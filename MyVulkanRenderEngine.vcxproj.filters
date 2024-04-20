@@ -36,9 +36,15 @@
     <ClInclude Include="Foundation\assert.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Foundation\Resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Foundation\RenderGraph.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Foundation\Resource.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
