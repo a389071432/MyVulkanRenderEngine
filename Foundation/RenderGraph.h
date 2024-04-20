@@ -4,11 +4,13 @@
 #include<vector>
 #include"datatypes.h"
 #include"enums.h"
+#include"Resource.h"
+#include"GPUDevice.h"
 
 namespace zzcVulkanRenderEngine {
 	typedef u32 GraphNodeHandle;
 
-	struct ResourceInfo {
+	struct ResourceDesc {
 		union {
 			struct {
 				sizet size;
@@ -29,17 +31,22 @@ namespace zzcVulkanRenderEngine {
 	struct GraphResource {
 		bool isExternal;
 		GraphResourceType type;   
-		ResourceInfo info;
+		ResourceDesc info;
 		std::string key;     //used to uniquely identify a resource
-		//Texture* texture;
+		ResourceHandle texture;
 	};
 
 	struct GraphNode {
 		GraphNodeType type;
-		std::vector<GraphResource> input;
-		std::vector<GraphResource> output;
+		std::vector<GraphResource> inputs;
+		std::vector<GraphResource> outputs;
 		VkRenderPass renderPass;
 		VkFramebuffer framebuffer;
+
+		GraphNode& setType(GraphNodeType type);
+		GraphNode& setInputs(std::vector<GraphResource> inputs);
+		GraphNode& setOutputs(std::vector<GraphResource> outputs);
+		virtual void execute();
 	};
 
 	class RenderGraph {
@@ -48,15 +55,16 @@ namespace zzcVulkanRenderEngine {
 		~RenderGraph();
 		void addNode(GraphNode node);
 		void compile();
-		void execute();
+		void execute(CommandBuffer& cmdBuffer);
 	private:
+		GPUDevice* device;
 		std::vector<GraphNode> nodes;
 		std::vector<std::vector<GraphNodeHandle>> graph;
 		std::vector<GraphNodeHandle> topologyOrder;
 		void buildGraph();
 		void topologySort();
 		GraphResource& getResource(std::string key);
-		void insert_barriers(VkCommandBuffer cmdBuffer, GraphNode& node);
+		void insert_barriers(CommandBuffer& cmdBuffer, GraphNode& node);
 
 		//helper functions
 		//void insert_barrier(VkCommandBuffer cmdBuffer, Texture& texture, VkAccessFlags newAccess);

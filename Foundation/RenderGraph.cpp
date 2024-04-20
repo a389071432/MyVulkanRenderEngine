@@ -5,6 +5,23 @@
 #include <algorithm>
 
 namespace zzcVulkanRenderEngine {
+	// For GraphNode
+	GraphNode& GraphNode::setType(GraphNodeType _type) {
+		type = _type;
+		return *this;
+	}
+
+	GraphNode& GraphNode::setInputs(std::vector<GraphResource> _inputs) {
+		inputs = _inputs;
+		return *this;
+	}
+
+	GraphNode& GraphNode::setOutputs(std::vector<GraphResource> _outputs) {
+		outputs = _outputs;
+		return *this;
+	}
+
+	// For RenderGraph
 	RenderGraph::RenderGraph() {
 
 	}
@@ -27,7 +44,7 @@ namespace zzcVulkanRenderEngine {
 		std::map<std::string, GraphNodeHandle> producer;
 		for (u32 i = 0; i < nodes.size(); i++) {
 			GraphNode& node = nodes.at(i);
-			for (GraphResource& r : node.output) {
+			for (GraphResource& r : node.outputs) {
 				producer.insert({ r.key,(GraphNodeHandle)i });
 			}
 		}
@@ -36,7 +53,7 @@ namespace zzcVulkanRenderEngine {
 		graph.resize(nodes.size());
 		for (u32 i = 0; i < nodes.size(); i++) {
 			GraphNode& node = nodes.at(i);
-			for (GraphResource& r : node.input) {
+			for (GraphResource& r : node.inputs) {
 				if (r.isExternal)
 					continue;
 				auto it = producer.find(r.key);
@@ -91,7 +108,7 @@ namespace zzcVulkanRenderEngine {
 		for (u32 i = 0; i < topologyOrder.size(); i++) {
 			u32 index = topologyOrder.at(i);
 			GraphNode& node = nodes.at(index);
-			for (GraphResource& r : node.input) {
+			for (GraphResource& r : node.inputs) {
 				auto it = ref_count.find(r.key);
 				if (it == ref_count.end()) {
 					ref_count.insert({ r.key,0 });
@@ -103,26 +120,28 @@ namespace zzcVulkanRenderEngine {
 		}
 
 		//allocate memory on device for resources, using technique of memory aliasing to efficiently reuse memory 
-		std::queue<GraphResource&>freelist;
+		std::queue<ResourceHandle>freelist;
 		for (u32 i = 0; i < topologyOrder.size(); i++) {
 			u32 index = topologyOrder.at(i);
 			GraphNode& node = nodes.at(index);
 
 			// TODO: create resource on device and assign the obtained handle to GraphResource
-			for (GraphResource& r : node.output) {
+			for (GraphResource& r : node.outputs) {
 				if (!freelist.empty()) {
-
+					ResourceHandle freeTex = freelist.front();
+					freelist.pop();
+					device->createTexture(r.texture,freeTex);
 				}
 				else {
-
+					device->createTexture(r.texture);
 				}
 			}
 			
 			//update ref_count of resources and the freelist
-			for (GraphResource& r : node.input) {
+			for (GraphResource& r : node.inputs) {
 				ref_count[r.key]--;
 				if (ref_count[r.key] == 0)
-					freelist.push(getResource(r.key));
+					freelist.push(getResource(r.key).texture);
 			}
 
 			//TODO: create render pass and framebuffer for the node
@@ -132,34 +151,43 @@ namespace zzcVulkanRenderEngine {
 
 	}
 
-	void RenderGraph::execute() {
+	void RenderGraph::execute(CommandBuffer& cmdBuffer) {
 		for (u32 i = 0; i < topologyOrder.size(); i++) {
 			u32 index = topologyOrder.at(i);
 			GraphNode& node = nodes.at(index);
 
-			//insert barrier for both input and output resources
-			//insert_barriers(, node);
+			// Insert barriers for both input and output resources
+			insert_barriers(cmdBuffer, node);
+
+			// Begin the render pass
+			cmdBuffer.cmdBeginRenderPass(node.renderPass, node.framebuffer);
+
+			// Execute the node using user-defined method
+			node.execute();
+
+			//End the render pass
+			cmdBuffer.cmdEndRenderPass();
 		}
 	}
 
-	void RenderGraph::insert_barriers(VkCommandBuffer cmdBuffer, GraphNode& node) {
-		if (node.type == GRAPHICS) {
+	void RenderGraph::insert_barriers(CommandBuffer& cmdBuffer, GraphNode& node) {
+		if (node.type == GraphNodeType::GRAPHICS) {
 			// add barrier for input resources
-			for (GraphResource& r : node.input) {
-				if (r.type == TEXTURE_TO_SAMPLE) {
+			for (GraphResource& r : node.inputs) {
+				if (r.type == GraphResourceType::TEXTURE_TO_SAMPLE) {
 
 				}
-				else if (r.type == BUFFER) {
+				else if (r.type == GraphResourceType::BUFFER) {
 
 				}
 			}
 
 			// add barrier for output resources
-			for (GraphResource& r : node.input) {
+			for (GraphResource& r : node.inputs) {
 
 			}
 		}
-		else if (node.type == COMPUTE) {
+		else if (node.type == GraphNodeType::COMPUTE) {
 			//TODO: add barriers for a compute node
 
 		}

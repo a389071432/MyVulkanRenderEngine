@@ -156,10 +156,14 @@
     <ClInclude Include="Foundation\enums.h" />
     <ClInclude Include="Foundation\RenderGraph.h" />
     <ClInclude Include="Foundation\Resource.h" />
+    <ClInclude Include="Foundation\CommandBuffer.h" />
+    <ClInclude Include="Foundation\GPUDevice.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Foundation\RenderGraph.cpp" />
     <ClCompile Include="Foundation\Resource.cpp" />
+    <ClCompile Include="Foundation\CommanBuffer.cpp" />
+    <ClCompile Include="Foundation\GPUDevice.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

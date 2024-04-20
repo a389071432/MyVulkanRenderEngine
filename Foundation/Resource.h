@@ -4,6 +4,7 @@
 #include<queue>
 #include"datatypes.h"
 #include"vulkan/vulkan_core.h"
+#include"enums.h"
 
 namespace zzcVulkanRenderEngine {
 	typedef uint32_t ResourceHandle;
@@ -15,6 +16,21 @@ namespace zzcVulkanRenderEngine {
 		VkFormat format;
 		VkSampler sampler;
 		Texture() {};
+	};
+
+	struct TextureCreation {
+		u16 width;
+		u16 height;
+		u16 depth;
+		u16 nMipLevels;
+		u16 flags;
+		VkFormat format = VK_FORMAT_UNDEFINED;
+		TextureType  type = TextureType::Texture2D;
+
+		TextureCreation& set_size(u16 width, u16 height, u16 depth);
+		TextureCreation& set_flags(u16 nMipLevels, u16 flags);
+		TextureCreation& set_format(VkFormat format);
+		TextureCreation& set_type(TextureType type);
 	};
 
 	struct Buffer {

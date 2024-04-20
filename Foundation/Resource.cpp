@@ -3,6 +3,31 @@
 
 namespace zzcVulkanRenderEngine {
 
+	//For TextureCreation
+	TextureCreation& TextureCreation::set_size(u16 _width, u16 _height, u16 _depth) {
+		width = _width;
+		height = _height;
+		depth = _depth;
+		return *this;
+	}
+
+	TextureCreation& TextureCreation::set_flags(u16 _nMipLevels, u16 _flags) {
+		nMipLevels = _nMipLevels;
+		flags = _flags;
+		return *this;
+	}
+
+	TextureCreation& TextureCreation::set_format(VkFormat _format) {
+		format = _format;
+		return *this;
+	}
+
+	TextureCreation& TextureCreation::set_type(TextureType _type) {
+		type = _type;
+		return *this;
+	}
+
+	// For ResourcePool
 	template <typename T>
 	ResourcePool<T>::ResourcePool(u32 poolSize) {
 		ASSERT(poolSize <= maxPoolSize, "required pool size exceeds maximum limit!");
