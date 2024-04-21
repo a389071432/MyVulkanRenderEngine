@@ -12,9 +12,7 @@ namespace zzcVulkanRenderEngine {
 	enum class GraphResourceType {
 		TEXTURE,
 		DEPTH_MAP,
-		BUFFER,
-		RENDER_TARGET,
-
+		BUFFER
 	};
 
 	enum class GraphNodeType {
@@ -25,6 +23,7 @@ namespace zzcVulkanRenderEngine {
 	enum class GraphResourceAccessType {
 		READ_TEXTURE,
 		WRITE_ATTACHMENT,
-		WRITE_DEPTH
+		WRITE_DEPTH,
+		UNDEFINED
 	};
 }

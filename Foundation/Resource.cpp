@@ -27,6 +27,11 @@ namespace zzcVulkanRenderEngine {
 		return *this;
 	}
 
+	TextureCreation& TextureCreation::set_aliasTexture(ResourceHandle _aliasTex) {
+		aliasTexture = _aliasTex;
+		return *this;
+	}
+
 	//For Texture
 	void Texture::setAccessType(GraphResourceAccessType _access) {
 		access = _access;

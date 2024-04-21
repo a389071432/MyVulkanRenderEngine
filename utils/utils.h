@@ -47,6 +47,36 @@ namespace zzcVulkanRenderEngine {
 		}
 		return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 	}
+
+	inline VkImageType util_getImageType(TextureType textureType) {
+		switch (textureType)
+		{
+		case TextureType::Texture1D:
+			return VK_IMAGE_TYPE_1D;
+		case TextureType::Texture2D:
+			return VK_IMAGE_TYPE_2D;
+		case TextureType::Texture3D:
+			return VK_IMAGE_TYPE_3D;
+		default:
+			ASSERT(false, "Assertion failed: invalid texture type!");
+			break;
+		}
+	}
+
+	inline VkImageViewType util_getImageViewType(TextureType textureType) {
+		switch (textureType)
+		{
+		case TextureType::Texture1D:
+			return VK_IMAGE_VIEW_TYPE_1D;
+		case TextureType::Texture2D:
+			return VK_IMAGE_VIEW_TYPE_2D;
+		case TextureType::Texture3D:
+			return VK_IMAGE_VIEW_TYPE_3D;
+		default:
+			ASSERT(false, "Assertion failed: invalid texture type!");
+			break;
+		}
+	}
 }
 
 

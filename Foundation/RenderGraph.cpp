@@ -120,22 +120,26 @@ namespace zzcVulkanRenderEngine {
 			}
 		}
 
-		//allocate memory on device for resources, using technique of memory aliasing to efficiently reuse memory 
+		// allocate memory on device for resources, using technique of memory aliasing to efficiently reuse memory 
 		std::queue<ResourceHandle>freelist;
 		for (u32 i = 0; i < topologyOrder.size(); i++) {
 			u32 index = topologyOrder.at(i);
 			GraphNode& node = nodes.at(index);
 
-			// TODO: create resource on device and assign the obtained handle to GraphResource
+			// Create resource on device and assign the obtained handle to GraphResource
 			for (GraphResource& r : node.outputs) {
-				if (!freelist.empty()) {
-					ResourceHandle freeTex = freelist.front();
+				ResourceDesc info = r.info;
+				TextureCreation texCI;
+				texCI.set_type(info.texture.textureType)
+					.set_format(info.texture.format)
+					.set_size(info.texture.width, info.texture.height, info.texture.depth);
+
+				if (!freelist.empty()) {      // meomry aliasing if applicable
+					ResourceHandle aliasTex = freelist.front();
 					freelist.pop();
-					device->createTexture(r.texture,freeTex);
+					texCI.set_aliasTexture(aliasTex);
 				}
-				else {
-					device->createTexture(r.texture);
-				}
+				r.texture = device->createTexture(texCI);
 			}
 			
 			//update ref_count of resources and the freelist
@@ -175,8 +179,10 @@ namespace zzcVulkanRenderEngine {
 		if (node.type == GraphNodeType::GRAPHICS) {
 			// add barrier for input resources
 			for (GraphResource& r : node.inputs) {
+				Texture& texture = device->getTexture(r.texture);
 				if (r.type == GraphResourceType::TEXTURE) {
-					cmdBuffer.cmdInsertImageBarrier(device->getTexture(r.texture), GraphResourceAccessType::READ_TEXTURE, 0, 1);
+					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::READ_TEXTURE, 0, 1);
+					texture.setAccessType(GraphResourceAccessType::READ_TEXTURE);
 				}
 				else if (r.type == GraphResourceType::BUFFER) {
 					
@@ -185,11 +191,14 @@ namespace zzcVulkanRenderEngine {
 
 			// add barrier for output resources
 			for (GraphResource& r : node.outputs) {
+				Texture& texture = device->getTexture(r.texture);
 				if (r.type == GraphResourceType::TEXTURE) {
-					cmdBuffer.cmdInsertImageBarrier(device->getTexture(r.texture), GraphResourceAccessType::WRITE_ATTACHMENT, 0, 1);
+					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::WRITE_ATTACHMENT, 0, 1);
+					texture.setAccessType(GraphResourceAccessType::WRITE_ATTACHMENT);
 				}
 				else if (r.type == GraphResourceType::DEPTH_MAP) {
-					cmdBuffer.cmdInsertImageBarrier(device->getTexture(r.texture), GraphResourceAccessType::WRITE_DEPTH, 0, 1);
+					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::WRITE_DEPTH, 0, 1);
+					texture.setAccessType(GraphResourceAccessType::WRITE_DEPTH);
 				}
 				else if (r.type == GraphResourceType::BUFFER) {
 
@@ -197,7 +206,7 @@ namespace zzcVulkanRenderEngine {
 			}
 		}
 		else if (node.type == GraphNodeType::COMPUTE) {
-			//TODO: add barriers for a compute node
+			// TODO: add barriers for a compute node
 
 		}
 	}

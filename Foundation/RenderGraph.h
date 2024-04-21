@@ -20,8 +20,11 @@ namespace zzcVulkanRenderEngine {
 				u32 width;
 				u32 height;
 				u32 depth;
+
+				TextureType  textureType;
+				// TODO: wrap following Vulkan enums for convenient usage by application programmers
 				VkFormat format;
-				VkImageUsageFlags usage;
+				//VkImageUsageFlags usage;
 				VkAttachmentLoadOp loadOp;
 				VkAttachmentStoreOp storeOp;
 			}texture;

@@ -9,14 +9,18 @@ namespace zzcVulkanRenderEngine {
 	const u32 defaultPoolSize = 256;
 	const u32 maxFrameInFlight = 2;
 
+	// TODO: fill in this 
+	struct GPUDeviceCreation {
+
+	};
+
 	class GPUDevice {
 	public:
-		GPUDevice();
+		GPUDevice(GPUDeviceCreation createInfo);
 		~GPUDevice();
 
 		// Resource creation
-		ResourceHandle createTexture(ResourceHandle texToCreate);
-		ResourceHandle createTexture(ResourceHandle texToCreate, ResourceHandle texAlias);
+		ResourceHandle createTexture(TextureCreation createInfo);
 		ResourceHandle createBuffer();
 
 		// Resource access
