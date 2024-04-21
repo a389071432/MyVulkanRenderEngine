@@ -15,7 +15,10 @@ namespace zzcVulkanRenderEngine {
 		VkDeviceMemory mem;
 		VkFormat format;
 		VkSampler sampler;
+		GraphResourceAccessType access;
+
 		Texture() {};
+		void setAccessType(GraphResourceAccessType access);
 	};
 
 	struct TextureCreation {

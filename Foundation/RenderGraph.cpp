@@ -1,8 +1,9 @@
-#include"RenderGraph.h"
-#include"assert.h"
 #include<queue>
 #include<map>
 #include <algorithm>
+#include"RenderGraph.h"
+#include"assert.h"
+#include"utils/utils.h"
 
 namespace zzcVulkanRenderEngine {
 	// For GraphNode
@@ -174,17 +175,25 @@ namespace zzcVulkanRenderEngine {
 		if (node.type == GraphNodeType::GRAPHICS) {
 			// add barrier for input resources
 			for (GraphResource& r : node.inputs) {
-				if (r.type == GraphResourceType::TEXTURE_TO_SAMPLE) {
-
+				if (r.type == GraphResourceType::TEXTURE) {
+					cmdBuffer.cmdInsertImageBarrier(device->getTexture(r.texture), GraphResourceAccessType::READ_TEXTURE, 0, 1);
 				}
 				else if (r.type == GraphResourceType::BUFFER) {
-
+					
 				}
 			}
 
 			// add barrier for output resources
-			for (GraphResource& r : node.inputs) {
+			for (GraphResource& r : node.outputs) {
+				if (r.type == GraphResourceType::TEXTURE) {
+					cmdBuffer.cmdInsertImageBarrier(device->getTexture(r.texture), GraphResourceAccessType::WRITE_ATTACHMENT, 0, 1);
+				}
+				else if (r.type == GraphResourceType::DEPTH_MAP) {
+					cmdBuffer.cmdInsertImageBarrier(device->getTexture(r.texture), GraphResourceAccessType::WRITE_DEPTH, 0, 1);
+				}
+				else if (r.type == GraphResourceType::BUFFER) {
 
+				}
 			}
 		}
 		else if (node.type == GraphNodeType::COMPUTE) {

@@ -27,6 +27,11 @@ namespace zzcVulkanRenderEngine {
 		return *this;
 	}
 
+	//For Texture
+	void Texture::setAccessType(GraphResourceAccessType _access) {
+		access = _access;
+	}
+
 	// For ResourcePool
 	template <typename T>
 	ResourcePool<T>::ResourcePool(u32 poolSize) {

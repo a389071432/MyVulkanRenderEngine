@@ -10,14 +10,21 @@ namespace zzcVulkanRenderEngine {
 	};
 
 	enum class GraphResourceType {
-		TEXTURE_TO_SAMPLE,
+		TEXTURE,
+		DEPTH_MAP,
 		BUFFER,
 		RENDER_TARGET,
-		DEPTH_MAP
+
 	};
 
 	enum class GraphNodeType {
 		GRAPHICS,
 		COMPUTE
+	};
+
+	enum class GraphResourceAccessType {
+		READ_TEXTURE,
+		WRITE_ATTACHMENT,
+		WRITE_DEPTH
 	};
 }
