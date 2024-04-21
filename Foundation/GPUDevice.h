@@ -1,5 +1,6 @@
 #pragma once
 #include"vulkan/vulkan_core.h"
+#include"vk_mem_alloc.h"
 #include"Resource.h"
 #include"CommandBuffer.h"
 
@@ -25,6 +26,12 @@ namespace zzcVulkanRenderEngine {
 		Buffer& getBuffer(ResourceHandle handle);
 
 	private:
+		//Vulkan instance 
+		VkInstance vkInstance;
+
+		// GPU memory allocator. Currently using a default one provided by VMA
+		VmaAllocator vmaAllocator;
+		
 		// Device related
 		VkPhysicalDevice physicalDevice;
 		VkPhysicalDeviceProperties deviceProperties;
