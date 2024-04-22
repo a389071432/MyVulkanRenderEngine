@@ -9,6 +9,12 @@ namespace zzcVulkanRenderEngine {
 		Texture3D
 	};
 
+	enum class BindingType {
+		UNIFORM_BUFFER,
+		IMAGE_SAMPLER,
+		STORAGE_BUFFER
+	};
+
 	enum class GraphResourceType {
 		TEXTURE,
 		DEPTH_MAP,

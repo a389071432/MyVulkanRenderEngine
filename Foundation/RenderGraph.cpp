@@ -131,14 +131,14 @@ namespace zzcVulkanRenderEngine {
 			for (GraphResource& r : node.outputs) {
 				ResourceInfo info = r.info;
 				TextureCreation texCI;
-				texCI.set_type(info.texture.textureType)
-					.set_format(info.texture.format)
-					.set_size(info.texture.width, info.texture.height, info.texture.depth);
+				texCI.setType(info.texture.textureType)
+					.setFormat(info.texture.format)
+					.setSize(info.texture.width, info.texture.height, info.texture.depth);
 
 				if (!texFreelist.empty()) {      // meomry aliasing if applicable
 					TextureHandle aliasTex = texFreelist.front();
 					texFreelist.pop();
-					texCI.set_aliasTexture(aliasTex);
+					texCI.setAliasTexture(aliasTex);
 				}
 				r.texture = device->createTexture(texCI);
 			}

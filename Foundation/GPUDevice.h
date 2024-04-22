@@ -50,7 +50,7 @@ namespace zzcVulkanRenderEngine {
 		// Resource management
 		ResourcePool<Texture,TextureHandle> texturePool;
 		ResourcePool<Buffer,BufferHandle> bufferPool;
-		ResourcePool<>
+		ResourcePool<std::vector<VkDescriptorSet>, DescriptorSetsHandle> descriptorSetsPool;
 
 	};
 }

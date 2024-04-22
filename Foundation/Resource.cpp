@@ -4,37 +4,50 @@
 namespace zzcVulkanRenderEngine {
 
 	//For TextureCreation
-	TextureCreation& TextureCreation::set_size(u16 _width, u16 _height, u16 _depth) {
+	TextureCreation& TextureCreation::setSize(u16 _width, u16 _height, u16 _depth) {
 		width = _width;
 		height = _height;
 		depth = _depth;
 		return *this;
 	}
 
-	TextureCreation& TextureCreation::set_flags(u16 _nMipLevels, u16 _flags) {
+	TextureCreation& TextureCreation::setFlags(u16 _nMipLevels, u16 _flags) {
 		nMipLevels = _nMipLevels;
 		flags = _flags;
 		return *this;
 	}
 
-	TextureCreation& TextureCreation::set_format(VkFormat _format) {
+	TextureCreation& TextureCreation::setFormat(VkFormat _format) {
 		format = _format;
 		return *this;
 	}
 
-	TextureCreation& TextureCreation::set_type(TextureType _type) {
+	TextureCreation& TextureCreation::setType(TextureType _type) {
 		type = _type;
 		return *this;
 	}
 
-	TextureCreation& TextureCreation::set_aliasTexture(TextureHandle _aliasTex) {
+	TextureCreation& TextureCreation::setAliasTexture(TextureHandle _aliasTex) {
 		aliasTexture = _aliasTex;
 		return *this;
 	}
 
-	//For Texture
+	// For Texture
 	void Texture::setAccessType(GraphResourceAccessType _access) {
 		access = _access;
+	}
+
+	// For DescriptorSetsCreation
+	DescriptorSetsCreation& DescriptorSetsCreation::setNodeType(GraphNodeType _nodeType) {
+		nodeType = _nodeType;
+	}
+
+	DescriptorSetsCreation& DescriptorSetsCreation::addInput(BindingDesc binding) {
+		inputs.push_back(binding);
+	}
+
+	DescriptorSetsCreation& DescriptorSetsCreation::addOutput(BindingDesc binding) {
+		outputs.push_back(binding);
 	}
 
 	// For ResourcePool
