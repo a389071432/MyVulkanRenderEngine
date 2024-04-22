@@ -10,7 +10,7 @@
 namespace zzcVulkanRenderEngine {
 	typedef u32 GraphNodeHandle;
 
-	struct ResourceDesc {
+	struct ResourceInfo {
 		union {
 			struct {
 				sizet size;
@@ -34,22 +34,29 @@ namespace zzcVulkanRenderEngine {
 	struct GraphResource {
 		bool isExternal;
 		GraphResourceType type;   
-		ResourceDesc info;
-		std::string key;     //used to uniquely identify a resource
-		ResourceHandle texture;
+		ResourceInfo info;
+		std::string key;           // used to uniquely identify a resource
+		TextureHandle texture;
+		u32 groupId;               // specify which group the resource belongs to, typically determined by frequency of updating 
 	};
 
 	struct GraphNode {
+		// specified by the user
 		GraphNodeType type;
 		std::vector<GraphResource> inputs;
 		std::vector<GraphResource> outputs;
-		VkRenderPass renderPass;
-		VkFramebuffer framebuffer;
 
+		// building helpers
 		GraphNode& setType(GraphNodeType type);
 		GraphNode& setInputs(std::vector<GraphResource> inputs);
 		GraphNode& setOutputs(std::vector<GraphResource> outputs);
 		virtual void execute();
+
+		// automatically created
+		// TODO: following resources should be considered as Resource managed by GPUDevice
+		VkRenderPass renderPass;
+		VkFramebuffer framebuffer;
+		std::vector<VkDescriptorSet> descriptorSets;
 	};
 
 	class RenderGraph {

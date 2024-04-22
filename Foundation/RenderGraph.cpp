@@ -103,7 +103,8 @@ namespace zzcVulkanRenderEngine {
 	void RenderGraph::compile() {
 		buildGraph();
 		topologySort();
-
+		
+		// STEP 0: CREATE RESOURCES ON DEVICE
 		//count number of reference for each resource
 		std::map<std::string, u32>ref_count;
 		for (u32 i = 0; i < topologyOrder.size(); i++) {
@@ -121,38 +122,43 @@ namespace zzcVulkanRenderEngine {
 		}
 
 		// allocate memory on device for resources, using technique of memory aliasing to efficiently reuse memory 
-		std::queue<ResourceHandle>freelist;
+		std::queue<TextureHandle> texFreelist;
 		for (u32 i = 0; i < topologyOrder.size(); i++) {
 			u32 index = topologyOrder.at(i);
 			GraphNode& node = nodes.at(index);
 
 			// Create resource on device and assign the obtained handle to GraphResource
 			for (GraphResource& r : node.outputs) {
-				ResourceDesc info = r.info;
+				ResourceInfo info = r.info;
 				TextureCreation texCI;
 				texCI.set_type(info.texture.textureType)
 					.set_format(info.texture.format)
 					.set_size(info.texture.width, info.texture.height, info.texture.depth);
 
-				if (!freelist.empty()) {      // meomry aliasing if applicable
-					ResourceHandle aliasTex = freelist.front();
-					freelist.pop();
+				if (!texFreelist.empty()) {      // meomry aliasing if applicable
+					TextureHandle aliasTex = texFreelist.front();
+					texFreelist.pop();
 					texCI.set_aliasTexture(aliasTex);
 				}
 				r.texture = device->createTexture(texCI);
 			}
+
+			// TODO: repeat the same thing for buffer allocation
 			
-			//update ref_count of resources and the freelist
+			// Update ref_count of resources and the freelist
 			for (GraphResource& r : node.inputs) {
 				ref_count[r.key]--;
 				if (ref_count[r.key] == 0)
-					freelist.push(getResource(r.key).texture);
+					texFreelist.push(getResource(r.key).texture);
 			}
-
-			//TODO: create render pass and framebuffer for the node
-
 		}
 
+	   // TODO: STEP 2 (create descriptorSets for the node)
+
+
+       // TODO: STEP 3 (create render pass for the node)
+
+       // TODO: STEP 4 (create framebuffer for the node)
 
 	}
 

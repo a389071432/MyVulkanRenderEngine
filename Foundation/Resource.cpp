@@ -27,7 +27,7 @@ namespace zzcVulkanRenderEngine {
 		return *this;
 	}
 
-	TextureCreation& TextureCreation::set_aliasTexture(ResourceHandle _aliasTex) {
+	TextureCreation& TextureCreation::set_aliasTexture(TextureHandle _aliasTex) {
 		aliasTexture = _aliasTex;
 		return *this;
 	}
@@ -38,8 +38,8 @@ namespace zzcVulkanRenderEngine {
 	}
 
 	// For ResourcePool
-	template <typename T>
-	ResourcePool<T>::ResourcePool(u32 poolSize) {
+	template <typename T, typename ResourceHandle>
+	ResourcePool<T,ResourceHandle>::ResourcePool(u32 poolSize) {
 		ASSERT(poolSize <= maxPoolSize, "required pool size exceeds maximum limit!");
 
 		data.reserve(poolSize);
@@ -52,13 +52,13 @@ namespace zzcVulkanRenderEngine {
 		}
 	}
 
-	template <typename T>
-	ResourcePool<T>::~ResourcePool() {
+	template <typename T, typename ResourceHandle>
+	ResourcePool<T, ResourceHandle>::~ResourcePool() {
 
 	}
 
-	template <typename T>
-	ResourceHandle ResourcePool<T>::require_resource() {
+	template <typename T, typename ResourceHandle>
+	ResourceHandle ResourcePool<T, ResourceHandle>::require_resource() {
 		ASSERT(!freeList.empty(), "no available resource!");
 
 		ResourceHandle handle = freeList.front();
@@ -66,15 +66,15 @@ namespace zzcVulkanRenderEngine {
 		return handle;
 	}
 
-	template <typename T>
-	T& ResourcePool<T>::get_resource(ResourceHandle handle) {
+	template <typename T, typename ResourceHandle>
+	T& ResourcePool<T, ResourceHandle>::get_resource(ResourceHandle handle) {
 		ASSERT(handle>=0 && handle<data.size(), "invalid resource handle!");
 
 		return data.at(handle);
 	}
 
-	template <typename T>
-	void ResourcePool<T>::release_resource(ResourceHandle handle) {
+	template <typename T, typename ResourceHandle>
+	void ResourcePool<T, ResourceHandle>::release_resource(ResourceHandle handle) {
 		ASSERT(handle >= 0 && handle < data.size(), "invalid resource handle!");
 
 		freeList.push(handle);

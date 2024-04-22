@@ -3,7 +3,7 @@
 #include"utils/utils.h"
 
 namespace zzcVulkanRenderEngine {
-	GPUDevice::GPUDevice(GPUDeviceCreation createInfo) :textures(defaultPoolSize), buffers(defaultPoolSize) {
+	GPUDevice::GPUDevice(GPUDeviceCreation createInfo) :texturePool(defaultPoolSize), bufferPool(defaultPoolSize) {
 
 		// TODO: fill in createInfos
 
@@ -14,6 +14,10 @@ namespace zzcVulkanRenderEngine {
 		// TODO: Create physical device (study details before doing this)
 
 		// TODO: Create logical device (study details before doing this)
+
+		// TODO: Create descriptorPool
+
+		// TODO: Create commandBuffers
 
 		// Create VMA allocator
 		VmaAllocatorCreateInfo allocatorCI = {};
@@ -30,25 +34,25 @@ namespace zzcVulkanRenderEngine {
 
 	}
 
-	ResourceHandle GPUDevice::requireTexture() {
-		return textures.require_resource();
+	TextureHandle GPUDevice::requireTexture() {
+		return texturePool.require_resource();
 	}
 
-	ResourceHandle GPUDevice::requireBuffer() {
-		return buffers.require_resource();
+	BufferHandle GPUDevice::requireBuffer() {
+		return bufferPool.require_resource();
 	}
 
-	Texture& GPUDevice::getTexture(ResourceHandle handle) {
-		return textures.get_resource(handle);
+	Texture& GPUDevice::getTexture(TextureHandle handle) {
+		return texturePool.get_resource(handle);
 	}
 
-	Buffer& GPUDevice::getBuffer(ResourceHandle handle) {
-		return buffers.get_resource(handle);
+	Buffer& GPUDevice::getBuffer(BufferHandle handle) {
+		return bufferPool.get_resource(handle);
 	}
 
-	ResourceHandle GPUDevice::createTexture(TextureCreation createInfo) {
+	TextureHandle GPUDevice::createTexture(TextureCreation createInfo) {
 		// Require a resource first
-		ResourceHandle handle = requireTexture();
+		TextureHandle handle = requireTexture();
 		Texture& texture = getTexture(handle);
 
 		// Fill in the structure 

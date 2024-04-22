@@ -8,7 +8,9 @@
 #include"datatypes.h"
 
 namespace zzcVulkanRenderEngine {
-	typedef uint32_t ResourceHandle;
+	typedef u32 TextureHandle;
+	typedef u32 BufferHandle;
+	typedef u32 DescriptorSetHandle;
 
 	struct Texture {
 		VkImage image;
@@ -24,7 +26,7 @@ namespace zzcVulkanRenderEngine {
 		void setAccessType(GraphResourceAccessType access);
 	};
 
-	const ResourceHandle INVALID_TEXTURE_HANDLE = -1;
+	const TextureHandle INVALID_TEXTURE_HANDLE = -1;
 	struct TextureCreation {
 		u16 width;
 		u16 height;
@@ -35,13 +37,18 @@ namespace zzcVulkanRenderEngine {
 		GraphResourceType resourceType;
 		VkFormat format = VK_FORMAT_UNDEFINED;
 		TextureType  type = TextureType::Texture2D;
-		ResourceHandle aliasTexture = INVALID_TEXTURE_HANDLE;
+		TextureHandle aliasTexture = INVALID_TEXTURE_HANDLE;
 
 		TextureCreation& set_size(u16 width, u16 height, u16 depth);
 		TextureCreation& set_flags(u16 nMipLevels, u16 flags);
 		TextureCreation& set_format(VkFormat format);
 		TextureCreation& set_type(TextureType type);
-		TextureCreation& set_aliasTexture(ResourceHandle aliasTex);
+		TextureCreation& set_aliasTexture(TextureHandle aliasTex);
+	};
+
+	// TODO: fill in this
+	struct BufferCreation {
+
 	};
 
 	struct Buffer {
@@ -51,7 +58,11 @@ namespace zzcVulkanRenderEngine {
 		Buffer() {};
 	};
 
-	template<typename T>
+	struct DescriptorSetsCreation {
+
+	};
+
+	template<typename T, typename ResourceHandle>
 	class ResourcePool {
 	public:
 		ResourcePool(u32 poolSize);

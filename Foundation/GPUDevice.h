@@ -20,14 +20,14 @@ namespace zzcVulkanRenderEngine {
 		~GPUDevice();
 
 		// Resource creation
-		ResourceHandle createTexture(TextureCreation createInfo);
-		ResourceHandle createBuffer();
+		TextureHandle createTexture(TextureCreation createInfo);
+		BufferHandle createBuffer();
 
 		// Resource access
-		ResourceHandle requireTexture();
-		ResourceHandle requireBuffer();
-		Texture& getTexture(ResourceHandle handle);
-		Buffer& getBuffer(ResourceHandle handle);
+		TextureHandle requireTexture();
+		BufferHandle requireBuffer();
+		Texture& getTexture(TextureHandle handle);
+		Buffer& getBuffer(BufferHandle handle);
 
 	private:
 		//Vulkan instance 
@@ -44,9 +44,13 @@ namespace zzcVulkanRenderEngine {
 		// Command buffers
 		std::vector<CommandBuffer> cmdBuffers;
 
+		// Descriptor pool
+		VkDescriptorPool descriptorPool;
+
 		// Resource management
-		ResourcePool<Texture> textures;
-		ResourcePool<Buffer> buffers;
+		ResourcePool<Texture,TextureHandle> texturePool;
+		ResourcePool<Buffer,BufferHandle> bufferPool;
+		ResourcePool<>
 
 	};
 }
