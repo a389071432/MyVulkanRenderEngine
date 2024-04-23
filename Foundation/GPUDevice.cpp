@@ -174,5 +174,26 @@ namespace zzcVulkanRenderEngine {
 				"Assertion failed: create DescriptorSetLayout failed!"
 			);
 		}
+		return handle;
+	}
+
+	DescriptorSetsHandle GPUDevice::createDescriptorSets(DescriptorSetsAlloc allocInfo) {
+		DescriptorSetsHandle handle = requireDescriptorSets();
+		std::vector<VkDescriptorSet>& descriptorSets = getDescriptorSets(handle);
+		std::vector<VkDescriptorSetLayout>& layouts = getDescriptorSetLayouts(allocInfo.layoutsHandle);
+		descriptorSets.resize(layouts.size());
+
+		for (u32 i = 0; i < layouts.size();i++) {
+			VkDescriptorSetAllocateInfo alloc{};
+			alloc.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+			alloc.descriptorPool = descriptorPool;
+			alloc.descriptorSetCount = 1;
+			alloc.pSetLayouts = &layouts.at(i);
+			ASSERT(
+				vkAllocateDescriptorSets(device, &alloc, &descriptorSets.at(i)),
+				"Assertion failed: Allocate DescriptorSets failed!"
+			);
+		}
+		return handle;
 	}
 }

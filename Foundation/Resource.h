@@ -97,6 +97,8 @@ namespace zzcVulkanRenderEngine {
 		u16 dstBinding;
 	};
 
+
+	// TODO: An optimized version for 2D data
 	template<typename T, typename ResourceHandle>
 	class ResourcePool {
 	public:
