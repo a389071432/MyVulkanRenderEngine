@@ -141,10 +141,13 @@ namespace zzcVulkanRenderEngine {
 					texCI.setAliasTexture(aliasTex);
 				}
 				r.info.texture.texHandle = device->createTexture(texCI);
+				key2TexMap.insert({ r.key,r.info.texture.texHandle });
 			}
 
 			// Register handles for input resources
-
+			for (GraphResource& r : node.inputs) {
+				r.info.texture.texHandle = getTextureByKey(r.key);
+			}
 
 			// TODO: repeat the same thing for buffer allocation
 			
@@ -152,11 +155,15 @@ namespace zzcVulkanRenderEngine {
 			for (GraphResource& r : node.inputs) {
 				ref_count[r.key]--;
 				if (ref_count[r.key] == 0)
-					texFreelist.push(getResource(r.key).info.texture.texHandle);
+					texFreelist.push(getTextureByKey(r.key));
 			}
 		}
 
-	   // TODO: STEP 2 (create descriptorSets for the node)
+	   // TODO: STEP 2 (create descriptorSetLayouts for the node)
+
+	   // TODO: STEP 2 (allocate descriptorSets for the node)
+
+	   // TODO: STEP 2 (write descriptorSets for the node)
 
 	   // TODO: STEP 2 (create pipeline for the node)
 
@@ -189,7 +196,7 @@ namespace zzcVulkanRenderEngine {
 		if (node.type == GraphNodeType::GRAPHICS) {
 			// add barrier for input resources
 			for (GraphResource& r : node.inputs) {
-				Texture& texture = device->getTexture(r.texture);
+				Texture& texture = device->getTexture(r.info.texture.texHandle);
 				if (r.type == GraphResourceType::TEXTURE) {
 					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::READ_TEXTURE, 0, 1);
 					texture.setAccessType(GraphResourceAccessType::READ_TEXTURE);
@@ -201,7 +208,7 @@ namespace zzcVulkanRenderEngine {
 
 			// add barrier for output resources
 			for (GraphResource& r : node.outputs) {
-				Texture& texture = device->getTexture(r.texture);
+				Texture& texture = device->getTexture(r.info.texture.texHandle);
 				if (r.type == GraphResourceType::TEXTURE) {
 					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::WRITE_ATTACHMENT, 0, 1);
 					texture.setAccessType(GraphResourceAccessType::WRITE_ATTACHMENT);
@@ -219,6 +226,12 @@ namespace zzcVulkanRenderEngine {
 			// TODO: add barriers for a compute node
 
 		}
+	}
+
+	TextureHandle& RenderGraph::getTextureByKey(std::string key) {
+		auto it = key2TexMap.find(key);
+		ASSERT(it != key2TexMap.end(), "Assertion failed: invalid key for texture");
+		return it->second;
 	}
 }
 

@@ -76,9 +76,13 @@ namespace zzcVulkanRenderEngine {
 		std::vector<GraphNode> nodes;
 		std::vector<std::vector<GraphNodeHandle>> graph;
 		std::vector<GraphNodeHandle> topologyOrder;
+		std::map<std::string, TextureHandle> key2TexMap;
+		std::map<std::string, BufferHandle> key2BufferMap;
+		
 		void buildGraph();
 		void topologySort();
-		GraphResource& getResource(std::string key);
+		TextureHandle& getTextureByKey(std::string key);
+		BufferHandle& getBufferByKey(std::string key);
 		void insert_barriers(CommandBuffer& cmdBuffer, GraphNode& node);
 
 		//helper functions
