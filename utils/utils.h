@@ -109,6 +109,22 @@ namespace zzcVulkanRenderEngine {
 			break;
 		}
 	}
+
+	// TODO: modify this method with isRead considered
+	inline BindingType util_getBindingType(GraphResourceType rType,bool isRead) {
+		switch (rType)
+		{
+		case GraphResourceType::TEXTURE:
+			return BindingType::IMAGE_SAMPLER;
+		case GraphResourceType::DEPTH_MAP:
+			return BindingType::IMAGE_SAMPLER;
+		case GraphResourceType::BUFFER:
+			return BindingType::UNIFORM_BUFFER;
+		default:
+			ASSERT(false, "Assertion failed: invalid GraphResourceType!");
+			break;
+		}
+	}
 }
 
 

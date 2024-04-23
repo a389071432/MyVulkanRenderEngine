@@ -160,10 +160,54 @@ namespace zzcVulkanRenderEngine {
 		}
 
 	   // TODO: STEP 2 (create descriptorSetLayouts for the node)
+		for (u32 i = 0; i < nodes.size(); i++) {
+			GraphNode& node = nodes.at(i);
+			DescriptorSetLayoutsCreation layoutsCI{};
+			layoutsCI.setNodeType(node.type);
+			if (node.type == GraphNodeType::GRAPHICS) {
+				for (GraphResource& r : node.inputs) {
+					layoutsCI.addBinding({
+						util_getBindingType(r.type,true),
+						r.accessStage,
+						r.groupId,
+						r.binding
+						});
+				}
+				node.descriptorSetLayouts = device->createDescriptorSetLayouts(layoutsCI);
+			}
+			else {
+				// TODO: repeat for Compute node
+			}
+		}
 
 	   // TODO: STEP 2 (allocate descriptorSets for the node)
+		for (u32 i = 0; i < nodes.size(); i++) {
+			GraphNode& node = nodes.at(i);
+			DescriptorSetsAlloc setsAllocInfo{};
+			setsAllocInfo.layoutsHandle = node.descriptorSetLayouts;
+			node.descriptorSets = device->createDescriptorSets(setsAllocInfo);
+		}
 
 	   // TODO: STEP 2 (write descriptorSets for the node)
+		for (u32 i = 0; i < nodes.size(); i++) {
+			GraphNode& node = nodes.at(i);
+			std::vector<DescriptorSetWrite> writes;
+			if (node.type == GraphNodeType::GRAPHICS) {
+				for (GraphResource& r : node.inputs) {
+					DescriptorSetWrite write{};
+					write.setType(util_getBindingType(r.type, true))
+						.setDstSet(r.groupId)
+						.setDstBinding(r.binding)
+						.setBufferHandle(r.type == GraphResourceType::BUFFER ? r.info.buffer.bufferHandle : INVALID_BUFFER_HANDLE)
+						.setTexHandle(r.type == GraphResourceType::TEXTURE ? r.info.texture.texHandle : INVALID_TEXTURE_HANDLE);
+					writes.push_back(write);
+				}
+				device->writeDescriptorSets(writes, node.descriptorSets);
+			}
+			else {
+				// TODO: repeat for Compute node
+			}
+		}
 
 	   // TODO: STEP 2 (create pipeline for the node)
 

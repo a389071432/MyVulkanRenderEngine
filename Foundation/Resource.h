@@ -17,7 +17,7 @@ namespace zzcVulkanRenderEngine {
 
 
 	const TextureHandle INVALID_TEXTURE_HANDLE = -1;
-	const BufferHandle INVALID_TEXTURE_HANDLE = -1;
+	const BufferHandle INVALID_BUFFER_HANDLE = -1;
 	const DescriptorSetsHandle INVALID_DESCRIPTORSETS_HANDLE = -1;
 
 	struct Texture {
@@ -69,7 +69,7 @@ namespace zzcVulkanRenderEngine {
 		BindingType type;
 		ShaderStage accessStage;
 		u16 groupId;
-		u32 binding;
+		u16 binding;
 	};
 
 	struct DescriptorSetLayoutsCreation {
@@ -82,6 +82,8 @@ namespace zzcVulkanRenderEngine {
 
 	struct DescriptorSetsAlloc {
 		DescriptorSetLayoutsHandle layoutsHandle;
+
+		DescriptorSetsAlloc& setLayoutsHandle(DescriptorSetLayoutsHandle layouts);
 	};
 
 	struct DescriptorSetWrite {
@@ -95,6 +97,12 @@ namespace zzcVulkanRenderEngine {
 		// position to bind
 		u16 dstSetId;
 		u16 dstBinding;
+
+		DescriptorSetWrite& setType(BindingType type);
+		DescriptorSetWrite& setDstSet(u16 setId);
+		DescriptorSetWrite& setDstBinding(u16 binding);
+		DescriptorSetWrite& setTexHandle(TextureHandle texHandle);
+		DescriptorSetWrite& setBufferHandle(BufferHandle bufferHandle);
 	};
 
 
@@ -109,7 +117,7 @@ namespace zzcVulkanRenderEngine {
 		void release_resource(ResourceHandle handle);
 	private:
 		u32 poolSize;
-		const maxPoolSize;
+		const u32 maxPoolSize;
 		std::vector<T> data;
 		std::queue<T> freeList;
 	};

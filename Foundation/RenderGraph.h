@@ -39,8 +39,8 @@ namespace zzcVulkanRenderEngine {
 		GraphResourceType type;   
 		ResourceInfo info;
 		std::string key;           // used to uniquely identify a resource
-		u32 groupId;               // specify which group the resource belongs to, typically determined by frequency of updating 
-		u32 binding=INVALID_BINDING;               // specify which binding point to bound
+		u16 groupId;               // specify which group the resource belongs to, typically determined by frequency of updating 
+		u16 binding=INVALID_BINDING;               // specify which binding point to bound
 		ShaderStage accessStage;   // specify which shader stage(s) will access this resource
 	};
 
@@ -60,7 +60,7 @@ namespace zzcVulkanRenderEngine {
 		// TODO: following resources should be considered as Resource managed by GPUDevice
 		RenderPassHandle renderPass;
 		FramebufferHandle framebuffer;
-		DescriptorSetLayoutsHandle descriptorSetLayout;
+		DescriptorSetLayoutsHandle descriptorSetLayouts;
 		DescriptorSetsHandle descriptorSets;
 	};
 
