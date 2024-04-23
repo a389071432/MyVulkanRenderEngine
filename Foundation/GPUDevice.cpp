@@ -122,9 +122,12 @@ namespace zzcVulkanRenderEngine {
 		viewCI.subresourceRange.aspectMask = createInfo.resourceType == (GraphResourceType::DEPTH_MAP) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 		viewCI.viewType = util_getImageViewType(createInfo.type);
 		ASSERT(
-			vkCreateImageView(device, &viewCI, nullptr, &texture.imageView),
+			vkCreateImageView(device, &viewCI, nullptr, &texture.imageView) == VK_SUCCESS,
 			"Assertion failed: create image view faield!"
 		);
+
+		// TODO: create sampler for texture (study details before this) 
+
 
 		return handle;
 	}
@@ -170,7 +173,7 @@ namespace zzcVulkanRenderEngine {
 			layoutCI.bindingCount = static_cast<u32>(bindings.size());
 			layoutCI.pBindings = bindings.data();
 			ASSERT(
-				vkCreateDescriptorSetLayout(device, &layoutCI, nullptr, &layouts[set]),
+				vkCreateDescriptorSetLayout(device, &layoutCI, nullptr, &layouts[set]) == VK_SUCCESS,
 				"Assertion failed: create DescriptorSetLayout failed!"
 			);
 		}
@@ -190,10 +193,42 @@ namespace zzcVulkanRenderEngine {
 			alloc.descriptorSetCount = 1;
 			alloc.pSetLayouts = &layouts.at(i);
 			ASSERT(
-				vkAllocateDescriptorSets(device, &alloc, &descriptorSets.at(i)),
+				vkAllocateDescriptorSets(device, &alloc, &descriptorSets.at(i)) == VK_SUCCESS,
 				"Assertion failed: Allocate DescriptorSets failed!"
 			);
 		}
 		return handle;
+	}
+
+	void GPUDevice::writeDescriptorSets(std::vector<DescriptorSetWrite>& writes, DescriptorSetsHandle setsHandle) {
+		std::vector<VkDescriptorSet>& sets = getDescriptorSets(setsHandle);
+
+		std::vector<VkWriteDescriptorSet>updates;
+		updates.resize(writes.size());
+		for (u32 i = 0; i < writes.size(); i++) {
+			DescriptorSetWrite& write = writes.at(i);
+			VkWriteDescriptorSet& update = updates.at(i);
+			update.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			update.descriptorCount = 1;
+			update.dstBinding = write.dstBinding;
+			update.dstSet = sets.at(write.dstSetId);
+			if (write.type == BindingType::IMAGE_SAMPLER) {
+				Texture& texture = getTexture(write.resource.texHandle);
+				VkDescriptorImageInfo imageInfo{};
+				imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				imageInfo.sampler = texture.sampler;
+				imageInfo.imageView = texture.imageView;
+				update.pImageInfo = &imageInfo;
+			}
+			else {
+				Buffer& buffer = getBuffer(write.resource.bufferhandle);
+				VkDescriptorBufferInfo bufferInfo{};
+				bufferInfo.buffer = buffer.buffer;
+				bufferInfo.offset = 0;                           //´æÒÉ
+				bufferInfo.range = buffer.size;
+				update.pBufferInfo = &bufferInfo;
+			}
+		}
+		vkUpdateDescriptorSets(device, static_cast<uint32_t>(updates.size()), updates.data(), 0, nullptr);
 	}
 }

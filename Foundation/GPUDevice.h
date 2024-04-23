@@ -24,6 +24,7 @@ namespace zzcVulkanRenderEngine {
 		BufferHandle createBuffer();
 		DescriptorSetLayoutsHandle createDescriptorSetLayouts(DescriptorSetLayoutsCreation createInfo);
 		DescriptorSetsHandle createDescriptorSets(DescriptorSetsAlloc allocInfo);
+		void writeDescriptorSets(std::vector<DescriptorSetWrite>& writes, DescriptorSetsHandle setsHandle);
 
 		// Resource access
 		TextureHandle requireTexture();
