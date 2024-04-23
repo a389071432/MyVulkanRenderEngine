@@ -140,8 +140,11 @@ namespace zzcVulkanRenderEngine {
 					texFreelist.pop();
 					texCI.setAliasTexture(aliasTex);
 				}
-				r.texture = device->createTexture(texCI);
+				r.info.texture.texHandle = device->createTexture(texCI);
 			}
+
+			// Register handles for input resources
+
 
 			// TODO: repeat the same thing for buffer allocation
 			
@@ -149,12 +152,13 @@ namespace zzcVulkanRenderEngine {
 			for (GraphResource& r : node.inputs) {
 				ref_count[r.key]--;
 				if (ref_count[r.key] == 0)
-					texFreelist.push(getResource(r.key).texture);
+					texFreelist.push(getResource(r.key).info.texture.texHandle);
 			}
 		}
 
 	   // TODO: STEP 2 (create descriptorSets for the node)
 
+	   // TODO: STEP 2 (create pipeline for the node)
 
        // TODO: STEP 3 (create render pass for the node)
 

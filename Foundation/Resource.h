@@ -10,7 +10,11 @@
 namespace zzcVulkanRenderEngine {
 	typedef u32 TextureHandle;
 	typedef u32 BufferHandle;
-	typedef u32 DescriptorSetsHandle;
+	typedef u32 DescriptorSetLayoutsHandle;      // points to a list of layouts
+	typedef u32 DescriptorSetsHandle;            // points to a list of sets
+	typedef u32 RenderPassHandle;
+	typedef u32 FramebufferHandle;
+
 
 	const TextureHandle INVALID_TEXTURE_HANDLE = -1;
 	const BufferHandle INVALID_TEXTURE_HANDLE = -1;
@@ -63,17 +67,34 @@ namespace zzcVulkanRenderEngine {
 
 	struct BindingDesc {
 		BindingType type;
+		ShaderStage accessStage;
 		u16 groupId;
+		u32 binding;
 	};
 
-	struct DescriptorSetsCreation {
-		std::vector<BindingDesc> inputs;
-		std::vector<BindingDesc> outputs;
+	struct DescriptorSetLayoutsCreation {
+		std::vector<BindingDesc> bindings;
 		GraphNodeType nodeType;
 
-		DescriptorSetsCreation& setNodeType(GraphNodeType nodeType);
-		DescriptorSetsCreation& addInput(BindingDesc binding);
-		DescriptorSetsCreation& addOutput(BindingDesc binding);
+		DescriptorSetLayoutsCreation& setNodeType(GraphNodeType nodeType);
+		DescriptorSetLayoutsCreation& addBinding(BindingDesc binding);
+	};
+
+	struct DescriptorSetsAlloc {
+		DescriptorSetLayoutsHandle layoutsHandle;
+	};
+
+	struct DescriptorSetWrite {
+		// resource to bind
+		BindingType type;
+		union {
+			TextureHandle texHandle;
+			BufferHandle bufferhandle;
+		}resource;
+
+		// position to bind
+		u16 dstSetId;
+		u16 dstBinding;
 	};
 
 	template<typename T, typename ResourceHandle>

@@ -14,6 +14,7 @@ namespace zzcVulkanRenderEngine {
 		union {
 			struct {
 				sizet size;
+				BufferHandle bufferHandle;
 			}buffer;
 
 			struct {
@@ -27,17 +28,20 @@ namespace zzcVulkanRenderEngine {
 				//VkImageUsageFlags usage;
 				VkAttachmentLoadOp loadOp;
 				VkAttachmentStoreOp storeOp;
+				TextureHandle texHandle;
 			}texture;
 		};
 	};
 
+	u32 INVALID_BINDING = -1;
 	struct GraphResource {
-		bool isExternal;
+		bool isExternal=false;
 		GraphResourceType type;   
 		ResourceInfo info;
 		std::string key;           // used to uniquely identify a resource
-		TextureHandle texture;
 		u32 groupId;               // specify which group the resource belongs to, typically determined by frequency of updating 
+		u32 binding=INVALID_BINDING;               // specify which binding point to bound
+		ShaderStage accessStage;   // specify which shader stage(s) will access this resource
 	};
 
 	struct GraphNode {
@@ -52,11 +56,12 @@ namespace zzcVulkanRenderEngine {
 		GraphNode& setOutputs(std::vector<GraphResource> outputs);
 		virtual void execute();
 
-		// automatically created
+		// automatically generated
 		// TODO: following resources should be considered as Resource managed by GPUDevice
-		VkRenderPass renderPass;
-		VkFramebuffer framebuffer;
-		std::vector<VkDescriptorSet> descriptorSets;
+		RenderPassHandle renderPass;
+		FramebufferHandle framebuffer;
+		DescriptorSetLayoutsHandle descriptorSetLayout;
+		DescriptorSetsHandle descriptorSets;
 	};
 
 	class RenderGraph {

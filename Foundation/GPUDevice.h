@@ -22,12 +22,21 @@ namespace zzcVulkanRenderEngine {
 		// Resource creation
 		TextureHandle createTexture(TextureCreation createInfo);
 		BufferHandle createBuffer();
+		DescriptorSetLayoutsHandle createDescriptorSetLayouts(DescriptorSetLayoutsCreation createInfo);
 
 		// Resource access
 		TextureHandle requireTexture();
 		BufferHandle requireBuffer();
+		DescriptorSetLayoutsHandle requireDescriptorSetLayouts();
+		DescriptorSetsHandle requireDescriptorSets();
+		RenderPassHandle requireRenderPass();
+		FramebufferHandle requireFramebuffer();
 		Texture& getTexture(TextureHandle handle);
 		Buffer& getBuffer(BufferHandle handle);
+		std::vector<VkDescriptorSetLayout>& getDescriptorSetLayouts(DescriptorSetLayoutsHandle handle);
+		std::vector<VkDescriptorSet>& getDescriptorSets(DescriptorSetsHandle handle);
+		VkRenderPass& getRenderPass(RenderPassHandle handle);
+		VkFramebuffer& getFramebuffer(FramebufferHandle handle);
 
 	private:
 		//Vulkan instance 

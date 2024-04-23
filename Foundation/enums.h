@@ -32,4 +32,11 @@ namespace zzcVulkanRenderEngine {
 		WRITE_DEPTH,
 		UNDEFINED
 	};
+
+	// TODO: more types
+	enum class ShaderStage {
+		VERTEX,
+		FRAG,
+		RANDOM
+	};
 }

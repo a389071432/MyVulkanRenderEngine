@@ -13,9 +13,9 @@ namespace zzcVulkanRenderEngine {
 		case GraphResourceAccessType::WRITE_DEPTH:
 			return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 		default:
+			ASSERT(false, "Assertion failed: invalid GraphResourceAccessType!");
 			break;
 		}
-		return 0;
 	}
 
 	inline VkImageLayout util_getImageLayout(GraphResourceAccessType accessType) {
@@ -28,9 +28,9 @@ namespace zzcVulkanRenderEngine {
 		case GraphResourceAccessType::WRITE_DEPTH:
 			return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
 		default:
+			ASSERT(false, "Assertion failed: invalid GraphResourceAccessType!");
 			break;
 		}
-		return VK_IMAGE_LAYOUT_UNDEFINED;
 	}
 
 	inline VkPipelineStageFlags util_getPipelineStageFlags(GraphResourceAccessType accessType) {
@@ -43,9 +43,9 @@ namespace zzcVulkanRenderEngine {
 		case GraphResourceAccessType::WRITE_DEPTH:
 			return VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 		default:
+			ASSERT(false, "Assertion failed: invalid GraphResourceAccessType!");
 			break;
 		}
-		return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 	}
 
 	inline VkImageType util_getImageType(TextureType textureType) {
@@ -58,7 +58,7 @@ namespace zzcVulkanRenderEngine {
 		case TextureType::Texture3D:
 			return VK_IMAGE_TYPE_3D;
 		default:
-			ASSERT(false, "Assertion failed: invalid texture type!");
+			ASSERT(false, "Assertion failed: invalid TextureType!");
 			break;
 		}
 	}
@@ -73,7 +73,39 @@ namespace zzcVulkanRenderEngine {
 		case TextureType::Texture3D:
 			return VK_IMAGE_VIEW_TYPE_3D;
 		default:
-			ASSERT(false, "Assertion failed: invalid texture type!");
+			ASSERT(false, "Assertion failed: invalid TextureType!");
+			break;
+		}
+	}
+
+	inline VkShaderStageFlags util_getShaderStageFlags(ShaderStage stage) {
+		switch (stage)
+		{
+		case ShaderStage::VERTEX:
+			return VK_SHADER_STAGE_VERTEX_BIT;
+			break;
+		case ShaderStage::FRAG:
+			return VK_SHADER_STAGE_FRAGMENT_BIT;
+			break;
+		case ShaderStage::RANDOM:
+			return VK_SHADER_STAGE_ALL_GRAPHICS;
+			break;
+		default:
+			ASSERT(false, "Assertion failed: invalid ShaderStage!");
+			break;
+		}
+	}
+
+	inline VkDescriptorType util_getDescriptorType(BindingType bindingType) {
+		// TODO: more types
+		switch (bindingType)
+		{
+		case BindingType::IMAGE_SAMPLER:
+			return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		case BindingType::UNIFORM_BUFFER:
+			return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		default:
+			ASSERT(false, "Assertion failed: invalid BindingType!");
 			break;
 		}
 	}

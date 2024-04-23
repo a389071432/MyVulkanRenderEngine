@@ -1,6 +1,7 @@
 #include"GPUDevice.h"
 #include"assert.h"
 #include"utils/utils.h"
+#include<array>
 
 namespace zzcVulkanRenderEngine {
 	GPUDevice::GPUDevice(GPUDeviceCreation createInfo) :texturePool(defaultPoolSize), bufferPool(defaultPoolSize) {
@@ -42,12 +43,20 @@ namespace zzcVulkanRenderEngine {
 		return bufferPool.require_resource();
 	}
 
+	DescriptorSetsHandle GPUDevice::requireDescriptorSets() {
+		return descriptorSetsPool.require_resource();
+	}
+
 	Texture& GPUDevice::getTexture(TextureHandle handle) {
 		return texturePool.get_resource(handle);
 	}
 
 	Buffer& GPUDevice::getBuffer(BufferHandle handle) {
 		return bufferPool.get_resource(handle);
+	}
+
+	std::vector<VkDescriptorSet>& GPUDevice::getDescriptorSets(DescriptorSetsHandle handle) {
+		return descriptorSetsPool.get_resource(handle);
 	}
 
 	TextureHandle GPUDevice::createTexture(TextureCreation createInfo) {
@@ -118,5 +127,52 @@ namespace zzcVulkanRenderEngine {
 		);
 
 		return handle;
+	}
+
+	DescriptorSetLayoutsHandle GPUDevice::createDescriptorSetLayouts(DescriptorSetLayoutsCreation createInfo) {
+		// Require a resource first
+		DescriptorSetLayoutsHandle handle = requireDescriptorSetLayouts();
+		std::vector<VkDescriptorSetLayout>& layouts = getDescriptorSetLayouts(handle);
+		
+		// Count for the required number of descriptor sets
+		sizet maxSet = 0;
+		for (u32 i = 0; i < createInfo.bindings.size(); i++) {
+			BindingDesc& binding = createInfo.bindings.at(i);
+			maxSet = binding.groupId > maxSet ? binding.groupId : maxSet;
+		}
+
+		layouts.resize(maxSet + 1);
+
+		// Group bindings into sets
+		std::vector<std::vector<BindingDesc>> groupBindingDescs;
+		groupBindingDescs.resize(maxSet+1);
+		for (u32 i = 0; i < createInfo.bindings.size(); i++) {
+			groupBindingDescs[createInfo.bindings.at(i).groupId].push_back(createInfo.bindings.at(i));
+		}
+
+		// Create descriptorSetLayout for each set
+		for (u32 set = 0; set < layouts.size(); set++) {
+			const sizet setSize = groupBindingDescs.at(set).size();
+			std::vector<VkDescriptorSetLayoutBinding> bindings;
+			bindings.resize(setSize);
+			std::vector<BindingDesc>& descs = groupBindingDescs.at(set);
+			for (u32 i = 0; i < descs.size(); i++) {
+				auto desc = descs.at(i);
+				VkDescriptorSetLayoutBinding layoutBinding{};
+				layoutBinding.binding = desc.binding;
+				layoutBinding.descriptorCount = 1;
+				layoutBinding.stageFlags = util_getShaderStageFlags(desc.accessStage);
+				layoutBinding.descriptorType = util_getDescriptorType(desc.type);
+				bindings.push_back(layoutBinding);
+			}
+			VkDescriptorSetLayoutCreateInfo layoutCI{};
+			layoutCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+			layoutCI.bindingCount = static_cast<u32>(bindings.size());
+			layoutCI.pBindings = bindings.data();
+			ASSERT(
+				vkCreateDescriptorSetLayout(device, &layoutCI, nullptr, &layouts[set]),
+				"Assertion failed: create DescriptorSetLayout failed!"
+			);
+		}
 	}
 }

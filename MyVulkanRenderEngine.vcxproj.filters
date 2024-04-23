@@ -48,6 +48,9 @@
     <ClInclude Include="utils\utils.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Foundation\memoryManagement.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Foundation\RenderGraph.cpp">
