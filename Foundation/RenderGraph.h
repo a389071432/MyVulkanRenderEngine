@@ -46,7 +46,7 @@ namespace zzcVulkanRenderEngine {
 
 	struct GraphicsPipelineInfo {
 		std::string vertShaderPath;
-		std::string fragSahderPath;
+		std::string fragShaderPath;
 
 	};
 	

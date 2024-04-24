@@ -13,7 +13,7 @@ namespace zzcVulkanRenderEngine {
 		case GraphResourceAccessType::WRITE_DEPTH:
 			return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 		default:
-			ASSERT(false, "Assertion failed: invalid GraphResourceAccessType!");
+			ASSERT(false, "Assertion failed: invalid Enum GraphResourceAccessType!");
 			break;
 		}
 	}
@@ -28,7 +28,7 @@ namespace zzcVulkanRenderEngine {
 		case GraphResourceAccessType::WRITE_DEPTH:
 			return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
 		default:
-			ASSERT(false, "Assertion failed: invalid GraphResourceAccessType!");
+			ASSERT(false, "Assertion failed: invalid Enum GraphResourceAccessType!");
 			break;
 		}
 	}
@@ -43,7 +43,7 @@ namespace zzcVulkanRenderEngine {
 		case GraphResourceAccessType::WRITE_DEPTH:
 			return VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 		default:
-			ASSERT(false, "Assertion failed: invalid GraphResourceAccessType!");
+			ASSERT(false, "Assertion failed: invalid Enum GraphResourceAccessType!");
 			break;
 		}
 	}
@@ -58,7 +58,7 @@ namespace zzcVulkanRenderEngine {
 		case TextureType::Texture3D:
 			return VK_IMAGE_TYPE_3D;
 		default:
-			ASSERT(false, "Assertion failed: invalid TextureType!");
+			ASSERT(false, "Assertion failed: invalid Enum TextureType!");
 			break;
 		}
 	}
@@ -73,7 +73,7 @@ namespace zzcVulkanRenderEngine {
 		case TextureType::Texture3D:
 			return VK_IMAGE_VIEW_TYPE_3D;
 		default:
-			ASSERT(false, "Assertion failed: invalid TextureType!");
+			ASSERT(false, "Assertion failed: invalid Enum TextureType!");
 			break;
 		}
 	}
@@ -91,7 +91,7 @@ namespace zzcVulkanRenderEngine {
 			return VK_SHADER_STAGE_ALL_GRAPHICS;
 			break;
 		default:
-			ASSERT(false, "Assertion failed: invalid ShaderStage!");
+			ASSERT(false, "Assertion failed: invalid Enum ShaderStage!");
 			break;
 		}
 	}
@@ -105,7 +105,7 @@ namespace zzcVulkanRenderEngine {
 		case BindingType::UNIFORM_BUFFER:
 			return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		default:
-			ASSERT(false, "Assertion failed: invalid BindingType!");
+			ASSERT(false, "Assertion failed: invalid Enum BindingType!");
 			break;
 		}
 	}
@@ -121,7 +121,97 @@ namespace zzcVulkanRenderEngine {
 		case GraphResourceType::BUFFER:
 			return BindingType::UNIFORM_BUFFER;
 		default:
-			ASSERT(false, "Assertion failed: invalid GraphResourceType!");
+			ASSERT(false, "Assertion failed: invalid Enum GraphResourceType!");
+			break;
+		}
+	}
+
+	inline VkVertexInputRate util_getVertexInputRate(VertexInputRate inputRate) {
+		switch (inputRate)
+		{
+		case zzcVulkanRenderEngine::VertexInputRate::VERTEX:
+			return VK_VERTEX_INPUT_RATE_VERTEX;
+			break;
+		case zzcVulkanRenderEngine::VertexInputRate::INSTANCE:
+			return VK_VERTEX_INPUT_RATE_INSTANCE;
+			break;
+		default:
+			ASSERT(false, "Assertion failed: invalid Enum VertexInputRate!");
+			break;
+		}
+	}
+
+	inline VkFormat util_getFormat(DataFormat format) {
+		switch (format)
+		{
+		case zzcVulkanRenderEngine::DataFormat::FLOAT:
+			return VK_FORMAT_R32_SFLOAT;
+			break;
+		case zzcVulkanRenderEngine::DataFormat::FLOAT2:
+			return VK_FORMAT_R32G32_SFLOAT;
+			break;
+		case zzcVulkanRenderEngine::DataFormat::FLOAT3:
+			return VK_FORMAT_R32G32B32_SFLOAT;
+			break;
+		case zzcVulkanRenderEngine::DataFormat::FLOAT4:
+			return VK_FORMAT_R32G32B32A32_SFLOAT;
+			break;
+		case zzcVulkanRenderEngine::DataFormat::INT:
+			return VK_FORMAT_R32_SINT;
+			break;
+		case zzcVulkanRenderEngine::DataFormat::INT2:
+			return VK_FORMAT_R32G32_SINT;
+			break;
+		case zzcVulkanRenderEngine::DataFormat::INT3:
+			return VK_FORMAT_R32G32B32_SINT;
+			break;
+		case zzcVulkanRenderEngine::DataFormat::INT4:
+			return VK_FORMAT_R32G32B32A32_SINT;
+			break;
+		case zzcVulkanRenderEngine::DataFormat::UINT:
+			return VK_FORMAT_R32_UINT;
+			break;
+		case zzcVulkanRenderEngine::DataFormat::UINT2:
+			return VK_FORMAT_R32G32_UINT;
+			break;
+		case zzcVulkanRenderEngine::DataFormat::UINT3:
+			return VK_FORMAT_R32G32B32_UINT;
+			break;
+		case zzcVulkanRenderEngine::DataFormat::UINT4:
+			return VK_FORMAT_R32G32B32A32_UINT;
+			break;
+		default:
+			ASSERT(false, "Assertion failed: invalid Enum DataFormat!");
+			break;
+		}
+	}
+
+	inline VkCullModeFlags util_getCullMode(CullMode cullMode) {
+		switch (cullMode)
+		{
+		case zzcVulkanRenderEngine::CullMode::FRONT:
+			return VK_CULL_MODE_FRONT_BIT;
+			break;
+		case zzcVulkanRenderEngine::CullMode::BACK:
+			return VK_CULL_MODE_BACK_BIT;
+			break;
+		default:
+			ASSERT(false, "Assertion failed: invalid Enum CullMode!");
+			break;
+		}
+	}
+
+	inline VkFrontFace util_getFrontFace(FrontFace front) {
+		switch (front)
+		{
+		case zzcVulkanRenderEngine::FrontFace::CLOCKWISE:
+			return VK_FRONT_FACE_CLOCKWISE;
+			break;
+		case zzcVulkanRenderEngine::FrontFace::CONTER_CLOCKWISE:
+			return VK_FRONT_FACE_CLOCKWISE;
+			break;
+		default:
+			ASSERT(false, "Assertion failed: invalid Enum CullFrontFace!");
 			break;
 		}
 	}

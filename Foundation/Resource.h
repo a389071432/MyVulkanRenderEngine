@@ -107,12 +107,39 @@ namespace zzcVulkanRenderEngine {
 		DescriptorSetWrite& setBufferHandle(BufferHandle bufferHandle);
 	};
 
-	struct GraphicsPipelineCreation {
-
+	struct VertexBindingDesc {
+		u32 binding;
+		u32 stride;
+		VertexInputRate inputRate = VertexInputRate::VERTEX;        // by default
 	};
 
-	struct GraphicsPipeline {
 
+	struct VertexAttribute {
+		u32 location = 0;
+		u32 binding = 0;
+		u32 offset = 0;
+		DataFormat format;
+	};
+
+	struct GraphicsPipelineCreation {
+		struct ShaderInfo{
+			std::string vertShaderPath;
+			std::string fragShaderPath;
+		} shaders;
+
+		struct VertexInput {
+			VertexBindingDesc bindingDesc;
+			std::vector<VertexAttribute> attributes;
+		}vertexInput;
+
+		struct RasterizerInfo {
+			CullMode cullMode;
+			FrontFace frontFace;
+		} rasterInfo;
+
+		struct MSAAInfo {
+			u32 nSamplesPerPixel;
+		}msaa;
 	};
 
 	// TODO: An optimized version for 2D data

@@ -232,13 +232,18 @@ namespace zzcVulkanRenderEngine {
 		vkUpdateDescriptorSets(device, static_cast<uint32_t>(updates.size()), updates.data(), 0, nullptr);
 	}
 
+	// TODO: add dynamic states support
 	GraphicsPipelineHandle GPUDevice::createGraphicsPipeline(GraphicsPipelineCreation createInfo) {
-		// For shaders
-		auto vertShaderCode = readFile("shaders/vert.spv");
-		auto fragShaderCode = readFile("shaders/frag.spv");
+		GraphicsPipelineHandle handle = requireGraphicsPipeline();
+		VkPipeline& pipeline = getGraphicsPipeline(handle);
 
-		VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
-		VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+		// FOR SHADERS
+		auto shaderInfo = createInfo.shaders;
+		auto vertShaderCode = fileHandler.read(shaderInfo.vertShaderPath);
+		auto fragShaderCode = fileHandler.read(shaderInfo.fragShaderPath);
+
+		VkShaderModule vertShaderModule = helper_createShaderModule(vertShaderCode);
+		VkShaderModule fragShaderModule = helper_createShaderModule(fragShaderCode);
 
 		VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -256,7 +261,99 @@ namespace zzcVulkanRenderEngine {
 
 		vkDestroyShaderModule(device, fragShaderModule, nullptr);
 		vkDestroyShaderModule(device, vertShaderModule, nullptr);
+
+		// FOR VERTEX INPUT
+		auto vertexInput = createInfo.vertexInput;
+		VkVertexInputBindingDescription bindingDesc{};
+		bindingDesc.binding = static_cast<uint32_t>(vertexInput.bindingDesc.binding);
+		bindingDesc.stride = static_cast<uint32_t>(vertexInput.bindingDesc.stride);
+		bindingDesc.inputRate = util_getVertexInputRate(vertexInput.bindingDesc.inputRate);
+
+		std::vector<VkVertexInputAttributeDescription> attributes;
+		attributes.resize(vertexInput.attributes.size());
+		for (u32 i = 0; i < attributes.size(); i++) {
+			VkVertexInputAttributeDescription& attr = attributes.at(i);
+			auto desc = vertexInput.attributes.at(i);
+			attr.binding = static_cast<uint32_t>(desc.binding);
+			attr.location = static_cast<uint32_t>(desc.location);
+			attr.offset = static_cast<uint32_t>(desc.offset);
+			attr.format = util_getFormat(desc.format);
+		}
+		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+		vertexInputInfo.vertexBindingDescriptionCount = 1;
+		vertexInputInfo.pVertexBindingDescriptions = &bindingDesc;
+		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributes.size());
+		vertexInputInfo.pVertexAttributeDescriptions = attributes.data();
+
+		// FOR INPUT ASSEMBLY
+		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+		inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;       // only triangle permitted
+		inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+		// FOR VIEWPORTS AND SCISSORS
+		VkViewport viewport = {};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = static_cast<float>(swapChainWidth * 1.0);
+		viewport.height = static_cast<float>(swapChainHeight * 1.0);
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+
+		VkRect2D scissor = {};
+		scissor.offset = { 0, 0 };
+		scissor.extent = { swapChainWidth, swapChainWidth };
+
+		VkPipelineViewportStateCreateInfo viewportState{ VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
+		viewportState.viewportCount = 1;
+		viewportState.pViewports = &viewport;
+		viewportState.scissorCount = 1;
+		viewportState.pScissors = &scissor;
+
+		// FOR RASTERIZAER
+		auto rasterInfo = createInfo.rasterInfo;
+		VkPipelineRasterizationStateCreateInfo rasterizer{ VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
+		rasterizer.depthClampEnable = VK_FALSE;
+		rasterizer.rasterizerDiscardEnable = VK_FALSE;
+		rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
+		rasterizer.lineWidth = 1.0f;
+		rasterizer.cullMode = util_getCullMode(rasterInfo.cullMode);
+		rasterizer.frontFace = util_getFrontFace(rasterInfo.frontFace);
+		rasterizer.depthBiasEnable = VK_FALSE;
+		rasterizer.depthBiasConstantFactor = 0.0f; 
+		rasterizer.depthBiasClamp = 0.0f; 
+		rasterizer.depthBiasSlopeFactor = 0.0f; 
+
+		// TODO: add support for MSAA
+		VkPipelineMultisampleStateCreateInfo msaaInfo = {};
+		msaaInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+		msaaInfo.sampleShadingEnable = VK_FALSE;
+		msaaInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+		msaaInfo.minSampleShading = 1.0f; 
+		msaaInfo.pSampleMask = nullptr; 
+		msaaInfo.alphaToCoverageEnable = VK_FALSE; 
+		msaaInfo.alphaToOneEnable = VK_FALSE; 
+
+		// FOR
+
+		return handle;
 	}
 
+	// TODO: handle all types of shader extensions 
+	// Study Panko for details (in ShaderManager::get_spirv)
+	VkShaderModule GPUDevice::helper_createShaderModule(const std::vector<char>& code) {
+		VkShaderModuleCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+		createInfo.codeSize = code.size();
+		createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
+		VkShaderModule shaderModule;
+		ASSERT(
+			vkCreateShaderModule(device,&createInfo,nullptr,&shaderModule)==VK_SUCCESS,
+			"Assertion failed: CreateShaderModule failed!"
+		);
+
+		return shaderModule;
+	}
 }

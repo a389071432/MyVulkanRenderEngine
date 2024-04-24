@@ -39,4 +39,48 @@ namespace zzcVulkanRenderEngine {
 		FRAG,
 		RANDOM
 	};
+
+	enum class VertexInputRate {
+		VERTEX,
+		INSTANCE
+	};
+
+	// TODO: more formats support
+	enum class DataFormat {
+		FLOAT,
+		FLOAT2,
+		FLOAT3,
+		FLOAT4,
+
+		INT,
+		INT2,
+		INT3,
+		INT4,
+
+		UINT,
+		UINT2,
+		UINT3,
+		UINT4
+	};
+
+	enum class CullMode {
+		FRONT,
+		BACK
+	};
+
+	enum class FrontFace {
+		CLOCKWISE,
+		CONTER_CLOCKWISE
+	};
+
+	enum class MSAASamples {
+		SAMPLE_1,
+		SAMPLE_2,
+		SAMPLE_4,
+		SAMPLE_8,
+		SAMPLE_16,
+		SAMPLE_32,
+		SAMPLE_64,
+		SAMPLE_MAX
+	};
 }

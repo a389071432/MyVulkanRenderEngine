@@ -3,6 +3,7 @@
 #include"vk_mem_alloc.h"
 #include"Resource.h"
 #include"CommandBuffer.h"
+#include"FileHandler.h"
 
 namespace zzcVulkanRenderEngine {
 	// Default configs
@@ -44,8 +45,15 @@ namespace zzcVulkanRenderEngine {
 		VkPipeline& getGraphicsPipeline(GraphicsPipelineHandle handle);
 
 	private:
+		// File handler
+		FileHandler fileHandler;
+
 		//Vulkan instance 
 		VkInstance vkInstance;
+
+		// Swapchain size (provided by Engine)
+		u32 swapChainWidth;
+		u32 swapChainHeight;
 
 		// GPU memory allocator. Currently using a default one provided by VMA
 		VmaAllocator vmaAllocator;
