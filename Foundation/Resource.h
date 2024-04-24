@@ -14,6 +14,8 @@ namespace zzcVulkanRenderEngine {
 	typedef u32 DescriptorSetsHandle;            // points to a list of sets
 	typedef u32 RenderPassHandle;
 	typedef u32 FramebufferHandle;
+	typedef u32 GraphicsPipelineHandle;
+	typedef u32 ComputePipelineHandle;
 
 
 	const TextureHandle INVALID_TEXTURE_HANDLE = -1;
@@ -105,6 +107,13 @@ namespace zzcVulkanRenderEngine {
 		DescriptorSetWrite& setBufferHandle(BufferHandle bufferHandle);
 	};
 
+	struct GraphicsPipelineCreation {
+
+	};
+
+	struct GraphicsPipeline {
+
+	};
 
 	// TODO: An optimized version for 2D data
 	template<typename T, typename ResourceHandle>

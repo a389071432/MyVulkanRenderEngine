@@ -25,6 +25,7 @@ namespace zzcVulkanRenderEngine {
 		DescriptorSetLayoutsHandle createDescriptorSetLayouts(DescriptorSetLayoutsCreation createInfo);
 		DescriptorSetsHandle createDescriptorSets(DescriptorSetsAlloc allocInfo);
 		void writeDescriptorSets(std::vector<DescriptorSetWrite>& writes, DescriptorSetsHandle setsHandle);
+		GraphicsPipelineHandle createGraphicsPipeline(GraphicsPipelineCreation createInfo);
 
 		// Resource access
 		TextureHandle requireTexture();
@@ -33,12 +34,14 @@ namespace zzcVulkanRenderEngine {
 		DescriptorSetsHandle requireDescriptorSets();
 		RenderPassHandle requireRenderPass();
 		FramebufferHandle requireFramebuffer();
+		GraphicsPipelineHandle requireGraphicsPipeline();
 		Texture& getTexture(TextureHandle handle);
 		Buffer& getBuffer(BufferHandle handle);
 		std::vector<VkDescriptorSetLayout>& getDescriptorSetLayouts(DescriptorSetLayoutsHandle handle);
 		std::vector<VkDescriptorSet>& getDescriptorSets(DescriptorSetsHandle handle);
 		VkRenderPass& getRenderPass(RenderPassHandle handle);
 		VkFramebuffer& getFramebuffer(FramebufferHandle handle);
+		VkPipeline& getGraphicsPipeline(GraphicsPipelineHandle handle);
 
 	private:
 		//Vulkan instance 
@@ -46,7 +49,7 @@ namespace zzcVulkanRenderEngine {
 
 		// GPU memory allocator. Currently using a default one provided by VMA
 		VmaAllocator vmaAllocator;
-		
+
 		// Device related
 		VkPhysicalDevice physicalDevice;
 		VkPhysicalDeviceProperties deviceProperties;
@@ -59,9 +62,13 @@ namespace zzcVulkanRenderEngine {
 		VkDescriptorPool descriptorPool;
 
 		// Resource management
-		ResourcePool<Texture,TextureHandle> texturePool;
-		ResourcePool<Buffer,BufferHandle> bufferPool;
+		ResourcePool<Texture, TextureHandle> texturePool;
+		ResourcePool<Buffer, BufferHandle> bufferPool;
 		ResourcePool<std::vector<VkDescriptorSet>, DescriptorSetsHandle> descriptorSetsPool;
+		ResourcePool<VkPipeline, GraphicsPipelineHandle> graphicsPipelinePool;
+		ResourcePool<VkPipeline, ComputePipelineHandle> computePipelinePool;
 
+		// helpers
+		VkShaderModule helper_createShaderModule(const std::vector<char>& code);
 	};
 }

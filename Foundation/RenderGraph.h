@@ -44,6 +44,18 @@ namespace zzcVulkanRenderEngine {
 		ShaderStage accessStage;   // specify which shader stage(s) will access this resource
 	};
 
+	struct GraphicsPipelineInfo {
+		std::string vertShaderPath;
+		std::string fragSahderPath;
+
+	};
+	
+	struct ComputePipelineInfo {
+
+	};
+
+	// TODO: add raytracing pipeline
+
 	struct GraphNode {
 		// specified by the user
 		GraphNodeType type;
@@ -62,6 +74,16 @@ namespace zzcVulkanRenderEngine {
 		FramebufferHandle framebuffer;
 		DescriptorSetLayoutsHandle descriptorSetLayouts;
 		DescriptorSetsHandle descriptorSets;
+	};
+
+	struct GraphicsNode : GraphNode {
+		GraphicsPipelineInfo pipelineInfo;
+		GraphicsPipelineHandle pipelineHandle;
+	};
+
+	struct ComputeNode : GraphNode {
+		ComputePipelineInfo pipelineInfo;
+		ComputePipelineHandle pipelineHandle;
 	};
 
 	class RenderGraph {

@@ -154,6 +154,7 @@
     <ClInclude Include="Foundation\assert.h" />
     <ClInclude Include="Foundation\datatypes.h" />
     <ClInclude Include="Foundation\enums.h" />
+    <ClInclude Include="Foundation\FileHandler.h" />
     <ClInclude Include="Foundation\memoryManagement.h" />
     <ClInclude Include="Foundation\RenderGraph.h" />
     <ClInclude Include="Foundation\Resource.h" />
@@ -162,6 +163,7 @@
     <ClInclude Include="utils\utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Foundation\FileHandler.cpp" />
     <ClCompile Include="Foundation\RenderGraph.cpp" />
     <ClCompile Include="Foundation\Resource.cpp" />
     <ClCompile Include="Foundation\CommanBuffer.cpp" />
