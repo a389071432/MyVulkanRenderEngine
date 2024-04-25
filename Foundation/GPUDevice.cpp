@@ -232,7 +232,25 @@ namespace zzcVulkanRenderEngine {
 		vkUpdateDescriptorSets(device, static_cast<uint32_t>(updates.size()), updates.data(), 0, nullptr);
 	}
 
-	
+	// TODO: add support for push constants
+	PipelineLayoutHandle GPUDevice::createPipelineLayout(PipelineLayoutCreation createInfo) {
+		PipelineLayoutHandle handle = requirePipelineLayout();
+		VkPipelineLayout& pipelineLayout = getPipelineLayout(handle);
+
+		VkPipelineLayoutCreateInfo layoutCI{};
+		layoutCI.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		layoutCI.pushConstantRangeCount = 0;                     // by default no push constants
+		layoutCI.pPushConstantRanges = VK_NULL_HANDLE;
+		std::vector<VkDescriptorSetLayout>& descLayouts = getDescriptorSetLayouts(createInfo.descLayoutsHandle);
+		layoutCI.setLayoutCount = static_cast<uint32_t>(descLayouts.size());
+		layoutCI.pSetLayouts = descLayouts.data();
+		
+		ASSERT(
+			vkCreatePipelineLayout(device, &layoutCI, nullptr, &pipelineLayout) == VK_SUCCESS,
+			"Assertion failed: CreatePipelineLayout failed!"
+		);
+		return handle;
+	}
 
 	// TODO: add dynamic states support
 	// TODO: add support for pipelineCache
