@@ -26,6 +26,7 @@ namespace zzcVulkanRenderEngine {
 		DescriptorSetLayoutsHandle createDescriptorSetLayouts(DescriptorSetLayoutsCreation createInfo);
 		DescriptorSetsHandle createDescriptorSets(DescriptorSetsAlloc allocInfo);
 		void writeDescriptorSets(std::vector<DescriptorSetWrite>& writes, DescriptorSetsHandle setsHandle);
+		PipelineLayoutHandle createPipelineLayout(PipelineLayoutCreation createInfo);
 		GraphicsPipelineHandle createGraphicsPipeline(GraphicsPipelineCreation createInfo);
 
 		// Resource access
@@ -35,6 +36,7 @@ namespace zzcVulkanRenderEngine {
 		DescriptorSetsHandle requireDescriptorSets();
 		RenderPassHandle requireRenderPass();
 		FramebufferHandle requireFramebuffer();
+		PipelineLayoutHandle requirePipelineLayout();
 		GraphicsPipelineHandle requireGraphicsPipeline();
 		Texture& getTexture(TextureHandle handle);
 		Buffer& getBuffer(BufferHandle handle);
@@ -42,6 +44,7 @@ namespace zzcVulkanRenderEngine {
 		std::vector<VkDescriptorSet>& getDescriptorSets(DescriptorSetsHandle handle);
 		VkRenderPass& getRenderPass(RenderPassHandle handle);
 		VkFramebuffer& getFramebuffer(FramebufferHandle handle);
+		VkPipelineLayout& getPipelineLayout(PipelineLayoutHandle& handle);
 		VkPipeline& getGraphicsPipeline(GraphicsPipelineHandle handle);
 
 	private:

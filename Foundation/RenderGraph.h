@@ -101,6 +101,7 @@ namespace zzcVulkanRenderEngine {
 		std::map<std::string, TextureHandle> key2TexMap;
 		std::map<std::string, BufferHandle> key2BufferMap;
 		
+		void checkValidity();
 		void buildGraph();
 		void topologySort();
 		TextureHandle& getTextureByKey(std::string key);

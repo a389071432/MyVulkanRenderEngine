@@ -14,6 +14,7 @@ namespace zzcVulkanRenderEngine {
 	typedef u32 DescriptorSetsHandle;            // points to a list of sets
 	typedef u32 RenderPassHandle;
 	typedef u32 FramebufferHandle;
+	typedef u32 PipelineLayoutHandle;
 	typedef u32 GraphicsPipelineHandle;
 	typedef u32 ComputePipelineHandle;
 
@@ -121,6 +122,10 @@ namespace zzcVulkanRenderEngine {
 		DataFormat format;
 	};
 
+	struct PipelineLayoutCreation {
+		DescriptorSetLayoutsHandle descLayoutsHandle;
+	};
+
 	struct GraphicsPipelineCreation {
 		struct ShaderInfo{
 			std::string vertShaderPath;
@@ -140,6 +145,16 @@ namespace zzcVulkanRenderEngine {
 		struct MSAAInfo {
 			u32 nSamplesPerPixel;
 		}msaa;
+
+		struct DepthStencilInfo {
+			bool enableDepth;
+		}depthStencil;
+
+		PipelineLayoutHandle pipelineLayoutHandle;
+
+		struct RenderPassInfo {
+			RenderPassHandle renderPassHandle;
+		}renderPassInfo;
 	};
 
 	// TODO: An optimized version for 2D data

@@ -35,9 +35,18 @@ namespace zzcVulkanRenderEngine {
 		nodes.push_back(node);
 	}
 
+	void RenderGraph::checkValidity() {
+		// check for non-unique keys of resources
+
+		// for each node, check number of outputs matches the number of ColorBlendingStates
+
+		// for each node, check number of inputs/outputs matches DescriptorSetLayoutsCreation.bindings
+	}
+
+
 	//add edges between nodes according to inputs and outputs
 	void RenderGraph::buildGraph() {
-		//check for non-unique keys of resources
+		//check for validity of the graph 
 
 
 		
