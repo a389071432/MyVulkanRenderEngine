@@ -157,6 +157,15 @@ namespace zzcVulkanRenderEngine {
 		}renderPassInfo;
 	};
 
+	struct RenderAttachmentInfo {
+		DataFormat format;
+		GraphResourceType resourceType;
+	};
+
+	struct RenderPassCreation {
+		std::vector<RenderAttachmentInfo> attachmentInfos;
+	};
+
 	// TODO: An optimized version for 2D data
 	template<typename T, typename ResourceHandle>
 	class ResourcePool {

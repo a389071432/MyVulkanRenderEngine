@@ -218,11 +218,14 @@ namespace zzcVulkanRenderEngine {
 			}
 		}
 
-	   // TODO: STEP 2 (create pipeline for the node)
-
        // TODO: STEP 3 (create render pass for the node)
 
+
        // TODO: STEP 4 (create framebuffer for the node)
+
+	   // TODO: STEP 2 (create pipelineLayout for the node)
+
+	   // TODO: STEP 2 (create pipeline for the node)
 
 	}
 
@@ -252,7 +255,7 @@ namespace zzcVulkanRenderEngine {
 				Texture& texture = device->getTexture(r.info.texture.texHandle);
 				if (r.type == GraphResourceType::TEXTURE) {
 					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::READ_TEXTURE, 0, 1);
-					texture.setAccessType(GraphResourceAccessType::READ_TEXTURE);
+					texture.setAccessType(GraphResourceAccessType::READ_TEXTURE);    // necessary to track the state of texture to determine initialLayout
 				}
 				else if (r.type == GraphResourceType::BUFFER) {
 					

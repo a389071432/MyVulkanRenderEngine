@@ -232,6 +232,88 @@ namespace zzcVulkanRenderEngine {
 		vkUpdateDescriptorSets(device, static_cast<uint32_t>(updates.size()), updates.data(), 0, nullptr);
 	}
 
+	RenderPassHandle GPUDevice::createRenderPass(RenderPassCreation createInfo) {
+		RenderPassHandle handle = requireRenderPass();
+		VkRenderPass& renderPass = getRenderPass(handle);
+
+		std::vector<RenderAttachmentInfo>& attachmentInfos = createInfo.attachmentInfos;
+
+		std::vector<VkAttachmentDescription> attachDescs;
+		attachDescs.resize(attachmentInfos.size());
+
+		std::vector<VkAttachmentReference> colorAttachRefs;
+		VkAttachmentReference depthRef{};
+		
+		// create attachmentDescs
+		u32 depthMapIndex = -1;
+		for (u32 i = 0; i < attachDescs.size(); i++) {
+			VkAttachmentDescription& desc = attachDescs.at(i);
+			auto attachInfo = createInfo.attachmentInfos.at(i);
+
+			desc.format = util_getFormat(attachInfo.format);
+			desc.samples = VK_SAMPLE_COUNT_1_BIT;
+			if (attachInfo.resourceType == GraphResourceType::TEXTURE) {
+				desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+				desc.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+				desc.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+				desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+				VkAttachmentReference colorRef{};
+				colorRef.attachment = static_cast<uint32_t>(i);
+				colorRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+				colorAttachRefs.push_back(colorRef);
+			}
+			else if (attachInfo.resourceType == GraphResourceType::DEPTH_MAP) {
+				desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+				desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;;
+				desc.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+				desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+				depthMapIndex = i;
+
+				depthRef.attachment= static_cast<uint32_t>(i);
+				depthRef.layout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;
+			}
+		}
+
+		// create subpass
+		VkSubpassDescription subpassDesc;
+		subpassDesc.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpassDesc.colorAttachmentCount = static_cast<uint32_t>(colorAttachRefs.size());
+		subpassDesc.pColorAttachments = colorAttachRefs.data();
+		subpassDesc.pDepthStencilAttachment = &depthRef;
+
+		// dependency between subpasses
+		VkSubpassDependency dependency{};
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.dstSubpass = 0;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		if (depthMapIndex != -1) {
+			dependency.srcStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+			dependency.srcAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			dependency.dstStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+			dependency.dstAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		}
+
+		// finally create the renderpass
+		VkRenderPassCreateInfo passCI{};
+		passCI.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		passCI.attachmentCount = static_cast<uint32_t>(attachDescs.size());
+		passCI.pAttachments = attachDescs.data();
+		passCI.subpassCount = 1;
+		passCI.pSubpasses = &subpassDesc;
+		passCI.dependencyCount = 1;
+		passCI.pDependencies = &dependency;
+		
+		ASSERT(
+			vkCreateRenderPass(device, &passCI, nullptr, &renderPass) == VK_SUCCESS,
+			"Assertion failed: CreateRenderPass failed!"
+		);
+		return handle;
+	}
+
 	// TODO: add support for push constants
 	PipelineLayoutHandle GPUDevice::createPipelineLayout(PipelineLayoutCreation createInfo) {
 		PipelineLayoutHandle handle = requirePipelineLayout();

@@ -26,6 +26,7 @@ namespace zzcVulkanRenderEngine {
 		DescriptorSetLayoutsHandle createDescriptorSetLayouts(DescriptorSetLayoutsCreation createInfo);
 		DescriptorSetsHandle createDescriptorSets(DescriptorSetsAlloc allocInfo);
 		void writeDescriptorSets(std::vector<DescriptorSetWrite>& writes, DescriptorSetsHandle setsHandle);
+		RenderPassHandle createRenderPass(RenderPassCreation createInfo);
 		PipelineLayoutHandle createPipelineLayout(PipelineLayoutCreation createInfo);
 		GraphicsPipelineHandle createGraphicsPipeline(GraphicsPipelineCreation createInfo);
 
