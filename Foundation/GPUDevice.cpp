@@ -506,6 +506,35 @@ namespace zzcVulkanRenderEngine {
 		return handle;
 	}
 
+	FramebufferHandle GPUDevice::createFramebuffer(FramebufferCreation createInfo) {
+		FramebufferHandle handle = requireFramebuffer();
+		VkFramebuffer& framebuffer = getFramebuffer(handle);
+
+		std::vector<VkImageView> attachments;
+		attachments.resize(createInfo.attachments.size());
+		for (u32 i = 0; i < createInfo.attachments.size(); i++) {
+			TextureHandle texHandle = createInfo.attachments.at(i);
+			Texture& tex = getTexture(texHandle);
+			attachments[i] = tex.imageView;
+		}
+
+		VkFramebufferCreateInfo fbCI{};
+		fbCI.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		fbCI.width = createInfo.width;
+		fbCI.height = createInfo.height;
+		fbCI.layers = createInfo.layers;
+		fbCI.renderPass = getRenderPass(createInfo.renderPassHandle);
+		fbCI.attachmentCount = static_cast<uint32_t>(attachments.size());
+		fbCI.pAttachments = attachments.data();
+
+		ASSERT(
+			vkCreateFramebuffer(device, &fbCI, nullptr, &framebuffer) == VK_SUCCESS,
+			"Assertion failed: CreateFramebuffer failed!"
+		);
+
+		return handle;
+	}
+
 	// TODO: handle all types of shader extensions 
 	// Study Panko for details (in ShaderManager::get_spirv)
 	VkShaderModule GPUDevice::helper_createShaderModule(const std::vector<char>& code) {

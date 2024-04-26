@@ -29,6 +29,7 @@ namespace zzcVulkanRenderEngine {
 		RenderPassHandle createRenderPass(RenderPassCreation createInfo);
 		PipelineLayoutHandle createPipelineLayout(PipelineLayoutCreation createInfo);
 		GraphicsPipelineHandle createGraphicsPipeline(GraphicsPipelineCreation createInfo);
+		FramebufferHandle createFramebuffer(FramebufferCreation createInfo);
 
 		// Resource access
 		TextureHandle requireTexture();

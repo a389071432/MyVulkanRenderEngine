@@ -164,6 +164,16 @@ namespace zzcVulkanRenderEngine {
 
 	struct RenderPassCreation {
 		std::vector<RenderAttachmentInfo> attachmentInfos;
+
+		RenderPassCreation& addAttachInfo(RenderAttachmentInfo info);
+	};
+
+	struct FramebufferCreation {
+		std::vector<TextureHandle> attachments;
+		RenderPassHandle renderPassHandle;
+		u32 width;
+		u32 height;
+		u32 layers = 1;
 	};
 
 	// TODO: An optimized version for 2D data

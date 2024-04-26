@@ -41,6 +41,8 @@ namespace zzcVulkanRenderEngine {
 		// for each node, check number of outputs matches the number of ColorBlendingStates
 
 		// for each node, check number of inputs/outputs matches DescriptorSetLayoutsCreation.bindings
+
+		// for each node, check its output attachments have the same size (required to create framebuffer)
 	}
 
 
@@ -219,7 +221,18 @@ namespace zzcVulkanRenderEngine {
 		}
 
        // TODO: STEP 3 (create render pass for the node)
-
+		for (u32 i = 0; i < nodes.size(); i++) {
+			GraphNode& node = nodes.at(i);
+			RenderPassCreation creation{};
+			if (node.type == GraphNodeType::GRAPHICS) {
+				for (GraphResource& r : node.outputs) {
+					if (r.type == GraphResourceType::TEXTURE || r.type == GraphResourceType::DEPTH_MAP) {
+						creation.addAttachInfo({ r.info.texture.format,r.type });
+					}
+				}
+				device->createRenderPass(creation);
+			}
+		}
 
        // TODO: STEP 4 (create framebuffer for the node)
 
