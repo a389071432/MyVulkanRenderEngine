@@ -230,15 +230,52 @@ namespace zzcVulkanRenderEngine {
 						creation.addAttachInfo({ r.info.texture.format,r.type });
 					}
 				}
-				device->createRenderPass(creation);
+				node.renderPass = device->createRenderPass(creation);
 			}
 		}
 
        // TODO: STEP 4 (create framebuffer for the node)
+		for (u32 i = 0; i < nodes.size(); i++) {
+			GraphNode& node = nodes.at(i);
+			FramebufferCreation creation{};
+			if (node.type == GraphNodeType::GRAPHICS) {
+				u32 width = -1;
+				u32 height = -1;
+				for (GraphResource& r : node.outputs) {
+					if (r.type == GraphResourceType::TEXTURE || r.type == GraphResourceType::DEPTH_MAP) {
+						creation.addAttachment({ r.info.texture.texHandle });
+						width = r.info.texture.width;
+						height = r.info.texture.height;
+					}
+				}
+				creation.setLayers(1);
+				creation.setRenderPass(node.renderPass);
+				creation.setSize(width,height);
+				node.framebuffer = device->createFramebuffer(creation);
+			}
+		}
 
-	   // TODO: STEP 2 (create pipelineLayout for the node)
+	    // TODO: STEP 2 (create pipelineLayout for the node)
+		for (u32 i = 0; i < nodes.size(); i++) {
+			GraphNode& node = nodes.at(i);
+			PipelineLayoutCreation layoutCI{};
+			layoutCI.setDescLayouts(node.descriptorSetLayouts);
+			node.pipelineLayout = device->createPipelineLayout(layoutCI);
+		}
 
-	   // TODO: STEP 2 (create pipeline for the node)
+	    // TODO: STEP 2 (create pipeline for the node)
+		for (u32 i = 0; i < nodes.size(); i++) {
+			GraphNode* node = &nodes.at(i);
+			if (node->type == GraphNodeType::GRAPHICS) {
+				GraphicsPipelineCreation gPipelineCI{};
+				GraphicsNode* gNode = dynamic_cast<GraphicsNode*>(node);
+				ASSERT(gNode, "Assertion failed: casting from GraphNode* GraphicsNode* failed!");
+				gNode->
+			}
+			PipelineLayoutCreation layoutCI{};
+			layoutCI.setDescLayouts(node.descriptorSetLayouts);
+			node.pipelineLayout = device->createPipelineLayout(layoutCI);
+		}
 
 	}
 

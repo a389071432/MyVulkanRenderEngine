@@ -124,6 +124,8 @@ namespace zzcVulkanRenderEngine {
 
 	struct PipelineLayoutCreation {
 		DescriptorSetLayoutsHandle descLayoutsHandle;
+
+		DescriptorSetLayoutsHandle& setDescLayouts(DescriptorSetLayoutsHandle descLayoutsHandle);
 	};
 
 	struct GraphicsPipelineCreation {
@@ -135,6 +137,9 @@ namespace zzcVulkanRenderEngine {
 		struct VertexInput {
 			VertexBindingDesc bindingDesc;
 			std::vector<VertexAttribute> attributes;
+			
+			VertexInput& setBindingDesc(VertexBindingDesc bindingDesc);
+			VertexInput& addVertexAttribute(VertexAttribute attribute);
 		}vertexInput;
 
 		struct RasterizerInfo {
@@ -155,6 +160,14 @@ namespace zzcVulkanRenderEngine {
 		struct RenderPassInfo {
 			RenderPassHandle renderPassHandle;
 		}renderPassInfo;
+
+		GraphicsPipelineCreation& setShaderInfo(ShaderInfo shaderInfo);
+		GraphicsPipelineCreation& setVertexInput(VertexInput vertexInput);
+		GraphicsPipelineCreation& setRasterizerInfo(RasterizerInfo rasterInfo);
+		GraphicsPipelineCreation& setMSAAInfo(MSAAInfo msaaInfo);
+		GraphicsPipelineCreation& setDepthStencilInfo(DepthStencilInfo depthStencilInfo);
+		GraphicsPipelineCreation& setPipelineLayout(PipelineLayoutHandle pipelineLayoutHandle);
+		GraphicsPipelineCreation& setRenderPassInfo(RenderPassInfo renderPassInfo);
 	};
 
 	struct RenderAttachmentInfo {
@@ -174,6 +187,11 @@ namespace zzcVulkanRenderEngine {
 		u32 width;
 		u32 height;
 		u32 layers = 1;
+
+		FramebufferCreation& addAttachment(TextureHandle tex);
+		FramebufferCreation& setRenderPass(RenderPassHandle renderpass);
+		FramebufferCreation& setSize(u32 width,u32 height);
+		FramebufferCreation& setLayers(u32 nLayers);
 	};
 
 	// TODO: An optimized version for 2D data

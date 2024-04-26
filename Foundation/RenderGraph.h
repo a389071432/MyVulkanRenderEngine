@@ -74,6 +74,7 @@ namespace zzcVulkanRenderEngine {
 		FramebufferHandle framebuffer;
 		DescriptorSetLayoutsHandle descriptorSetLayouts;
 		DescriptorSetsHandle descriptorSets;
+		PipelineLayoutHandle pipelineLayout;
 	};
 
 	struct GraphicsNode : GraphNode {
