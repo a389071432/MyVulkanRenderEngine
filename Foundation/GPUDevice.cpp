@@ -59,7 +59,7 @@ namespace zzcVulkanRenderEngine {
 		return descriptorSetsPool.get_resource(handle);
 	}
 
-	TextureHandle GPUDevice::createTexture(TextureCreation createInfo) {
+	TextureHandle GPUDevice::createTexture(const TextureCreation createInfo) {
 		// Require a resource first
 		TextureHandle handle = requireTexture();
 		Texture& texture = getTexture(handle);
@@ -132,7 +132,7 @@ namespace zzcVulkanRenderEngine {
 		return handle;
 	}
 
-	DescriptorSetLayoutsHandle GPUDevice::createDescriptorSetLayouts(DescriptorSetLayoutsCreation createInfo) {
+	DescriptorSetLayoutsHandle GPUDevice::createDescriptorSetLayouts(const DescriptorSetLayoutsCreation createInfo) {
 		// Require a resource first
 		DescriptorSetLayoutsHandle handle = requireDescriptorSetLayouts();
 		std::vector<VkDescriptorSetLayout>& layouts = getDescriptorSetLayouts(handle);
@@ -140,7 +140,7 @@ namespace zzcVulkanRenderEngine {
 		// Count for the required number of descriptor sets
 		sizet maxSet = 0;
 		for (u32 i = 0; i < createInfo.bindings.size(); i++) {
-			BindingDesc& binding = createInfo.bindings.at(i);
+			const BindingDesc& binding = createInfo.bindings.at(i);
 			maxSet = binding.groupId > maxSet ? binding.groupId : maxSet;
 		}
 
@@ -200,13 +200,13 @@ namespace zzcVulkanRenderEngine {
 		return handle;
 	}
 
-	void GPUDevice::writeDescriptorSets(std::vector<DescriptorSetWrite>& writes, DescriptorSetsHandle setsHandle) {
+	void GPUDevice::writeDescriptorSets(const std::vector<DescriptorSetWrite>& writes, DescriptorSetsHandle setsHandle) {
 		std::vector<VkDescriptorSet>& sets = getDescriptorSets(setsHandle);
 
 		std::vector<VkWriteDescriptorSet>updates;
 		updates.resize(writes.size());
 		for (u32 i = 0; i < writes.size(); i++) {
-			DescriptorSetWrite& write = writes.at(i);
+			const DescriptorSetWrite& write = writes.at(i);
 			VkWriteDescriptorSet& update = updates.at(i);
 			update.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			update.descriptorCount = 1;
@@ -232,11 +232,11 @@ namespace zzcVulkanRenderEngine {
 		vkUpdateDescriptorSets(device, static_cast<uint32_t>(updates.size()), updates.data(), 0, nullptr);
 	}
 
-	RenderPassHandle GPUDevice::createRenderPass(RenderPassCreation createInfo) {
+	RenderPassHandle GPUDevice::createRenderPass(const RenderPassCreation createInfo) {
 		RenderPassHandle handle = requireRenderPass();
 		VkRenderPass& renderPass = getRenderPass(handle);
 
-		std::vector<RenderAttachmentInfo>& attachmentInfos = createInfo.attachmentInfos;
+		const std::vector<RenderAttachmentInfo>& attachmentInfos = createInfo.attachmentInfos;
 
 		std::vector<VkAttachmentDescription> attachDescs;
 		attachDescs.resize(attachmentInfos.size());
@@ -315,7 +315,7 @@ namespace zzcVulkanRenderEngine {
 	}
 
 	// TODO: add support for push constants
-	PipelineLayoutHandle GPUDevice::createPipelineLayout(PipelineLayoutCreation createInfo) {
+	PipelineLayoutHandle GPUDevice::createPipelineLayout(const PipelineLayoutCreation createInfo) {
 		PipelineLayoutHandle handle = requirePipelineLayout();
 		VkPipelineLayout& pipelineLayout = getPipelineLayout(handle);
 
@@ -336,7 +336,7 @@ namespace zzcVulkanRenderEngine {
 
 	// TODO: add dynamic states support
 	// TODO: add support for pipelineCache
-	GraphicsPipelineHandle GPUDevice::createGraphicsPipeline(GraphicsPipelineCreation createInfo) {
+	GraphicsPipelineHandle GPUDevice::createGraphicsPipeline(const GraphicsPipelineCreation createInfo) {
 		GraphicsPipelineHandle handle = requireGraphicsPipeline();
 		VkPipeline& pipeline = getGraphicsPipeline(handle);
 
@@ -506,7 +506,7 @@ namespace zzcVulkanRenderEngine {
 		return handle;
 	}
 
-	FramebufferHandle GPUDevice::createFramebuffer(FramebufferCreation createInfo) {
+	FramebufferHandle GPUDevice::createFramebuffer(const FramebufferCreation createInfo) {
 		FramebufferHandle handle = requireFramebuffer();
 		VkFramebuffer& framebuffer = getFramebuffer(handle);
 

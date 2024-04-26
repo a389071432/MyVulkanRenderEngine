@@ -21,15 +21,15 @@ namespace zzcVulkanRenderEngine {
 		~GPUDevice();
 
 		// Resource creation
-		TextureHandle createTexture(TextureCreation createInfo);
+		TextureHandle createTexture(const TextureCreation createInfo);
 		BufferHandle createBuffer();
-		DescriptorSetLayoutsHandle createDescriptorSetLayouts(DescriptorSetLayoutsCreation createInfo);
-		DescriptorSetsHandle createDescriptorSets(DescriptorSetsAlloc allocInfo);
-		void writeDescriptorSets(std::vector<DescriptorSetWrite>& writes, DescriptorSetsHandle setsHandle);
-		RenderPassHandle createRenderPass(RenderPassCreation createInfo);
-		PipelineLayoutHandle createPipelineLayout(PipelineLayoutCreation createInfo);
-		GraphicsPipelineHandle createGraphicsPipeline(GraphicsPipelineCreation createInfo);
-		FramebufferHandle createFramebuffer(FramebufferCreation createInfo);
+		DescriptorSetLayoutsHandle createDescriptorSetLayouts(const DescriptorSetLayoutsCreation createInfo);
+		DescriptorSetsHandle createDescriptorSets(const DescriptorSetsAlloc allocInfo);
+		void writeDescriptorSets(const std::vector<DescriptorSetWrite>& writes, DescriptorSetsHandle setsHandle);
+		RenderPassHandle createRenderPass(const RenderPassCreation createInfo);
+		PipelineLayoutHandle createPipelineLayout(const PipelineLayoutCreation createInfo);
+		GraphicsPipelineHandle createGraphicsPipeline(const GraphicsPipelineCreation createInfo);
+		FramebufferHandle createFramebuffer(const FramebufferCreation createInfo);
 
 		// Resource access
 		TextureHandle requireTexture();
