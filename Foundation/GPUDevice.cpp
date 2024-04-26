@@ -10,11 +10,86 @@ namespace zzcVulkanRenderEngine {
 
 		cmdBuffers.resize(maxFrameInFlight);
 
-		// TODO: Create vulkan instance (study details before doing this)
+		// TODO: create windowSurface
+		
+		// CREATE VULKAN INSTANCE
+		// TODO: glfw extensions
+		VkInstanceCreateInfo instanceCI{};
+		instanceCI.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+		instanceCI.enabledExtensionCount = 0;
+		instanceCI.ppEnabledExtensionNames = nullptr;
+		VkApplicationInfo appInfo{};
+		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+		appInfo.apiVersion = VK_API_VERSION_1_3;
+		appInfo.applicationVersion = VK_MAKE_VERSION(0, 0, 1);
+		appInfo.pApplicationName = "zzc Vulkan Render Engine";
+		appInfo.engineVersion = VK_MAKE_VERSION(0, 0, 1);
+		appInfo.pEngineName = "zzc Vulkan Render Engine";
+		instanceCI.pApplicationInfo = &appInfo;
+		ASSERT(
+			vkCreateInstance(&instanceCI, nullptr, &vkInstance) == VK_SUCCESS,
+			"Assertion failed: CreateInstanceFailed!"
+		);
 
-		// TODO: Create physical device (study details before doing this)
+		// PICK PHYSICAL DEVICE
+		// TODO: check for extension support
+		uint32_t phyDeviceCnt;
+		ASSERT(
+			vkEnumeratePhysicalDevices(vkInstance, &phyDeviceCnt, nullptr)==VK_SUCCESS,
+			"Assertion failed: EnumeratePhysicalDevices failed!"
+		);
+		std::vector<VkPhysicalDevice>physicalDevices;
+		ASSERT(
+			vkEnumeratePhysicalDevices(vkInstance, &phyDeviceCnt, physicalDevices.data()) == VK_SUCCESS,
+			"Assertion failed: EnumeratePhysicalDevices failed!"
+		);
+		VkPhysicalDevice discreteGPU = VK_NULL_HANDLE;
+		VkPhysicalDevice integrateGPU = VK_NULL_HANDLE;
+		for (const auto& phyDevice : physicalDevices) {
+			VkPhysicalDeviceProperties properties;
+			VkPhysicalDeviceFeatures features;
+			vkGetPhysicalDeviceProperties(phyDevice, &properties);
+			vkGetPhysicalDeviceFeatures(physicalDevice, &features);
+			if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && helper_checkQueueSatisfication(phyDevice,createInfo.requireQueueFamlies)) {
+				discreteGPU = phyDevice;
+				break;
+			}
+			if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU && helper_checkQueueSatisfication(phyDevice, createInfo.requireQueueFamlies)) {
+				integrateGPU = phyDevice;
+			}
+		}
+		if (discreteGPU != VK_NULL_HANDLE) {
+			physicalDevice = discreteGPU;
+		}
+		else if (integrateGPU != VK_NULL_HANDLE) {
+			physicalDevice = integrateGPU;
+		}
+		else {
+			ASSERT(false, "Assertion failed: no GPU detected!");
+		}
 
-		// TODO: Create logical device (study details before doing this)
+		// TODO: CREATE LOGICAL DEVICE (study details before doing this)
+		// TODO: enable a set of extensions (study Raptor for details)
+		QueueFamilyInfos queueFamilyInfos = helper_selectQueueFamilies(physicalDevice, createInfo.requireQueueFamlies);
+		std::vector<VkDeviceQueueCreateInfo> queueCIs = helper_getQueueCreateInfos(queueFamilyInfos,createInfo.requireQueueFamlies);
+		VkDeviceCreateInfo deviceCI{};
+		deviceCI.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+		deviceCI.queueCreateInfoCount = static_cast<uint32_t>(queueCIs.size());
+		deviceCI.pQueueCreateInfos = queueCIs.data();
+
+		ASSERT(
+			vkCreateDevice(physicalDevice, &deviceCI, nullptr, &device) == VK_SUCCESS,
+			"Assertion failed: CreateDevice failed!"
+		);
+
+		vkGetDeviceQueue(device, queueFamilyInfos.presentQueue.familyIndex, queueFamilyInfos.presentQueue.queueIndex, &presentQueue);
+		if (createInfo.requireQueueFamlies & VK_QUEUE_GRAPHICS_BIT) 
+			vkGetDeviceQueue(device, queueFamilyInfos.mainQueue.familyIndex, queueFamilyInfos.mainQueue.queueIndex, &mainQueue);
+		if (createInfo.requireQueueFamlies & VK_QUEUE_COMPUTE_BIT)
+			vkGetDeviceQueue(device, queueFamilyInfos.computeQueue.familyIndex, queueFamilyInfos.computeQueue.queueIndex, &computeQueue);
+		if (createInfo.requireQueueFamlies & VK_QUEUE_TRANSFER_BIT)
+			vkGetDeviceQueue(device, queueFamilyInfos.transferQueue.familyIndex, queueFamilyInfos.transferQueue.queueIndex, &transferQueue);
+
 
 		// TODO: Create descriptorPool
 
@@ -533,6 +608,134 @@ namespace zzcVulkanRenderEngine {
 		);
 
 		return handle;
+	}
+
+	// helper: check whether the physical device support all required types of queues
+	// return true if all required types of queues satisfied and that the device supports presentation
+	// TODO: more types of queue support
+	bool GPUDevice::helper_checkQueueSatisfication(VkPhysicalDevice phyDevice, u32 requiredQueues) {
+		u32 propertyCnt;
+		vkGetPhysicalDeviceQueueFamilyProperties(phyDevice, &propertyCnt, nullptr);
+		std::vector<VkQueueFamilyProperties> properties(propertyCnt);
+		vkGetPhysicalDeviceQueueFamilyProperties(phyDevice, &propertyCnt, properties.data());
+
+		bool graphics = false;
+		bool compute = false;
+		bool transfer = false;
+		VkBool32 supportSurface = false;
+		for (u32 i = 0; i < propertyCnt; i++) {
+			auto& prop = properties.at(i);
+			if (prop.queueCount>0) {
+				vkGetPhysicalDeviceSurfaceSupportKHR(phyDevice, i, windowSurface, &supportSurface);
+			}
+			if ((prop.queueCount > 0) && (prop.queueFlags & VK_QUEUE_GRAPHICS_BIT))
+				graphics = true;
+			if ((prop.queueCount > 0) && (prop.queueFlags & VK_QUEUE_COMPUTE_BIT))
+				compute = true;
+			if ((prop.queueCount > 0) && (prop.queueFlags & VK_QUEUE_TRANSFER_BIT))
+				transfer = true;
+		}
+
+		if((requiredQueues & VK_QUEUE_GRAPHICS_BIT) && (!graphics))
+			return false;
+		if ((requiredQueues & VK_QUEUE_COMPUTE_BIT) && (!compute))
+			return false;
+		if ((requiredQueues & VK_QUEUE_TRANSFER_BIT) && (!transfer))
+			return false;
+		if (!supportSurface)
+			return false;
+
+		return true;
+	}
+
+	// helper: get indices of required queue families
+	// by default to have only one queue for each required family
+	// for now simply pick the first queue for each type that satisfies
+	// TODO: may extend to support multiple queues per family
+	// TODO: a better strategy to select queues
+	// TODO: for transfer queue
+	QueueFamilyInfos GPUDevice::helper_selectQueueFamilies(VkPhysicalDevice phyDevice, u32 requiredQueues) {
+		QueueFamilyInfos familyInfos;
+
+		u32 propertyCnt;
+		vkGetPhysicalDeviceQueueFamilyProperties(phyDevice, &propertyCnt, nullptr);
+		std::vector<VkQueueFamilyProperties> properties(propertyCnt);
+		vkGetPhysicalDeviceQueueFamilyProperties(phyDevice, &propertyCnt, properties.data());
+
+		// select for present queue (this is always required by the application)
+		for (u32 i = 0; i < propertyCnt; i++) {
+			auto& prop = properties.at(i);
+			if (prop.queueCount > 0) {
+				VkBool32 supportSurface = false;
+				vkGetPhysicalDeviceSurfaceSupportKHR(phyDevice, i, windowSurface, &supportSurface);
+				if (supportSurface) {
+					familyInfos.presentQueue.familyIndex = i;
+					familyInfos.presentQueue.queueIndex = 0;
+					break;
+				}
+			}
+		}
+
+		// select for graphics queue
+		if (requiredQueues & VK_QUEUE_GRAPHICS_BIT) {
+			for (u32 i = 0; i < propertyCnt; i++) {
+				auto& prop = properties.at(i);
+				if ((prop.queueCount > 0) && (prop.queueFlags & VK_QUEUE_GRAPHICS_BIT)) {
+					familyInfos.mainQueue.familyIndex = i;
+					familyInfos.mainQueue.queueIndex = 0;
+					break;
+				}
+			}
+		}
+
+		// select for compute queue
+		if (requiredQueues & VK_QUEUE_COMPUTE_BIT) {
+			for (u32 i = 0; i < propertyCnt; i++) {
+				auto& prop = properties.at(i);
+				if ((prop.queueCount > 0) && (prop.queueFlags & VK_QUEUE_COMPUTE_BIT)) {
+					familyInfos.computeQueue.familyIndex = i;
+					familyInfos.computeQueue.queueIndex = 0;
+					break;
+				}
+			}
+		} 
+
+		// try to merge graphics and compute in a single family
+		if (requiredQueues & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)) {
+			auto& graphicsProp = properties.at(familyInfos.mainQueue.familyIndex);
+			if (graphicsProp.queueFlags & VK_QUEUE_COMPUTE_BIT) {
+				familyInfos.computeQueue.familyIndex = familyInfos.mainQueue.familyIndex;
+				familyInfos.computeQueue.queueIndex = graphicsProp.queueCount > 1 ? 1 : 0;
+			}
+		}
+		return familyInfos;
+	}
+
+	//TODO: priorities for queue
+	std::vector<VkDeviceQueueCreateInfo>& GPUDevice::helper_getQueueCreateInfos(QueueFamilyInfos queueInfos, u32 requiredQueues) {
+		std::vector<VkDeviceQueueCreateInfo> CIs;
+
+		VkDeviceQueueCreateInfo CI{};
+		CI.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		CI.queueCount = 1;
+		float prior = 1.0;
+		CI.pQueuePriorities = &prior;
+
+		if (requiredQueues & VK_QUEUE_GRAPHICS_BIT) {
+			CI.queueFamilyIndex = queueInfos.mainQueue.familyIndex;
+			CIs.push_back(CI);
+		}
+
+		if (requiredQueues & VK_QUEUE_COMPUTE_BIT) {
+			CI.queueFamilyIndex = queueInfos.computeQueue.familyIndex;
+			CIs.push_back(CI);
+		}
+		if (requiredQueues & VK_QUEUE_TRANSFER_BIT) {
+			CI.queueFamilyIndex = queueInfos.transferQueue.familyIndex;
+			CIs.push_back(CI);
+		}
+
+		return CIs;
 	}
 
 	// TODO: handle all types of shader extensions 

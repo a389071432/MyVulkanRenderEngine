@@ -12,7 +12,19 @@ namespace zzcVulkanRenderEngine {
 
 	// TODO: fill in this 
 	struct GPUDeviceCreation {
+		u32 requireQueueFamlies = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT;
+	};
 
+	struct QueueInfo {
+		u32 familyIndex;
+		u32 queueIndex;
+	};
+	// TODO: add more types
+	struct QueueFamilyInfos {
+		QueueInfo mainQueue;
+		QueueInfo computeQueue;
+		QueueInfo transferQueue;
+		QueueInfo presentQueue;
 	};
 
 	class GPUDevice {
@@ -56,6 +68,9 @@ namespace zzcVulkanRenderEngine {
 		//Vulkan instance 
 		VkInstance vkInstance;
 
+		// Window surface
+		VkSurfaceKHR windowSurface;
+
 		// Swapchain size (provided by Engine)
 		u32 swapChainWidth;
 		u32 swapChainHeight;
@@ -67,6 +82,12 @@ namespace zzcVulkanRenderEngine {
 		VkPhysicalDevice physicalDevice;
 		VkPhysicalDeviceProperties deviceProperties;
 		VkDevice device;
+
+		// Queue related
+		VkQueue mainQueue;
+		VkQueue computeQueue;
+		VkQueue transferQueue;
+		VkQueue presentQueue;
 
 		// Command buffers
 		std::vector<CommandBuffer> cmdBuffers;
@@ -82,6 +103,9 @@ namespace zzcVulkanRenderEngine {
 		ResourcePool<VkPipeline, ComputePipelineHandle> computePipelinePool;
 
 		// helpers
+		bool helper_checkQueueSatisfication(VkPhysicalDevice phyDevice,u32 requiredQueues);
+		QueueFamilyInfos helper_selectQueueFamilies(VkPhysicalDevice phyDevice, u32 requiredQueues);
+		std::vector<VkDeviceQueueCreateInfo>& helper_getQueueCreateInfos(QueueFamilyInfos queueInfos,u32 requiredQueues);
 		VkShaderModule helper_createShaderModule(const std::vector<char>& code);
 	};
 }
