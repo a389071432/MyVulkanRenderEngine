@@ -2,6 +2,7 @@
 #include"assert.h"
 #include"utils/utils.h"
 #include<array>
+#include<algorithm>
 
 namespace zzcVulkanRenderEngine {
 	GPUDevice::GPUDevice(GPUDeviceCreation createInfo) :texturePool(defaultPoolSize), bufferPool(defaultPoolSize) {
@@ -50,11 +51,17 @@ namespace zzcVulkanRenderEngine {
 			VkPhysicalDeviceFeatures features;
 			vkGetPhysicalDeviceProperties(phyDevice, &properties);
 			vkGetPhysicalDeviceFeatures(physicalDevice, &features);
-			if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && helper_checkQueueSatisfication(phyDevice,createInfo.requireQueueFamlies)) {
+			if (
+				properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU 
+				&& helper_checkQueueSatisfication(phyDevice,createInfo.requireQueueFamlies)
+				&& helper_checkExtensionSupport(phyDevice,createInfo.requiredExtensions)) {
 				discreteGPU = phyDevice;
 				break;
 			}
-			if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU && helper_checkQueueSatisfication(phyDevice, createInfo.requireQueueFamlies)) {
+			if (
+				properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU 
+				&& helper_checkQueueSatisfication(phyDevice, createInfo.requireQueueFamlies)
+				&& helper_checkExtensionSupport(phyDevice, createInfo.requiredExtensions)) {
 				integrateGPU = phyDevice;
 			}
 		}
@@ -68,14 +75,16 @@ namespace zzcVulkanRenderEngine {
 			ASSERT(false, "Assertion failed: no GPU detected!");
 		}
 
-		// TODO: CREATE LOGICAL DEVICE (study details before doing this)
+		// CREATE LOGICAL DEVICE (study details before doing this)
 		// TODO: enable a set of extensions (study Raptor for details)
-		QueueFamilyInfos queueFamilyInfos = helper_selectQueueFamilies(physicalDevice, createInfo.requireQueueFamlies);
+		queueFamilyInfos = helper_selectQueueFamilies(physicalDevice, createInfo.requireQueueFamlies);
 		std::vector<VkDeviceQueueCreateInfo> queueCIs = helper_getQueueCreateInfos(queueFamilyInfos,createInfo.requireQueueFamlies);
 		VkDeviceCreateInfo deviceCI{};
 		deviceCI.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		deviceCI.queueCreateInfoCount = static_cast<uint32_t>(queueCIs.size());
 		deviceCI.pQueueCreateInfos = queueCIs.data();
+		deviceCI.enabledExtensionCount = static_cast<uint32_t>(createInfo.requiredExtensions.size());
+		deviceCI.ppEnabledExtensionNames = createInfo.requiredExtensions.data();
 
 		ASSERT(
 			vkCreateDevice(physicalDevice, &deviceCI, nullptr, &device) == VK_SUCCESS,
@@ -91,10 +100,6 @@ namespace zzcVulkanRenderEngine {
 			vkGetDeviceQueue(device, queueFamilyInfos.transferQueue.familyIndex, queueFamilyInfos.transferQueue.queueIndex, &transferQueue);
 
 
-		// TODO: Create descriptorPool
-
-		// TODO: Create commandBuffers
-
 		// Create VMA allocator
 		VmaAllocatorCreateInfo allocatorCI = {};
 		allocatorCI.physicalDevice = physicalDevice;
@@ -104,6 +109,86 @@ namespace zzcVulkanRenderEngine {
 			vmaCreateAllocator(&allocatorCI, &vmaAllocator) == VK_SUCCESS,
 			"Assertion failed: VMA Allocator creation failed!"
 		);
+
+		// TODO: Create descriptorPool
+
+		// CREATE COMMANDPOOL
+		VkCommandPoolCreateInfo cmdPoolCI{};
+		cmdPoolCI.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		cmdPoolCI.queueFamilyIndex = static_cast<uint32_t>(queueFamilyInfos.mainQueue.familyIndex);
+		cmdPoolCI.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		ASSERT(
+			vkCreateCommandPool(device, &cmdPoolCI, nullptr, &commandPool) == VK_SUCCESS,
+			"Assertion failed: CreateCommandPool failed!"
+		);
+
+        // CREATE COMMAND BUFFERS
+		// TODO: multithreads
+		// TODO: secondary command buffer
+		// TODO: (study this for details: https://github.com/ARM-software/vulkan_best_practice_for_mobile_developers/blob/master/samples/performance/command_buffer_usage/command_buffer_usage_tutorial.md)
+		cmdBuffers.resize(frameInFlight);
+		for (u32 i = 0; i < cmdBuffers.size(); i++) {
+			VkCommandBufferAllocateInfo cmdAllocInfo{};
+			cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			cmdAllocInfo.commandBufferCount = 1;
+			cmdAllocInfo.commandPool = commandPool;
+			cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			ASSERT(
+				vkAllocateCommandBuffers(device, &cmdAllocInfo, &cmdBuffers.at(i).getCmdBuffer()) == VK_SUCCESS,
+				"Assertion failed: AllocateCommandBuffers failed!"
+			);
+		}
+
+		// TODO: CREATE SWAPCHAIN
+		SwapChainSupportDetails swapChainSupport = helper_querySwapChainSupport(physicalDevice);
+
+		VkSurfaceFormatKHR surfaceFormat = helper_selectSwapSurfaceFormat(swapChainSupport.formats);
+		VkPresentModeKHR presentMode = helper_selectSwapPresentMode(swapChainSupport.presentModes);
+		VkExtent2D extent = helper_selectSwapExtent(swapChainSupport.capabilities);
+
+		uint32_t imageCount = nSwapChainImages > swapChainSupport.capabilities.minImageCount + 1 ? 
+			nSwapChainImages : swapChainSupport.capabilities.minImageCount + 1;
+		if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
+			imageCount = swapChainSupport.capabilities.maxImageCount;
+		}
+
+		VkSwapchainCreateInfoKHR swapChainCI{};
+		swapChainCI.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+		swapChainCI.surface = windowSurface;
+
+		swapChainCI.minImageCount = imageCount;
+		swapChainCI.imageFormat = surfaceFormat.format;
+		swapChainCI.imageColorSpace = surfaceFormat.colorSpace;
+		swapChainCI.imageExtent = extent;
+		swapChainCI.imageArrayLayers = 1;
+		swapChainCI.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		swapChainCI.preTransform = swapChainSupport.capabilities.currentTransform;
+		swapChainCI.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+		swapChainCI.presentMode = presentMode;
+		swapChainCI.clipped = VK_TRUE;
+		swapChainCI.oldSwapchain = VK_NULL_HANDLE;
+
+		if (queueFamilyInfos.mainQueue.familyIndex != queueFamilyInfos.presentQueue.familyIndex) {
+			swapChainCI.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+			swapChainCI.queueFamilyIndexCount = 2;
+			std::vector<uint32_t>indices = { queueFamilyInfos.mainQueue.familyIndex ,queueFamilyInfos.presentQueue.familyIndex };
+			swapChainCI.pQueueFamilyIndices = indices.data();
+		}
+		else {
+			swapChainCI.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		}
+
+		ASSERT(
+			vkCreateSwapchainKHR(device, &swapChainCI, nullptr, &swapChain) == VK_SUCCESS,
+			"Assertion failed: CreateSwapchain failed!"
+		);
+
+		vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
+		swapChainImages.resize(imageCount);
+		vkGetSwapchainImagesKHR(device, swapChain, &imageCount, swapChainImages.data());
+
+		swapChainFormat = surfaceFormat.format;
+		swapChainExtent = extent;
 	}
 
 	GPUDevice::~GPUDevice() {
@@ -646,6 +731,73 @@ namespace zzcVulkanRenderEngine {
 			return false;
 
 		return true;
+	}
+
+	bool GPUDevice::helper_checkExtensionSupport(VkPhysicalDevice phyDevice, const std::vector<const char*>& requiredExtensions) {
+		uint32_t extensionsCnt;
+		vkEnumerateDeviceExtensionProperties(phyDevice, nullptr, &extensionsCnt, nullptr);
+		std::vector<VkExtensionProperties> availableExtensions(extensionsCnt);
+		vkEnumerateDeviceExtensionProperties(phyDevice, nullptr, &extensionsCnt, availableExtensions.data());
+
+		for (const auto& extension : requiredExtensions) {
+			auto it = std::find(availableExtensions.begin(), availableExtensions.end(), extension);
+			if (it == availableExtensions.end())
+				return false;
+		}
+		return true;
+	}
+
+	SwapChainSupportDetails GPUDevice::helper_querySwapChainSupport(VkPhysicalDevice phyDevice) {
+		SwapChainSupportDetails details;
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(phyDevice, windowSurface, &details.capabilities);
+
+		uint32_t formatsCnt;
+		vkGetPhysicalDeviceSurfaceFormatsKHR(phyDevice, windowSurface, &formatsCnt,nullptr);
+		details.formats.resize(formatsCnt);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(phyDevice, windowSurface, &formatsCnt, details.formats.data());
+
+		uint32_t presentModesCnt;
+		vkGetPhysicalDeviceSurfacePresentModesKHR(phyDevice, windowSurface, &presentModesCnt, nullptr);
+		details.presentModes.resize(presentModesCnt);
+		vkGetPhysicalDeviceSurfacePresentModesKHR(phyDevice, windowSurface, &presentModesCnt,details.presentModes.data());
+	}
+
+	VkSurfaceFormatKHR GPUDevice::helper_selectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
+		for (const auto& availableFormat : availableFormats) {
+			if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+				return availableFormat;
+			}
+		}
+		return availableFormats[0];
+	}
+
+	VkPresentModeKHR GPUDevice::helper_selectSwapPresentMode(const std::vector<VkPresentModeKHR>& availableModes) {
+		for (const auto& mode : availableModes) {
+			if (mode == VK_PRESENT_MODE_MAILBOX_KHR) {
+				return mode;
+			}
+		}
+		return VK_PRESENT_MODE_FIFO_KHR;
+	}
+
+	VkExtent2D GPUDevice::helper_selectSwapExtent(const VkSurfaceCapabilitiesKHR capabilities) {
+		if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+			return capabilities.currentExtent;
+		}
+		else {
+			int width, height;
+			glfwGetFramebufferSize(window, &width, &height);
+
+			VkExtent2D actualExtent = {
+				static_cast<uint32_t>(width),
+				static_cast<uint32_t>(height)
+			};
+
+			actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+			actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+
+			return actualExtent;
+		}
 	}
 
 	// helper: get indices of required queue families

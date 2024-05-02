@@ -10,6 +10,10 @@ namespace zzcVulkanRenderEngine {
 
 	}
 
+	VkCommandBuffer& CommandBuffer::getCmdBuffer() {
+		return cmdBuffer;
+	}
+
 	void CommandBuffer::cmdBeginRenderPass(VkRenderPass renderpass, VkFramebuffer framebuffer) {
 
 	}

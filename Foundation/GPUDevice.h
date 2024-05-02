@@ -7,12 +7,14 @@
 
 namespace zzcVulkanRenderEngine {
 	// Default configs
-	const u32 defaultPoolSize = 256;
-	const u32 maxFrameInFlight = 2;
+	const u32 DEFAULT_POOL_SIZE = 256;
+	const u32 MAX_FRAME_IN_FLIGHT = 2;
+	const u32 SWAPCHAIN_IMAGES = 3;
 
 	// TODO: fill in this 
 	struct GPUDeviceCreation {
 		u32 requireQueueFamlies = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT;
+		std::vector<const char*> requiredExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 	};
 
 	struct QueueInfo {
@@ -25,6 +27,12 @@ namespace zzcVulkanRenderEngine {
 		QueueInfo computeQueue;
 		QueueInfo transferQueue;
 		QueueInfo presentQueue;
+	};
+
+	struct SwapChainSupportDetails {
+		VkSurfaceCapabilitiesKHR capabilities;
+		std::vector<VkSurfaceFormatKHR> formats;
+		std::vector<VkPresentModeKHR> presentModes;
 	};
 
 	class GPUDevice {
@@ -62,6 +70,11 @@ namespace zzcVulkanRenderEngine {
 		VkPipeline& getGraphicsPipeline(GraphicsPipelineHandle handle);
 
 	private:
+		// Default settings 
+		// may be later moved to Engine class
+		const u32 frameInFlight = MAX_FRAME_IN_FLIGHT;
+		const u32 nSwapChainImages = SWAPCHAIN_IMAGES;
+
 		// File handler
 		FileHandler fileHandler;
 
@@ -71,9 +84,13 @@ namespace zzcVulkanRenderEngine {
 		// Window surface
 		VkSurfaceKHR windowSurface;
 
-		// Swapchain size (provided by Engine)
+		// Swapchain related
 		u32 swapChainWidth;
 		u32 swapChainHeight;
+		VkSwapchainKHR swapChain;
+		std::vector<VkImage> swapChainImages;
+		VkFormat swapChainFormat;
+		VkExtent2D swapChainExtent;
 
 		// GPU memory allocator. Currently using a default one provided by VMA
 		VmaAllocator vmaAllocator;
@@ -84,12 +101,14 @@ namespace zzcVulkanRenderEngine {
 		VkDevice device;
 
 		// Queue related
+		QueueFamilyInfos queueFamilyInfos;
 		VkQueue mainQueue;
 		VkQueue computeQueue;
 		VkQueue transferQueue;
 		VkQueue presentQueue;
 
-		// Command buffers
+		// Command buffer related
+		VkCommandPool commandPool;
 		std::vector<CommandBuffer> cmdBuffers;
 
 		// Descriptor pool
@@ -104,6 +123,11 @@ namespace zzcVulkanRenderEngine {
 
 		// helpers
 		bool helper_checkQueueSatisfication(VkPhysicalDevice phyDevice,u32 requiredQueues);
+		bool helper_checkExtensionSupport(VkPhysicalDevice phyDevice, const std::vector<const char*>& requiredExtensions);
+		SwapChainSupportDetails helper_querySwapChainSupport(VkPhysicalDevice phyDevice);
+		VkSurfaceFormatKHR helper_selectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+		VkPresentModeKHR helper_selectSwapPresentMode(const std::vector<VkPresentModeKHR>& availableModes);
+		VkExtent2D helper_selectSwapExtent(const VkSurfaceCapabilitiesKHR capabilities);
 		QueueFamilyInfos helper_selectQueueFamilies(VkPhysicalDevice phyDevice, u32 requiredQueues);
 		std::vector<VkDeviceQueueCreateInfo>& helper_getQueueCreateInfos(QueueFamilyInfos queueInfos,u32 requiredQueues);
 		VkShaderModule helper_createShaderModule(const std::vector<char>& code);
