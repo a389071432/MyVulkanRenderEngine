@@ -54,6 +54,9 @@
     <ClInclude Include="Foundation\FileHandler.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Foundation\Engine.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Foundation\RenderGraph.cpp">
@@ -69,6 +72,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Foundation\FileHandler.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Foundation\Engine.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

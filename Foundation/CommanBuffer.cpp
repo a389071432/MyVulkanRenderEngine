@@ -10,7 +10,7 @@ namespace zzcVulkanRenderEngine {
 
 	}
 
-	VkCommandBuffer& CommandBuffer::getCmdBuffer() {
+	inline VkCommandBuffer CommandBuffer::getCmdBuffer() {
 		return cmdBuffer;
 	}
 

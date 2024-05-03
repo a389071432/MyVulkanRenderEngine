@@ -40,6 +40,13 @@ namespace zzcVulkanRenderEngine {
 		GPUDevice(GPUDeviceCreation createInfo);
 		~GPUDevice();
 
+		// methods for picking members, used by Engine
+		VkDevice getDevice();
+		VkSwapchainKHR getSwapChain();
+		CommandBuffer& getCommandBuffer(u32 index);
+		VkQueue getMainQueue();
+		VkQueue getPresentQueue();
+
 		// Resource creation
 		TextureHandle createTexture(const TextureCreation createInfo);
 		BufferHandle createBuffer();

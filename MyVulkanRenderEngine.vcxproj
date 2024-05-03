@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClInclude Include="Foundation\assert.h" />
     <ClInclude Include="Foundation\datatypes.h" />
+    <ClInclude Include="Foundation\Engine.h" />
     <ClInclude Include="Foundation\enums.h" />
     <ClInclude Include="Foundation\FileHandler.h" />
     <ClInclude Include="Foundation\memoryManagement.h" />
@@ -163,6 +164,7 @@
     <ClInclude Include="utils\utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Foundation\Engine.cpp" />
     <ClCompile Include="Foundation\FileHandler.cpp" />
     <ClCompile Include="Foundation\RenderGraph.cpp" />
     <ClCompile Include="Foundation\Resource.cpp" />

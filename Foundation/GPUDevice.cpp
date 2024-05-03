@@ -195,6 +195,27 @@ namespace zzcVulkanRenderEngine {
 
 	}
 
+	inline VkDevice GPUDevice::getDevice() {
+		return device;
+	}
+
+	inline VkSwapchainKHR GPUDevice::getSwapChain() {
+		return swapChain;
+	}
+
+	inline CommandBuffer& GPUDevice::getCommandBuffer(u32 index) {
+		ASSERT(index >= 0 && index < cmdBuffers.size(), "Invalid index for getting commandBuffer!");
+		return cmdBuffers.at(index);
+	}
+
+	inline VkQueue GPUDevice::getMainQueue() {
+		return mainQueue;
+	}
+
+	inline VkQueue GPUDevice::getPresentQueue() {
+		return presentQueue;
+	}
+
 	TextureHandle GPUDevice::requireTexture() {
 		return texturePool.require_resource();
 	}
