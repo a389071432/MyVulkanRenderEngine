@@ -66,7 +66,14 @@ namespace zzcVulkanRenderEngine {
 		GraphNode& setType(GraphNodeType type);
 		GraphNode& setInputs(std::vector<GraphResource> inputs);
 		GraphNode& setOutputs(std::vector<GraphResource> outputs);
+
+		// virtual methods to be overwritten by inherited nodes
+		// init() may include logic for creating buffer/image objects and registering handles for external input resources
+		// (note that external resources like PBR textures, camera can be accessed by name and registered by handle, this is automatically done in compile())
+		// execute() may include logic for binding pipeline/vertex/indices/descriptorsets
+		virtual void init();
 		virtual void execute();
+
 
 		// automatically generated
 		// TODO: following resources should be considered as Resource managed by GPUDevice
@@ -99,6 +106,8 @@ namespace zzcVulkanRenderEngine {
 		std::vector<GraphNode> nodes;
 		std::vector<std::vector<GraphNodeHandle>> graph;
 		std::vector<GraphNodeHandle> topologyOrder;
+
+		// TODO: moved to GPUDevice? not sure yet
 		std::map<std::string, TextureHandle> key2TexMap;
 		std::map<std::string, BufferHandle> key2BufferMap;
 		

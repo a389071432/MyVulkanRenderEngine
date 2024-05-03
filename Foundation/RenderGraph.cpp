@@ -43,13 +43,34 @@ namespace zzcVulkanRenderEngine {
 		// for each node, check number of inputs/outputs matches DescriptorSetLayoutsCreation.bindings
 
 		// for each node, check its output attachments have the same size (required to create framebuffer)
+
+		// for each node, check whether the required external input resources exists
+		// if exist, register the handle for that resource
+		for (u32 i = 0; i < nodes.size(); i++) {
+			GraphNode& node = nodes.at(i);
+			for (GraphResource& r : node.inputs) {
+				if (r.isExternal) {
+					if (r.type == GraphResourceType::BUFFER) {
+						auto it = key2BufferMap.find(r.key);
+						ASSERT(it != key2BufferMap.end(), "Invalid external input resource (buffer)", r.key);
+						r.info.buffer.bufferHandle = it->second;
+					}
+					else if (r.type == GraphResourceType::TEXTURE || r.type == GraphResourceType::DEPTH_MAP) {
+						auto it = key2TexMap.find(r.key);
+						ASSERT(it != key2TexMap.end(), "Invalid external input resource (texture)", r.key);
+						r.info.texture.texHandle = it->second;
+					}
+				}
+			}
+		}
+		
 	}
 
 
 	//add edges between nodes according to inputs and outputs
 	void RenderGraph::buildGraph() {
 		//check for validity of the graph 
-
+		checkValidity();
 
 		
 		//a map used to record the producer of resources
