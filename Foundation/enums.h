@@ -9,6 +9,12 @@ namespace zzcVulkanRenderEngine {
 		Texture3D
 	};
 
+	enum class ResourceSharingMode {
+		EXCLUSIVE,
+		CONCURRENT
+	};
+
+
 	enum class BindingType {
 		UNIFORM_BUFFER,
 		IMAGE_SAMPLER,
@@ -30,6 +36,9 @@ namespace zzcVulkanRenderEngine {
 		READ_TEXTURE,
 		WRITE_ATTACHMENT,
 		WRITE_DEPTH,
+		COPY_SRC,
+		COPY_DST,,
+		PRESENT,
 		UNDEFINED
 	};
 

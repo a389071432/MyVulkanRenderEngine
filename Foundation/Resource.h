@@ -58,7 +58,15 @@ namespace zzcVulkanRenderEngine {
 
 	// TODO: fill in this
 	struct BufferCreation {
-
+		u32 size;
+		u16 usage;
+		u16 prop;  // property: device local or ...
+		ResourceSharingMode shareMode = ResourceSharingMode::EXCLUSIVE;
+		
+		BufferCreation& setSize(u32 size);
+		BufferCreation& setUsage(u32 usage);
+		BufferCreation& setProp(u32 prop);
+		BufferCreation& setShareMode(ResourceSharingMode shareMode);
 	};
 
 	struct Buffer {

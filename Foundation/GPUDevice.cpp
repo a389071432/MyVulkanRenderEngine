@@ -139,6 +139,17 @@ namespace zzcVulkanRenderEngine {
 			);
 		}
 
+		// CREATE THE AUXILIARY COMMAND BUFFER
+		VkCommandBufferAllocateInfo cmdAllocInfo{};
+		cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		cmdAllocInfo.commandBufferCount = 1;
+		cmdAllocInfo.commandPool = commandPool;
+		cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		ASSERT(
+			vkAllocateCommandBuffers(device, &cmdAllocInfo, &auxiCmdBuffer.getCmdBuffer()) == VK_SUCCESS,
+			"Assertion failed: Allocate the auxiliary command buffer failed!"
+		);
+
 		// TODO: CREATE SWAPCHAIN
 		SwapChainSupportDetails swapChainSupport = helper_querySwapChainSupport(physicalDevice);
 
@@ -189,6 +200,20 @@ namespace zzcVulkanRenderEngine {
 
 		swapChainFormat = surfaceFormat.format;
 		swapChainExtent = extent;
+
+		// swapchain images are also managed through texture pool
+		for (int i = 0; i < swapChainImages.size();i++) {
+			VkImage& swapImage = swapChainImages[i];
+			TextureHandle handle = requireTexture();
+			Texture& texture = getTexture(handle);
+
+			texture.format = surfaceFormat.format;
+			texture.sampler = VK_NULL_HANDLE;
+			texture.access = GraphResourceAccessType::PRESENT;  
+			texture.image = swapChainImages[i];
+
+			index2handle_swapchain.insert({i,handle});
+		}
 	}
 
 	GPUDevice::~GPUDevice() {
@@ -201,6 +226,16 @@ namespace zzcVulkanRenderEngine {
 
 	inline VkSwapchainKHR GPUDevice::getSwapChain() {
 		return swapChain;
+	}
+
+	TextureHandle GPUDevice::getSwapChainImageByIndex(u32 index) {
+		auto it = index2handle_swapchain.find(index);
+		ASSERT(it != index2handle_swapchain.end(), "Invalid external input resource (buffer)", index);
+		return it->second;
+	}
+
+	VkExtent2D GPUDevice::getSwapChainExtent() {
+		return swapChainExtent;
 	}
 
 	inline CommandBuffer& GPUDevice::getCommandBuffer(u32 index) {
@@ -238,6 +273,14 @@ namespace zzcVulkanRenderEngine {
 
 	std::vector<VkDescriptorSet>& GPUDevice::getDescriptorSets(DescriptorSetsHandle handle) {
 		return descriptorSetsPool.get_resource(handle);
+	}
+
+	void GPUDevice::removeBuffer(BufferHandle handle) {
+		Buffer& buffer = bufferPool.get_resource(handle);
+		vkDestroyBuffer(device, buffer.buffer, nullptr);
+		vkFreeMemory(device, buffer.mem, nullptr);
+		
+		bufferPool.release_resource(handle);
 	}
 
 	TextureHandle GPUDevice::createTexture(const TextureCreation createInfo) {
@@ -309,6 +352,44 @@ namespace zzcVulkanRenderEngine {
 
 		// TODO: create sampler for texture (study details before this) 
 
+
+		return handle;
+	}
+
+	// TODO: allocate mem using VMA
+	BufferHandle GPUDevice::createBuffer(const BufferCreation createInfo) {
+		// Require a resource first
+		BufferHandle handle = requireTexture();
+		Buffer& buffer = getBuffer(handle);
+
+		//create the buffer object
+		VkBufferCreateInfo bufferInfo{};
+		bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferInfo.size = createInfo.size;
+		bufferInfo.usage = createInfo.usage;
+		bufferInfo.sharingMode = util_getSharingMode(createInfo.shareMode);
+		if (VK_SUCCESS != vkCreateBuffer(device, &bufferInfo, nullptr, &buffer.buffer)) {
+			throw std::runtime_error("failed to create buffer!");
+		}
+
+		//query required memory type for the buffer
+		VkMemoryRequirements memoryRequirements;
+		vkGetBufferMemoryRequirements(device, buffer.buffer, &memoryRequirements);
+
+		//find suitable memory type for the buffer
+		uint32_t memoryTypeIndex = helper_findSuitableMemoryType(memoryRequirements.memoryTypeBits, createInfo.prop);
+		VkMemoryAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.memoryTypeIndex = memoryTypeIndex;
+		allocInfo.allocationSize = memoryRequirements.size;
+		if (VK_SUCCESS != vkAllocateMemory(device, &allocInfo, nullptr, &buffer.mem)) {
+			throw std::runtime_error("failed to allocate memory for buffer!");
+		}
+
+		//bind buffer with memory
+		if (VK_SUCCESS != vkBindBufferMemory(device, buffer.buffer, buffer.mem, 0)) {
+			throw std::runtime_error("failed to bind buffer memory!");
+		}
 
 		return handle;
 	}
@@ -716,6 +797,69 @@ namespace zzcVulkanRenderEngine {
 		return handle;
 	}
 
+	template<typename T>
+	BufferHandle& GPUDevice::createBufferFromData(const std::vector<T>& data) {
+
+		VkDeviceSize bufferSize = VkDeviceSize(sizeof(T) * data.size());
+
+		//create vertex buffer (inaccessable by host, exclusive by GPU)
+		BufferCreation mainCI{};
+		mainCI.setSize(bufferSize)
+			.setUsage(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT)
+			.setProp(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+			.setShareMode(ResourceSharingMode::EXCLUSIVE);
+		BufferHandle main = createBuffer(mainCI);
+		Buffer& mainBuffer = getBuffer(main);
+
+		//create staging buffer (accessible by host, only used for transfering vertex data from host to GPU)
+		BufferCreation stageCI{};
+		stageCI.setSize(bufferSize)
+			.setUsage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
+			.setProp(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+			.setShareMode(ResourceSharingMode::EXCLUSIVE);
+		Bufferhandle stage = createBuffer(stageCI);
+		Buffer& stageBuffer = getBuffer(stage);
+
+		//fill in the staging buffer
+		void* pdata;
+		vkMapMemory(device, stageBuffer.mem, 0, bufferSize, 0, &data);
+		memcpy(pdata, data.data(), bufferSize);
+		vkUnmapMemory(device, stageBuffer.mem);
+
+		//transfer the vertices data from staging buffer to vertex buffer (by sumbitting commands)
+		transferBufferInDevice(stagingBuffer, vertexBuffer, bufferSize);
+
+		//release the stagging buffer and free the memory
+		removeBuffer(stage);
+
+		return main;
+	}
+
+	void GPUDevice::transferBufferInDevice(VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDeviceSize copySize) {
+		auxiCmdBuffer.begin();
+		auxiCmdBuffer.cmdCopyBuffer(srcBuffer, dstBuffer, copySize);
+		auxiCmdBuffer.end();
+	}
+
+	void GPUDevice::transferImageInDevice(TextureHandle src, TextureHandle dst, VkExtent2D copyExtent) {
+		auxiCmdBuffer.begin();
+
+		// get the textures 
+		Texture& srcImage = getTexture(src);
+		Texture& dstImage = getTexture(dst);
+		GraphResourceAccessType srcAccess = srcImage.access;
+		GraphResourceAccessType dstAccess = dstImage.access;
+
+		// copy
+		auxiCmdBuffer.cmdCopyImage(srcImage, dstImage, copyExtent);
+
+		// restore to original layout
+		auxiCmdBuffer.cmdInsertImageBarrier(srcImage, srcAccess, 0, 1);
+		auxiCmdBuffer.cmdInsertImageBarrier(dstImage, dstAccess, 0, 1);
+
+		auxiCmdBuffer.end();
+	}
+
 	// helper: check whether the physical device support all required types of queues
 	// return true if all required types of queues satisfied and that the device supports presentation
 	// TODO: more types of queue support
@@ -926,5 +1070,16 @@ namespace zzcVulkanRenderEngine {
 		);
 
 		return shaderModule;
+	}
+
+	uint32_t GPUDevice::helper_findSuitableMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
+		VkPhysicalDeviceMemoryProperties deviceMemoryproperties;
+		vkGetPhysicalDeviceMemoryProperties(physicalDevice, &deviceMemoryproperties);
+		for (size_t i = 0; i < deviceMemoryproperties.memoryTypeCount; i++) {
+			if ((typeFilter & (1 << i)) && ((deviceMemoryproperties.memoryTypes[i].propertyFlags & properties) == properties)) {
+				return i;
+			}
+		}
+		throw std::runtime_error("failed to find a suitable memory type!");
 	}
 }

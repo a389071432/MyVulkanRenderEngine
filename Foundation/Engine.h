@@ -14,6 +14,7 @@ namespace zzcVulkanRenderEngine {
 		void run();
 		void setDevice(GPUDevice* device);
 		void setRenderGraph(RenderGraph* graph);
+		void setPresentFormat(DataFormat format);
 	private:
 		GPUDevice* device;
 		RenderGraph* renderGraph;
@@ -31,5 +32,9 @@ namespace zzcVulkanRenderEngine {
 
 		void init();
 		void mainLoop();
+
+		// used for final presentation of the resulting image
+		void presentFinalImage(u32 imageIndex);
+
 	};
 }

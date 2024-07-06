@@ -4,6 +4,7 @@
 #include"Resource.h"
 #include"CommandBuffer.h"
 #include"FileHandler.h"
+#include<unordered_map>
 
 namespace zzcVulkanRenderEngine {
 	// Default configs
@@ -49,7 +50,7 @@ namespace zzcVulkanRenderEngine {
 
 		// Resource creation
 		TextureHandle createTexture(const TextureCreation createInfo);
-		BufferHandle createBuffer();
+		BufferHandle createBuffer(const BufferCreation createInfo);
 		DescriptorSetLayoutsHandle createDescriptorSetLayouts(const DescriptorSetLayoutsCreation createInfo);
 		DescriptorSetsHandle createDescriptorSets(const DescriptorSetsAlloc allocInfo);
 		void writeDescriptorSets(const std::vector<DescriptorSetWrite>& writes, DescriptorSetsHandle setsHandle);
@@ -76,6 +77,23 @@ namespace zzcVulkanRenderEngine {
 		VkPipelineLayout& getPipelineLayout(PipelineLayoutHandle& handle);
 		VkPipeline& getGraphicsPipeline(GraphicsPipelineHandle handle);
 
+		// Resource removal
+		void removeBuffer(BufferHandle handle);
+
+		// Swapchain access
+		TextureHandle getSwapChainImageByIndex(u32 index);
+		VkExtent2D getSwapChainExtent();
+
+		//helper functions for application-level operations
+		template<typename T>
+		BufferHandle& createBufferFromData(const std::vector<T>& data);
+		void transferBufferInDevice(VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDeviceSize copySize);
+		void transferImageInDevice(TextureHandle src, TextureHandle dst, VkExtent2D copyExtent);
+
+		//internal hepler functions
+		uint32_t helper_findSuitableMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+
 	private:
 		// Default settings 
 		// may be later moved to Engine class
@@ -98,6 +116,7 @@ namespace zzcVulkanRenderEngine {
 		std::vector<VkImage> swapChainImages;
 		VkFormat swapChainFormat;
 		VkExtent2D swapChainExtent;
+		std::unordered_map<u32, u32>index2handle_swapchain;
 
 		// GPU memory allocator. Currently using a default one provided by VMA
 		VmaAllocator vmaAllocator;
@@ -117,6 +136,7 @@ namespace zzcVulkanRenderEngine {
 		// Command buffer related
 		VkCommandPool commandPool;
 		std::vector<CommandBuffer> cmdBuffers;
+		CommandBuffer auxiCmdBuffer;  //auxiliary command buffer
 
 		// Descriptor pool
 		VkDescriptorPool descriptorPool;

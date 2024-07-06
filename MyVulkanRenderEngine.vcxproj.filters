@@ -57,6 +57,12 @@
     <ClInclude Include="Foundation\Engine.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Foundation\GraphNode.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderGraphExamples\ExampleNode.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Foundation\RenderGraph.cpp">

@@ -32,6 +32,23 @@ namespace zzcVulkanRenderEngine {
 		return *this;
 	}
 
+	//For buffer creation
+	BufferCreation& BufferCreation::setSize(u32 _size) {
+		size = _size;
+	}
+
+	BufferCreation& BufferCreation::setUsage(u32 _usage) {
+		usage = _usage;
+	}
+
+	BufferCreation& BufferCreation::setProp(u32 _prop) {
+		prop = _prop;
+	}
+
+	BufferCreation& BufferCreation::setShareMode(ResourceSharingMode _shareMode) {
+		shareMode = _shareMode;
+	}
+
 	// For Texture
 	void Texture::setAccessType(GraphResourceAccessType _access) {
 		access = _access;

@@ -291,16 +291,26 @@ namespace zzcVulkanRenderEngine {
 				GraphicsPipelineCreation gPipelineCI{};
 				GraphicsNode* gNode = dynamic_cast<GraphicsNode*>(node);
 				ASSERT(gNode, "Assertion failed: casting from GraphNode* GraphicsNode* failed!");
-				gNode->
+				GraphicsPipelineCreation ci{};
+				ci.setShaderInfo({ gNode->pipelineInfo.shaders.vertShaderPath,gNode->pipelineInfo.shaders.fragShaderPath });
+				ci.setVertexInput({ gNode->pipelineInfo.vertexInput.bindingDesc, gNode->pipelineInfo.vertexInput.attributes });
+				ci.setRasterizerInfo({ gNode->pipelineInfo.rasterInfo.cullMode,gNode->pipelineInfo.rasterInfo.frontFace });
+				ci.setMSAAInfo({ gNode->pipelineInfo.msaa.nSamplesPerPixel });
+				ci.setDepthStencilInfo({ gNode->pipelineInfo.depthStencil.enableDepth });
+				gNode->pipelineHandle = device->createGraphicsPipeline(ci);
 			}
-			PipelineLayoutCreation layoutCI{};
-			layoutCI.setDescLayouts(node.descriptorSetLayouts);
-			node.pipelineLayout = device->createPipelineLayout(layoutCI);
+		}
+
+		// init all nodes
+		for (u32 i = 0; i < nodes.size(); i++) {
+			GraphNode* node = &nodes.at(i);
+			node->init(device);
 		}
 
 	}
 
 	void RenderGraph::execute(CommandBuffer& cmdBuffer) {
+		cmdBuffer.begin();
 		for (u32 i = 0; i < topologyOrder.size(); i++) {
 			u32 index = topologyOrder.at(i);
 			GraphNode& node = nodes.at(index);
@@ -309,6 +319,26 @@ namespace zzcVulkanRenderEngine {
 			insert_barriers(cmdBuffer, node);
 
 			// Begin the render pass
+			std::vector<VkClearValue> clearValues;
+			clearValues.resize(node.outputs.size());
+			for (int i = 0; i < node.outputs.size();i++) {
+				GraphResource& r = node.outputs[i];
+				if (r.type == GraphResourceType::TEXTURE) {
+					clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
+				}
+				else if (r.type == GraphResourceType::DEPTH_MAP) {
+					clearValues[3].depthStencil = { 1.0f, 0 };
+				}
+			}
+
+			VkRenderPassBeginInfo beginInfo{};
+			beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			beginInfo.renderPass = node.renderPass;
+			beginInfo.framebuffer = node.framebuffer;
+			beginInfo.renderArea.extent.width = node.outputs[0].info.texture.width;
+			beginInfo.renderArea.extent.height = node.outputs[0].info.texture.height;
+			beginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+			beginInfo.pClearValues = clearValues.data();
 			cmdBuffer.cmdBeginRenderPass(node.renderPass, node.framebuffer);
 
 			// Execute the node using user-defined method
@@ -317,6 +347,7 @@ namespace zzcVulkanRenderEngine {
 			//End the render pass
 			cmdBuffer.cmdEndRenderPass();
 		}
+		cmdBuffer.end();
 	}
 
 	void RenderGraph::insert_barriers(CommandBuffer& cmdBuffer, GraphNode& node) {

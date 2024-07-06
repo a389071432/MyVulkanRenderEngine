@@ -18,6 +18,19 @@ namespace zzcVulkanRenderEngine {
 		}
 	}
 
+	inline VkSharingMode util_getSharingMode(ResourceSharingMode shareMode) {
+		switch (shareMode)
+		{
+		case ResourceSharingMode::EXCLUSIVE:
+			return VK_SHARING_MODE_EXCLUSIVE;
+		case ResourceSharingMode::CONCURRENT:
+			return VK_SHARING_MODE_CONCURRENT;
+		default:
+			ASSERT(false, "Assertion failed: invalid Enum ResourceSharingMode!");
+			break;
+		}
+	}
+
 	inline VkImageLayout util_getImageLayout(GraphResourceAccessType accessType) {
 		switch (accessType)
 		{
@@ -27,6 +40,12 @@ namespace zzcVulkanRenderEngine {
 			return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		case GraphResourceAccessType::WRITE_DEPTH:
 			return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+		case GraphResourceAccessType::COPY_SRC:
+			return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		case GraphResourceAccessType::COPY_DST:
+			return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		case GraphResourceAccessType::PRESENT:
+			return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 		default:
 			ASSERT(false, "Assertion failed: invalid Enum GraphResourceAccessType!");
 			break;

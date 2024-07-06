@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -156,11 +156,13 @@
     <ClInclude Include="Foundation\Engine.h" />
     <ClInclude Include="Foundation\enums.h" />
     <ClInclude Include="Foundation\FileHandler.h" />
+    <ClInclude Include="Foundation\GraphNode.h" />
     <ClInclude Include="Foundation\memoryManagement.h" />
     <ClInclude Include="Foundation\RenderGraph.h" />
     <ClInclude Include="Foundation\Resource.h" />
     <ClInclude Include="Foundation\CommandBuffer.h" />
     <ClInclude Include="Foundation\GPUDevice.h" />
+    <ClInclude Include="RenderGraphExamples\ExampleNode.h" />
     <ClInclude Include="utils\utils.h" />
   </ItemGroup>
   <ItemGroup>

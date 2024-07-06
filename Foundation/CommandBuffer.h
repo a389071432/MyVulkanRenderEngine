@@ -12,8 +12,12 @@ namespace zzcVulkanRenderEngine {
 
 		// Wrapped commands for easy usage, free users from filling in createInfo ...
 		VkCommandBuffer getCmdBuffer();
-		void cmdBeginRenderPass(VkRenderPass renderpass, VkFramebuffer framebuffer);
+		void begin();
+		void end();
+		void cmdBeginRenderPass(VkRenderPassBeginInfo beginInfo);
 		void cmdEndRenderPass();
+		void cmdCopyBuffer(VkBuffer& src, VkBuffer& dst, u32 copySize);
+		void cmdCopyImage(Texture& src, Texture& dst ,VkExtent2D copyExtent);
 		void cmdInsertImageBarrier(Texture& texture, GraphResourceAccessType accessType, u32 baseMipLevel, u32 nMipLevels);
 	private:
 		VkCommandBuffer cmdBuffer;

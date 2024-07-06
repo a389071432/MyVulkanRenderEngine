@@ -14,6 +14,7 @@ namespace zzcVulkanRenderEngine {
 		// Check for completeness
 		ASSERT(device != nullptr, "Device is NULL!");
 		ASSERT(renderGraph != nullptr, "RenderGraph is NULL!");
+		
 
 		// init sync objects
 		fencesFrame.resize(frameInFlight);
@@ -42,6 +43,13 @@ namespace zzcVulkanRenderEngine {
 				"Assertion failed: Create RenderDone Semaphore failed!"
 			);
 		}
+
+		// init for the final presenting pass
+		RenderPassCreation passCI{};
+		passCI.addAttachInfo({ presentFormat,GraphResourceType::TEXTURE });
+		finalPass = device->createRenderPass(passCI);
+
+
 	}
 
 	void Engine::run() {
@@ -72,7 +80,7 @@ namespace zzcVulkanRenderEngine {
 
 
 			// TODO: a dedicated renderpass (fullQuad) to write the resulting image from renderGraph to the final swapchain image for presentation
-
+			presentFinalImage(imageIndex);
 
 			// Submit to queue
 			VkSubmitInfo submitInfo{};
@@ -108,5 +116,12 @@ namespace zzcVulkanRenderEngine {
 			
 			currentFrame = (currentFrame + 1) % frameInFlight;
 		}
+	}
+
+	void Engine::presentFinalImage(u32 imageIndex) {
+		TextureHandle finalTex = renderGraph->getTextureByKey("final");
+		TextureHandle presentTex = device->getSwapChainImageByIndex(imageIndex);
+		device->transferImageInDevice(finalTex, presentTex,device->getSwapChainExtent());
+
 	}
 }
