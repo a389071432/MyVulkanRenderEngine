@@ -12,32 +12,24 @@ namespace zzcVulkanRenderEngine {
 			float color[3];
 		};
 
-		struct {
-			VkDeviceMemory memory; 
-			VkBuffer buffer;      
-		} vertices;
+		// define the triangle
+		std::vector<Vertex> vertices{
+			{ {  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+			{ { -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+			{ {  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
+		};
+		std::vector<uint32_t> indices{ 0, 1, 2 };
 
-		struct {
-			VkDeviceMemory memory;
-			VkBuffer buffer;
-			uint32_t count;
-		} indices;
+		BufferHandle vertexBuffer;
+		BufferHandle indexBuffer;
 
 		// overwrite the interfaces
 		virtual void init(GPUDevice* device) {
-			// define the triangle
-			std::vector<Vertex> vertexBuffer{
-				{ {  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-				{ { -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-				{ {  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
-			};
-			std::vector<uint32_t> indexBuffer{ 0, 1, 2 };
-
-			BufferHandle vHnd = device->createBufferFromData(vertexBuffer);
-			BufferHandle iHnd = device->createBufferFromData(indexBuffer);
+			vertexBuffer = device->createBufferFromData(vertices);
+			indexBuffer = device->createBufferFromData(indices);
 		}
 
-		virtual void execute() {
+		virtual void execute(CommandBuffer* cmdBuffer, GPUDevice* device) {
 
 		}
 	};

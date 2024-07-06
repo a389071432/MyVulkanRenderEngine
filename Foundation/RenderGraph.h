@@ -104,7 +104,7 @@ namespace zzcVulkanRenderEngine {
 		// (note that external resources like PBR textures, camera can be accessed by name and registered by handle, this is automatically done in compile())
 		// execute() may include logic for binding pipeline/vertex/indices/descriptorsets
 		virtual void init(GPUDevice* device)=0;
-		virtual void execute()=0;
+		virtual void execute(CommandBuffer* cmdBuffer, GPUDevice* device)=0;
 
 
 		// automatically generated

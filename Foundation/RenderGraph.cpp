@@ -339,10 +339,10 @@ namespace zzcVulkanRenderEngine {
 			beginInfo.renderArea.extent.height = node.outputs[0].info.texture.height;
 			beginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 			beginInfo.pClearValues = clearValues.data();
-			cmdBuffer.cmdBeginRenderPass(node.renderPass, node.framebuffer);
+			cmdBuffer.cmdBeginRenderPass(beginInfo);
 
 			// Execute the node using user-defined method
-			node.execute();
+			node.execute(&cmdBuffer,device);
 
 			//End the render pass
 			cmdBuffer.cmdEndRenderPass();
