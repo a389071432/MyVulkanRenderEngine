@@ -6,6 +6,7 @@
 #include"enums.h"
 #include"Resource.h"
 #include"GPUDevice.h"
+#include<unordered_map>
 
 namespace zzcVulkanRenderEngine {
 	typedef u32 GraphNodeHandle;
@@ -40,8 +41,8 @@ namespace zzcVulkanRenderEngine {
 		ResourceInfo info;
 		std::string key;           // used to uniquely identify a resource, note that 'final' represent the final output to display
 		u16 groupId;               // specify which group the resource belongs to, typically determined by frequency of updating 
-		u16 binding=INVALID_BINDING;               // specify which binding point to bound
-		ShaderStage accessStage;   // specify which shader stage(s) will access this resource
+		u16 binding = INVALID_BINDING;               // specify which binding point to bound
+		ShaderStage accessStage = ShaderStage::DONT_CARE;   // specify which shader stage(s) will access this resource
 	};
 
 	struct GraphicsPipelineInfo {
@@ -87,6 +88,7 @@ namespace zzcVulkanRenderEngine {
 
 	// TODO: add raytracing pipeline
 
+	
 	struct GraphNode {
 	public:
 		// specified by the user
@@ -99,12 +101,12 @@ namespace zzcVulkanRenderEngine {
 		GraphNode& setInputs(std::vector<GraphResource> inputs);
 		GraphNode& setOutputs(std::vector<GraphResource> outputs);
 
-		// virtual methods to be overwritten by inherited nodes
+		// virtual methods to be overwritten by derived nodes
 		// init() may include logic for creating buffer/image objects and registering handles for external input resources
 		// (note that external resources like PBR textures, camera can be accessed by name and registered by handle, this is automatically done in compile())
 		// execute() may include logic for binding pipeline/vertex/indices/descriptorsets
-		virtual void init(GPUDevice* device)=0;
-		virtual void execute(CommandBuffer* cmdBuffer, GPUDevice* device)=0;
+		virtual void init(GPUDevice* device);
+		virtual void execute(CommandBuffer* cmdBuffer, GPUDevice* device);
 
 
 		// automatically generated
@@ -120,6 +122,8 @@ namespace zzcVulkanRenderEngine {
 	public:
 		GraphicsPipelineInfo pipelineInfo;
 		GraphicsPipelineHandle pipelineHandle;
+
+		GraphicsNode& setPipelineInfo(GraphicsPipelineInfo info);
 	};
 
 	struct ComputeNode : public GraphNode {
@@ -144,8 +148,8 @@ namespace zzcVulkanRenderEngine {
 		std::vector<GraphNodeHandle> topologyOrder;
 
 		// TODO: moved to GPUDevice? not sure yet
-		std::map<std::string, TextureHandle> key2TexMap;
-		std::map<std::string, BufferHandle> key2BufferMap;
+		std::unordered_map<std::string, TextureHandle> key2TexMap;
+		std::unordered_map<std::string, BufferHandle> key2BufferMap;
 		
 		void checkValidity();
 		void buildGraph();

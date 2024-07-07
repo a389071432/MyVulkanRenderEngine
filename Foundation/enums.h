@@ -37,7 +37,7 @@ namespace zzcVulkanRenderEngine {
 		WRITE_ATTACHMENT,
 		WRITE_DEPTH,
 		COPY_SRC,
-		COPY_DST,,
+		COPY_DST,
 		PRESENT,
 		UNDEFINED
 	};
@@ -46,7 +46,9 @@ namespace zzcVulkanRenderEngine {
 	enum class ShaderStage {
 		VERTEX,
 		FRAG,
-		RANDOM
+		ALL,
+		RANDOM,
+		DONT_CARE
 	};
 
 	enum class VertexInputRate {
@@ -69,7 +71,12 @@ namespace zzcVulkanRenderEngine {
 		UINT,
 		UINT2,
 		UINT3,
-		UINT4
+		UINT4,
+
+		UNORM,
+		UNORM2,
+		UNORM3,
+		UNORM4
 	};
 
 

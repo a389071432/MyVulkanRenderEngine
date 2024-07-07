@@ -107,6 +107,7 @@ namespace zzcVulkanRenderEngine {
 		VkInstance vkInstance;
 
 		// Window surface
+		GLFWwindow* window;
 		VkSurfaceKHR windowSurface;
 
 		// Swapchain related

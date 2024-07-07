@@ -45,7 +45,7 @@ namespace zzcVulkanRenderEngine {
 		u16 nMipLevels = 1;
 		u16 flags;
 		GraphResourceType resourceType;
-		VkFormat format = VK_FORMAT_UNDEFINED;
+		DataFormat format = DataFormat::FLOAT3;
 		TextureType  type = TextureType::Texture2D;
 		TextureHandle aliasTexture = INVALID_TEXTURE_HANDLE;
 

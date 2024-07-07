@@ -3,6 +3,13 @@
 #include"utils/utils.h"
 #include<array>
 #include<algorithm>
+//#define VK_USE_PLATFORM_WIN32_KHR
+//#define GLFW_INCLUDE_VULKAN
+//#include <GLFW/glfw3.h>
+//#define GLFW_EXPOSE_NATIVE_WIN32
+//#include <GLFW/glfw3native.h>
+#include <Windows.h>
+#include <vulkan/vulkan_win32.h>
 
 namespace zzcVulkanRenderEngine {
 	GPUDevice::GPUDevice(GPUDeviceCreation createInfo) :texturePool(defaultPoolSize), bufferPool(defaultPoolSize) {
@@ -12,6 +19,14 @@ namespace zzcVulkanRenderEngine {
 		cmdBuffers.resize(maxFrameInFlight);
 
 		// TODO: create windowSurface
+		VkWin32SurfaceCreateInfoKHR surfaceCI{};
+		surfaceCI.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+		surfaceCI.hwnd = glfwGetWin32Window(window);
+		surfaceCI.hinstance = GetModuleHandle(nullptr);
+		ASSERT(vkCreateWin32SurfaceKHR(instance, &createInfo, nullptr, &surface) != VK_SUCCESS,
+			"Failed to create the window surface!"
+		);
+		
 		
 		// CREATE VULKAN INSTANCE
 		// TODO: glfw extensions

@@ -36,13 +36,15 @@ namespace zzcVulkanRenderEngine {
 	}
 
 	void RenderGraph::checkValidity() {
-		// check for non-unique keys of resources
+		// check for non-unique keys of otuput resources
 
 		// for each node, check number of outputs matches the number of ColorBlendingStates
 
 		// for each node, check number of inputs/outputs matches DescriptorSetLayoutsCreation.bindings
 
 		// for each node, check its output attachments have the same size (required to create framebuffer)
+
+		// check that the resolution of the final output matches the window
 
 		// for each node, check whether the required external input resources exists
 		// if exist, register the handle for that resource

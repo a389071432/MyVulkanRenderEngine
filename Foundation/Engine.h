@@ -15,7 +15,11 @@ namespace zzcVulkanRenderEngine {
 		void setDevice(GPUDevice* device);
 		void setRenderGraph(RenderGraph* graph);
 		void setPresentFormat(DataFormat format);
+		void setDisplayResolution(u32 width, u32 height);
 	private:
+		u32 scr_width = 800;
+		u32 scr_height = 600;
+		GLFWwindow* window;
 		GPUDevice* device;
 		RenderGraph* renderGraph;
 

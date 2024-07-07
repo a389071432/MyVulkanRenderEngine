@@ -44,12 +44,10 @@ namespace zzcVulkanRenderEngine {
 			);
 		}
 
-		// init for the final presenting pass
-		RenderPassCreation passCI{};
-		passCI.addAttachInfo({ presentFormat,GraphResourceType::TEXTURE });
-		finalPass = device->createRenderPass(passCI);
-
-
+		// create the window
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+		window = glfwCreateWindow(scr_width, scr_width, "Vulkan", nullptr, nullptr);
 	}
 
 	void Engine::run() {
@@ -123,5 +121,22 @@ namespace zzcVulkanRenderEngine {
 		TextureHandle presentTex = device->getSwapChainImageByIndex(imageIndex);
 		device->transferImageInDevice(finalTex, presentTex,device->getSwapChainExtent());
 
+	}
+
+	void Engine::setDevice(GPUDevice* _device) {
+		device = _device;
+	}
+
+	void Engine::setRenderGraph(RenderGraph* graph) {
+		renderGraph = graph;
+	}
+
+	void Engine::setPresentFormat(DataFormat _format) {
+		
+	}
+
+	void Engine::setDisplayResolution(u32 width, u32 height) {
+		scr_width = width;
+		scr_height = height;
 	}
 }

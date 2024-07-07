@@ -106,8 +106,14 @@ namespace zzcVulkanRenderEngine {
 		case ShaderStage::FRAG:
 			return VK_SHADER_STAGE_FRAGMENT_BIT;
 			break;
+		case ShaderStage::ALL:
+			return VK_SHADER_STAGE_ALL_GRAPHICS;
+			break;
 		case ShaderStage::RANDOM:
 			return VK_SHADER_STAGE_ALL_GRAPHICS;
+			break;
+		case ShaderStage::DONT_CARE:
+			return 0;
 			break;
 		default:
 			ASSERT(false, "Assertion failed: invalid Enum ShaderStage!");
@@ -198,6 +204,18 @@ namespace zzcVulkanRenderEngine {
 			break;
 		case zzcVulkanRenderEngine::DataFormat::UINT4:
 			return VK_FORMAT_R32G32B32A32_UINT;
+			break;
+		case zzcVulkanRenderEngine::DataFormat::UNORM:
+			return VK_FORMAT_R8_UNORM;
+			break;
+		case zzcVulkanRenderEngine::DataFormat::UNORM2:
+			return VK_FORMAT_R8G8_UNORM;
+			break;
+		case zzcVulkanRenderEngine::DataFormat::UNORM3:
+			return VK_FORMAT_R8G8B8_UNORM;
+			break;
+		case zzcVulkanRenderEngine::DataFormat::UNORM4:
+			return VK_FORMAT_R8G8B8A8_UNORM;
 			break;
 		default:
 			ASSERT(false, "Assertion failed: invalid Enum DataFormat!");
