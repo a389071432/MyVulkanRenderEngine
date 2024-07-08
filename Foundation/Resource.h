@@ -124,8 +124,8 @@ namespace zzcVulkanRenderEngine {
 
 
 	struct VertexAttribute {
-		u32 location = 0;
 		u32 binding = 0;
+		u32 location = 0;
 		u32 offset = 0;
 		DataFormat format;
 	};

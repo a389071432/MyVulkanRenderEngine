@@ -88,45 +88,80 @@ namespace zzcVulkanRenderEngine {
 
 	// TODO: add raytracing pipeline
 
-	
-	struct GraphNode {
+
+	//Base class
+	struct GraphNodeBase {
 	public:
-		// specified by the user
 		GraphNodeType type;
 		std::vector<GraphResource> inputs;
 		std::vector<GraphResource> outputs;
 
-		// building helpers
-		GraphNode& setType(GraphNodeType type);
-		GraphNode& setInputs(std::vector<GraphResource> inputs);
-		GraphNode& setOutputs(std::vector<GraphResource> outputs);
-
-		// virtual methods to be overwritten by derived nodes
-		// init() may include logic for creating buffer/image objects and registering handles for external input resources
-		// (note that external resources like PBR textures, camera can be accessed by name and registered by handle, this is automatically done in compile())
-		// execute() may include logic for binding pipeline/vertex/indices/descriptorsets
-		virtual void init(GPUDevice* device);
-		virtual void execute(CommandBuffer* cmdBuffer, GPUDevice* device);
-
-
 		// automatically generated
-		// TODO: following resources should be considered as Resource managed by GPUDevice
+        // TODO: following resources should be considered as Resource managed by GPUDevice
 		RenderPassHandle renderPass;
 		FramebufferHandle framebuffer;
 		DescriptorSetLayoutsHandle descriptorSetLayouts;
 		DescriptorSetsHandle descriptorSets;
 		PipelineLayoutHandle pipelineLayout;
+
+		// virtual methods to be overwritten by derived nodes
+        // init() may include logic for creating buffer/image objects and registering handles for external input resources
+        // (note that external resources like PBR textures, camera can be accessed by name and registered by handle, this is automatically done in compile())
+        // execute() may include logic for binding pipeline/vertex/indices/descriptorsets
+		virtual void init(GPUDevice* device)=0;
+		virtual void execute(CommandBuffer* cmdBuffer, GPUDevice* device)=0;
+		
+		// for type determination
+		virtual void asGraphics();
 	};
 
-	struct GraphicsNode : public GraphNode {
+	// Use the  Curiously Recurring Template Pattern (CRTP)
+	template<typename Derived>
+	struct GraphNode: public GraphNodeBase {
+	public:
+		//// specified by the user
+		//GraphNodeType type;
+		//std::vector<GraphResource> inputs;
+		//std::vector<GraphResource> outputs;
+
+		// building helpers
+		Derived& setType(GraphNodeType type);
+		Derived& setInputs(std::vector<GraphResource> inputs);
+		Derived& setOutputs(std::vector<GraphResource> outputs);
+
+		//// virtual methods to be overwritten by derived nodes
+		//// init() may include logic for creating buffer/image objects and registering handles for external input resources
+		//// (note that external resources like PBR textures, camera can be accessed by name and registered by handle, this is automatically done in compile())
+		//// execute() may include logic for binding pipeline/vertex/indices/descriptorsets
+		//virtual void init(GPUDevice* device);
+		//virtual void execute(CommandBuffer* cmdBuffer, GPUDevice* device);
+
+
+		//// automatically generated
+		//// TODO: following resources should be considered as Resource managed by GPUDevice
+		//RenderPassHandle renderPass;
+		//FramebufferHandle framebuffer;
+		//DescriptorSetLayoutsHandle descriptorSetLayouts;
+		//DescriptorSetsHandle descriptorSets;
+		//PipelineLayoutHandle pipelineLayout;
+	};
+
+	struct GraphicsNodeBase : public GraphNodeBase {
 	public:
 		GraphicsPipelineInfo pipelineInfo;
 		GraphicsPipelineHandle pipelineHandle;
-
-		GraphicsNode& setPipelineInfo(GraphicsPipelineInfo info);
 	};
 
-	struct ComputeNode : public GraphNode {
+	template<typename Derived>
+	struct GraphicsNode : public GraphNode<Derived>, GraphicsNodeBase {
+	public:
+		//GraphicsPipelineInfo pipelineInfo;
+		//GraphicsPipelineHandle pipelineHandle;
+
+		Derived& setPipelineInfo(GraphicsPipelineInfo info);
+	};
+
+	struct ComputeNode : public GraphNode<ComputeNode> {
 	public:
 		ComputePipelineInfo pipelineInfo;
 		ComputePipelineHandle pipelineHandle;
@@ -136,14 +171,14 @@ namespace zzcVulkanRenderEngine {
 	public:
 		RenderGraph();
 		~RenderGraph();
-		void addNode(GraphNode node);
+		void addNode(GraphNodeBase* node);
 		void compile();
 		void execute(CommandBuffer& cmdBuffer);
 		TextureHandle& getTextureByKey(std::string key);
 		BufferHandle& getBufferByKey(std::string key);
 	private:
 		GPUDevice* device;
-		std::vector<GraphNode> nodes;
+		std::vector<GraphNodeBase*> nodes;
 		std::vector<std::vector<GraphNodeHandle>> graph;
 		std::vector<GraphNodeHandle> topologyOrder;
 
@@ -154,7 +189,7 @@ namespace zzcVulkanRenderEngine {
 		void checkValidity();
 		void buildGraph();
 		void topologySort();
-		void insert_barriers(CommandBuffer& cmdBuffer, GraphNode& node);
+		void insert_barriers(CommandBuffer& cmdBuffer, GraphNodeBase& node);
 
 		//helper functions
 		//void insert_barrier(VkCommandBuffer cmdBuffer, Texture& texture, VkAccessFlags newAccess);

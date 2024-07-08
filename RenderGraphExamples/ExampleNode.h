@@ -4,7 +4,7 @@
 
 
 namespace zzcVulkanRenderEngine {
-	struct ExampleNode : public GraphicsNode {
+	struct ExampleNode : public GraphicsNode<ExampleNode> {
 	public:
 		// define extra variables
 		struct Vertex {
@@ -24,12 +24,12 @@ namespace zzcVulkanRenderEngine {
 		BufferHandle indexBuffer;
 
 		// overwrite the interfaces
-		virtual void init(GPUDevice* device) {
+		void init(GPUDevice* device) override {
 			vertexBuffer = device->createBufferFromData(vertices);
 			indexBuffer = device->createBufferFromData(indices);
 		}
 
-		virtual void execute(CommandBuffer* cmdBuffer, GPUDevice* device) {
+		void execute(CommandBuffer* cmdBuffer, GPUDevice* device) override {
 			// Update dynamic viewport state
 			VkViewport viewport{};
 			viewport.height = (float)device->getSwapChainExtent().height;
