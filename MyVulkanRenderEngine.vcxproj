@@ -88,7 +88,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\DevTools\Vulkan SDK\Include;../MyVulkanRenderEngine;"D:\DevTools\VMA\include";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\DevTools\Vulkan SDK\Include;../MyVulkanRenderEngine;D:\DevTools\VMA\include;"D:\DevTools\libraries for Vulkan\GLM\glm-0.9.9.8\glm";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -106,7 +106,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\DevTools\Vulkan SDK\Include;../MyVulkanRenderEngine;"D:\DevTools\VMA\include";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\DevTools\Vulkan SDK\Include;../MyVulkanRenderEngine;D:\DevTools\VMA\include;"D:\DevTools\libraries for Vulkan\GLM\glm-0.9.9.8\glm";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -124,7 +124,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\DevTools\Vulkan SDK\Include;../MyVulkanRenderEngine;"D:\DevTools\VMA\include";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\DevTools\Vulkan SDK\Include;../MyVulkanRenderEngine;D:\DevTools\VMA\include;"D:\DevTools\libraries for Vulkan\GLM\glm-0.9.9.8\glm";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -142,7 +142,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\DevTools\Vulkan SDK\Include;../MyVulkanRenderEngine;"D:\DevTools\VMA\include";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\DevTools\Vulkan SDK\Include;../MyVulkanRenderEngine;D:\DevTools\VMA\include;"D:\DevTools\libraries for Vulkan\GLM\glm-0.9.9.8\glm";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -160,12 +160,14 @@
     <ClInclude Include="Foundation\Engine.h" />
     <ClInclude Include="Foundation\enums.h" />
     <ClInclude Include="Foundation\FileHandler.h" />
+    <ClInclude Include="Foundation\gltfScene.h" />
     <ClInclude Include="Foundation\GraphNode.h" />
     <ClInclude Include="Foundation\memoryManagement.h" />
     <ClInclude Include="Foundation\RenderGraph.h" />
     <ClInclude Include="Foundation\Resource.h" />
     <ClInclude Include="Foundation\CommandBuffer.h" />
     <ClInclude Include="Foundation\GPUDevice.h" />
+    <ClInclude Include="Foundation\Scene.h" />
     <ClInclude Include="RenderGraphExamples\ExampleNode.h" />
     <ClInclude Include="utils\utils.h" />
   </ItemGroup>
