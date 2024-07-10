@@ -92,5 +92,8 @@
     <ClCompile Include="Application\demo_triangle.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Foundation\gltfScene.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

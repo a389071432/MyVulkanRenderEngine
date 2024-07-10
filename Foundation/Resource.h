@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include<vector>
 #include<queue>
-#include"vulkan/vulkan_core.h"
+#include<string>
 #include"vma/vk_mem_alloc.h"
 #include"enums.h"
 #include"datatypes.h"
@@ -43,15 +43,16 @@ namespace zzcVulkanRenderEngine {
 		u16 depth;
 		u16 baseMipLevel = 0;
 		u16 nMipLevels = 1;
-		u16 flags;
+		u16 flags = 0 ;    // by default to 0
 		GraphResourceType resourceType;
 		DataFormat format = DataFormat::FLOAT3;
 		TextureType  type = TextureType::Texture2D;
 		TextureHandle aliasTexture = INVALID_TEXTURE_HANDLE;
 
 		TextureCreation& setSize(u16 width, u16 height, u16 depth);
-		TextureCreation& setFlags(u16 nMipLevels, u16 flags);
-		TextureCreation& setFormat(VkFormat format);
+		TextureCreation& setMipLevels(u16 nMipLevels);
+		TextureCreation& setFlags(u16 flags);
+		TextureCreation& setFormat(DataFormat format);
 		TextureCreation& setType(TextureType type);
 		TextureCreation& setAliasTexture(TextureHandle aliasTex);
 	};
@@ -215,6 +216,6 @@ namespace zzcVulkanRenderEngine {
 		u32 poolSize;
 		const u32 maxPoolSize;
 		std::vector<T> data;
-		std::queue<T> freeList;
+		std::queue<ResourceHandle> freeList;
 	};
 }

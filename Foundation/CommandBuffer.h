@@ -1,5 +1,4 @@
 #pragma once
-#include"vulkan/vulkan_core.h"
 #include"datatypes.h"
 #include"Resource.h"
 #include"enums.h"
@@ -18,6 +17,7 @@ namespace zzcVulkanRenderEngine {
 		void cmdEndRenderPass();
 		void cmdCopyBuffer(VkBuffer& src, VkBuffer& dst, u32 copySize);
 		void cmdCopyImage(Texture& src, Texture& dst ,VkExtent2D copyExtent);
+		void cmdCopyBufferToImage(Buffer& buffer, Texture& tex, u32 width, u32 height, u32 depth);
 		void cmdInsertImageBarrier(Texture& texture, GraphResourceAccessType accessType, u32 baseMipLevel, u32 nMipLevels);
 	private:
 		VkCommandBuffer cmdBuffer;

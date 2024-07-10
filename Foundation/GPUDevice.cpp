@@ -3,27 +3,31 @@
 #include"utils/utils.h"
 #include<array>
 #include<algorithm>
-//#define VK_USE_PLATFORM_WIN32_KHR
-//#define GLFW_INCLUDE_VULKAN
-//#include <GLFW/glfw3.h>
-//#define GLFW_EXPOSE_NATIVE_WIN32
-//#include <GLFW/glfw3native.h>
-#include <Windows.h>
-#include <vulkan/vulkan_win32.h>
+#include<Windows.h>
+#include<vulkan/vulkan_win32.h>
 
 namespace zzcVulkanRenderEngine {
-	GPUDevice::GPUDevice(GPUDeviceCreation createInfo) :texturePool(defaultPoolSize), bufferPool(defaultPoolSize) {
+	GPUDevice::GPUDevice(GPUDeviceCreation createInfo) 
+		:texturePool(poolSize)
+		,bufferPool(poolSize)
+	    ,descriptorSetsPool(poolSize)
+	    ,graphicsPipelinePool(poolSize)
+	    ,computePipelinePool(poolSize){
 
 		// TODO: fill in createInfos
 
-		cmdBuffers.resize(maxFrameInFlight);
+		cmdBuffers.resize(frameInFlight);
 
 		// TODO: create windowSurface
-		VkWin32SurfaceCreateInfoKHR surfaceCI{};
-		surfaceCI.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-		surfaceCI.hwnd = glfwGetWin32Window(window);
-		surfaceCI.hinstance = GetModuleHandle(nullptr);
-		ASSERT(vkCreateWin32SurfaceKHR(instance, &createInfo, nullptr, &surface) != VK_SUCCESS,
+		//VkWin32SurfaceCreateInfoKHR surfaceCI{};
+		//surfaceCI.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+		//surfaceCI.hwnd = glfwGetWin32Window(window);
+		//surfaceCI.hinstance = GetModuleHandle(nullptr);
+		//ASSERT(vkCreateWin32SurfaceKHR(vkInstance, &surfaceCI, nullptr, &windowSurface) == VK_SUCCESS,
+		//	"Failed to create the window surface!"
+		//);
+		
+		ASSERT(glfwCreateWindowSurface(vkInstance, window, nullptr, &windowSurface) != VK_SUCCESS,
 			"Failed to create the window surface!"
 		);
 		
@@ -304,7 +308,7 @@ namespace zzcVulkanRenderEngine {
 		Texture& texture = getTexture(handle);
 
 		// Fill in the structure 
-		texture.format = createInfo.format;
+		texture.format = util_getFormat(createInfo.format);
 		texture.sampler = VK_NULL_HANDLE;
 		texture.access = GraphResourceAccessType::UNDEFINED;    //initialized to be undefined
 
@@ -312,7 +316,7 @@ namespace zzcVulkanRenderEngine {
 		VkImageCreateInfo imageCI;
 		imageCI.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		imageCI.arrayLayers = 1;
-		imageCI.format = createInfo.format;
+		imageCI.format = util_getFormat(createInfo.format);
 		imageCI.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		imageCI.mipLevels = createInfo.nMipLevels;
 		imageCI.extent.width = createInfo.width;
@@ -322,6 +326,7 @@ namespace zzcVulkanRenderEngine {
 		imageCI.tiling = VK_IMAGE_TILING_OPTIMAL;
 		imageCI.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		imageCI.imageType = util_getImageType(createInfo.type);
+		imageCI.flags = createInfo.flags;
 
 		// set image usage
 		imageCI.usage = 0;
@@ -353,7 +358,7 @@ namespace zzcVulkanRenderEngine {
 		VkImageViewCreateInfo viewCI{};
 		viewCI.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		viewCI.image = texture.image;
-		viewCI.format = createInfo.format;
+		viewCI.format = util_getFormat(createInfo.format);
 		viewCI.subresourceRange.layerCount = 1;
 		viewCI.subresourceRange.baseArrayLayer = 0;
 		viewCI.subresourceRange.baseMipLevel = createInfo.baseMipLevel;
@@ -850,6 +855,39 @@ namespace zzcVulkanRenderEngine {
 		return main;
 	}
 
+	template<typename T>
+	TextureHandle& GPUDevice::createTexture2DFromData(const std::vector<T>& data, u32 width, u32 height, DataFormat format) {
+		//create a staging buffer
+		BufferCreation stageCI{};
+		stageCI.setSize(bufferSize)
+			.setUsage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
+			.setProp(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+			.setShareMode(ResourceSharingMode::EXCLUSIVE);
+		BufferHandle stage = createBuffer(stageCI);
+		Buffer& stageBuffer = getBuffer(stage);
+
+		//fill in the staging buffer
+		void* pdata;
+		vkMapMemory(device, stageBuffer.mem, 0, bufferSize, 0, &data);
+		memcpy(pdata, data.data(), bufferSize);
+		vkUnmapMemory(device, stageBuffer.mem);
+
+		// create the image
+		TextureCreation texCI{};
+		texCI.setType(TextureType::Texture2D)
+			.setFormat(format)
+			.setSize(width, height, 1)
+			.setMipLevels(1);
+		TextureHandle texHandle = createTexture(texCI);
+		Texture& tex = getTexture(texHandle);
+
+		// transfer data in device
+		transferBufferToImage2DInDevice(stage, tex, width, height);
+
+		// release the staging buffer
+		removeBuffer(stage);
+	}
+
 	void GPUDevice::transferBufferInDevice(VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDeviceSize copySize) {
 		auxiCmdBuffer.begin();
 		auxiCmdBuffer.cmdCopyBuffer(srcBuffer, dstBuffer, copySize);
@@ -873,6 +911,40 @@ namespace zzcVulkanRenderEngine {
 		auxiCmdBuffer.cmdInsertImageBarrier(dstImage, dstAccess, 0, 1);
 
 		auxiCmdBuffer.end();
+
+		// submit to queue
+
+	}
+
+	void GPUDevice::transferBufferToImage2DInDevice(BufferHandle bHnd, TextureHandle texHnd, u32 width, u32 height) {
+		auxiCmdBuffer.begin();
+		Buffer& buffer = getBuffer(bHnd);
+		Texture& image = getTexture(texHnd);
+		GraphResourceAccessType ori_access = image.access;
+
+		// layout transition before transferring
+		auxiCmdBuffer.cmdInsertImageBarrier(image, GraphResourceAccessType::COPY_DST, 0, 1);
+		
+		// transfer data
+		auxiCmdBuffer.cmdCopyBufferToImage(buffer, image, width, height, 1);
+
+		// restore to original layout
+		auxiCmdBuffer.cmdInsertImageBarrier(image, ori_access, 0, 1);
+
+		auxiCmdBuffer.end();
+
+		// submit to queue
+
+	}
+
+	void GPUDevice::imageLayoutTransition(TextureHandle tex, GraphResourceAccessType targetAccess) {
+		auxiCmdBuffer.begin();
+		Texture& image = getTexture(tex);
+		auxiCmdBuffer.cmdInsertImageBarrier(image, targetAccess, 0, 1);
+		auxiCmdBuffer.end();
+
+		// submit to queue
+
 	}
 
 	// helper: check whether the physical device support all required types of queues
@@ -1097,4 +1169,4 @@ namespace zzcVulkanRenderEngine {
 		}
 		throw std::runtime_error("failed to find a suitable memory type!");
 	}
-}
+ }

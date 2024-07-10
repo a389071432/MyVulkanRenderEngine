@@ -11,13 +11,17 @@ namespace zzcVulkanRenderEngine {
 		return *this;
 	}
 
-	TextureCreation& TextureCreation::setFlags(u16 _nMipLevels, u16 _flags) {
-		nMipLevels = _nMipLevels;
+	TextureCreation& TextureCreation::setFlags(u16 _flags) {
 		flags = _flags;
 		return *this;
 	}
 
-	TextureCreation& TextureCreation::setFormat(VkFormat _format) {
+	TextureCreation& TextureCreation::setMipLevels(u16 _nMipLevels) {
+		nMipLevels = _nMipLevels;
+		return *this;
+	}
+
+	TextureCreation& TextureCreation::setFormat(DataFormat _format) {
 		format = _format;
 		return *this;
 	}
@@ -54,21 +58,21 @@ namespace zzcVulkanRenderEngine {
 		access = _access;
 	}
 
-	// For DescriptorSetsCreation
-	DescriptorSetsCreation& DescriptorSetsCreation::setNodeType(GraphNodeType _nodeType) {
-		nodeType = _nodeType;
-	}
+	//// For DescriptorSetsCreation
+	//DescriptorSetsCreation& DescriptorSetsCreation::setNodeType(GraphNodeType _nodeType) {
+	//	nodeType = _nodeType;
+	//}
 
-	DescriptorSetsCreation& DescriptorSetsCreation::addInput(BindingDesc binding) {
-		inputs.push_back(binding);
-	}
+	//DescriptorSetsCreation& DescriptorSetsCreation::addInput(BindingDesc binding) {
+	//	inputs.push_back(binding);
+	//}
 
-	DescriptorSetsCreation& DescriptorSetsCreation::addOutput(BindingDesc binding) {
-		outputs.push_back(binding);
-	}
+	//DescriptorSetsCreation& DescriptorSetsCreation::addOutput(BindingDesc binding) {
+	//	outputs.push_back(binding);
+	//}
 
 	// For ResourcePool
-	template <typename T, typename ResourceHandle>
+	template<typename T, typename ResourceHandle>
 	ResourcePool<T,ResourceHandle>::ResourcePool(u32 poolSize) {
 		ASSERT(poolSize <= maxPoolSize, "required pool size exceeds maximum limit!");
 

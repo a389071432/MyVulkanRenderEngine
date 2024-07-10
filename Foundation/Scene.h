@@ -43,15 +43,15 @@ namespace zzcVulkanRenderEngine {
     // (the instance-specific parameters are passed as an array bound to a descriptor)
     class Scene {
     public:
-        virtual void add_mesh() = 0;
+        virtual void add_mesh(const std::string& filename) = 0;
         virtual void prepare() = 0;
-    private:
+    protected:
         GPUDevice* device;
         std::vector<Mesh> meshes;
 
-        // only store the handle of resources on device
-        std::vector<BufferHandle> buffers;
-        std::vector<TextureHandle> textures;
+        //// only store the handle of resources on device
+        //std::vector<BufferHandle> buffers;
+        //std::vector<TextureHandle> textures;
 
     };
 }

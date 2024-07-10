@@ -1,14 +1,14 @@
 #pragma once
-#include"vulkan/vulkan_core.h"
-#include"vk_mem_alloc.h"
 #include"Resource.h"
 #include"CommandBuffer.h"
 #include"FileHandler.h"
 #include<unordered_map>
+#define GLFW_INCLUDE_VULKAN
+#include<GLFW/glfw3.h>
 
 namespace zzcVulkanRenderEngine {
 	// Default configs
-	const u32 DEFAULT_POOL_SIZE = 256;
+	const u32 DEFAULT_POOL_SIZE = 512;
 	const u32 MAX_FRAME_IN_FLIGHT = 2;
 	const u32 SWAPCHAIN_IMAGES = 3;
 
@@ -22,6 +22,7 @@ namespace zzcVulkanRenderEngine {
 		u32 familyIndex;
 		u32 queueIndex;
 	};
+
 	// TODO: add more types
 	struct QueueFamilyInfos {
 		QueueInfo mainQueue;
@@ -87,8 +88,12 @@ namespace zzcVulkanRenderEngine {
 		//helper functions for application-level operations
 		template<typename T>
 		BufferHandle& createBufferFromData(const std::vector<T>& data);
+		template<typename T>
+		TextureHandle& createTexture2DFromData(const std::vector<T>& data, u32 width, u32 height, DataFormat format);
 		void transferBufferInDevice(VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDeviceSize copySize);
 		void transferImageInDevice(TextureHandle src, TextureHandle dst, VkExtent2D copyExtent);
+		void transferBufferToImage2DInDevice(BufferHandle buffer, TextureHandle tex, u32 width, u32 height);
+		void imageLayoutTransition(TextureHandle tex, GraphResourceAccessType targetAccess);
 
 		//internal hepler functions
 		uint32_t helper_findSuitableMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -97,6 +102,7 @@ namespace zzcVulkanRenderEngine {
 	private:
 		// Default settings 
 		// may be later moved to Engine class
+		const u32 poolSize = DEFAULT_POOL_SIZE;
 		const u32 frameInFlight = MAX_FRAME_IN_FLIGHT;
 		const u32 nSwapChainImages = SWAPCHAIN_IMAGES;
 

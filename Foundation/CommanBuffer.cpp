@@ -103,6 +103,34 @@ namespace zzcVulkanRenderEngine {
 		);
 	}
 
+	void CommandBuffer::cmdCopyBufferToImage(Buffer& buffer, Texture& tex, u32 width, u32 height, u32 depth) {
+		VkBufferImageCopy region{};
+		region.bufferOffset = 0;
+		region.bufferRowLength = 0;
+		region.bufferImageHeight = 0;
+
+		region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		region.imageSubresource.mipLevel = 0;
+		region.imageSubresource.baseArrayLayer = 0;
+		region.imageSubresource.layerCount = 1;
+
+		region.imageOffset = { 0, 0, 0 };
+		region.imageExtent = {
+			width,
+			height,
+			depth
+		};
+
+		vkCmdCopyBufferToImage(
+			cmdBuffer,
+			buffer.buffer,
+			tex.image,
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			1,
+			&region
+		);
+	}
+
 	// Insert an image barrier
 	// AccessMask, layout and pipelineStage are all determined by the accessType
 	void CommandBuffer::cmdInsertImageBarrier(Texture& texture, GraphResourceAccessType newAccessType, u32 baseMipLevel, u32 nMipLevels) {

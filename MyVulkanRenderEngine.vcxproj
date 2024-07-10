@@ -88,14 +88,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\DevTools\Vulkan SDK\Include;../MyVulkanRenderEngine;D:\DevTools\VMA\include;"D:\DevTools\libraries for Vulkan\GLM\glm-0.9.9.8\glm";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\DevTools\Vulkan SDK\Include;../MyVulkanRenderEngine;D:\DevTools\VMA\include;D:\DevTools\libraries for Vulkan\GLM\glm-0.9.9.8\glm;"D:\DevTools\libraries for Vulkan\GLFW\glfw-3.3.8.bin.WIN64\include";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>"D:\DevTools\Vulkan SDK\Lib";%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\DevTools\Vulkan SDK\Lib;"D:\DevTools\libraries for Vulkan\GLFW\glfw-3.3.8.bin.WIN64\lib-vc2019";%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -106,7 +106,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\DevTools\Vulkan SDK\Include;../MyVulkanRenderEngine;D:\DevTools\VMA\include;"D:\DevTools\libraries for Vulkan\GLM\glm-0.9.9.8\glm";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\DevTools\Vulkan SDK\Include;../MyVulkanRenderEngine;D:\DevTools\VMA\include;D:\DevTools\libraries for Vulkan\GLM\glm-0.9.9.8\glm;"D:\DevTools\libraries for Vulkan\GLFW\glfw-3.3.8.bin.WIN64\include";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -114,8 +114,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>"D:\DevTools\Vulkan SDK\Lib";%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\DevTools\Vulkan SDK\Lib;"D:\DevTools\libraries for Vulkan\GLFW\glfw-3.3.8.bin.WIN64\lib-vc2019";%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -124,14 +124,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\DevTools\Vulkan SDK\Include;../MyVulkanRenderEngine;D:\DevTools\VMA\include;"D:\DevTools\libraries for Vulkan\GLM\glm-0.9.9.8\glm";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\DevTools\Vulkan SDK\Include;../MyVulkanRenderEngine;D:\DevTools\VMA\include;D:\DevTools\libraries for Vulkan\GLM\glm-0.9.9.8\glm;"D:\DevTools\libraries for Vulkan\GLFW\glfw-3.3.8.bin.WIN64\include";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>"D:\DevTools\Vulkan SDK\Lib";%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\DevTools\Vulkan SDK\Lib;"D:\DevTools\libraries for Vulkan\GLFW\glfw-3.3.8.bin.WIN64\lib-vc2019";%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -142,7 +142,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\DevTools\Vulkan SDK\Include;../MyVulkanRenderEngine;D:\DevTools\VMA\include;"D:\DevTools\libraries for Vulkan\GLM\glm-0.9.9.8\glm";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\DevTools\Vulkan SDK\Include;../MyVulkanRenderEngine;D:\DevTools\VMA\include;D:\DevTools\libraries for Vulkan\GLM\glm-0.9.9.8\glm;"D:\DevTools\libraries for Vulkan\GLFW\glfw-3.3.8.bin.WIN64\include";%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -150,8 +150,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>"D:\DevTools\Vulkan SDK\Lib";%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\DevTools\Vulkan SDK\Lib;"D:\DevTools\libraries for Vulkan\GLFW\glfw-3.3.8.bin.WIN64\lib-vc2019";%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -175,6 +175,7 @@
     <ClCompile Include="Application\demo_triangle.cpp" />
     <ClCompile Include="Foundation\Engine.cpp" />
     <ClCompile Include="Foundation\FileHandler.cpp" />
+    <ClCompile Include="Foundation\gltfScene.cpp" />
     <ClCompile Include="Foundation\RenderGraph.cpp" />
     <ClCompile Include="Foundation\Resource.cpp" />
     <ClCompile Include="Foundation\CommanBuffer.cpp" />

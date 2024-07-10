@@ -1,6 +1,5 @@
 #pragma once
 
-
 namespace zzcVulkanRenderEngine {
 
 	enum class TextureType {

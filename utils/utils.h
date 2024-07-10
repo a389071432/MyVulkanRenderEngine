@@ -1,6 +1,7 @@
 #pragma once
 #include"vulkan/vulkan_core.h"
 #include"Foundation/enums.h"
+#include"Foundation/assert.h"
 
 namespace zzcVulkanRenderEngine {
 	inline VkAccessFlags util_getAccessFlags(GraphResourceAccessType accessType) {
