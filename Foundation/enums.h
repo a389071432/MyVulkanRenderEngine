@@ -75,7 +75,9 @@ namespace zzcVulkanRenderEngine {
 		UNORM,
 		UNORM2,
 		UNORM3,
-		UNORM4
+		UNORM4,
+
+		UNDEFINED
 	};
 
 

@@ -1,6 +1,7 @@
 #include"gltfScene.h"
 #include"Third parties/tinygltf/tiny_gltf.h"
 #include"assert.h"
+#include"utils/utils.h"
 
 namespace zzcVulkanRenderEngine {
     gltfScene::gltfScene() {
@@ -36,7 +37,7 @@ namespace zzcVulkanRenderEngine {
                 image.image,
                 static_cast<u32>(image.width),
                 static_cast<u32>(image.height),
-                image.component
+                util_getDataFormat(image)
             );
         }
 

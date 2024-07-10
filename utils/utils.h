@@ -2,6 +2,7 @@
 #include"vulkan/vulkan_core.h"
 #include"Foundation/enums.h"
 #include"Foundation/assert.h"
+#include"Third parties/tinygltf/tiny_gltf.h"
 
 namespace zzcVulkanRenderEngine {
 	inline VkAccessFlags util_getAccessFlags(GraphResourceAccessType accessType) {
@@ -252,6 +253,40 @@ namespace zzcVulkanRenderEngine {
 			ASSERT(false, "Assertion failed: invalid Enum CullFrontFace!");
 			break;
 		}
+	}
+
+	inline DataFormat util_getDataFormat(::tinygltf::Image image) {
+		DataFormat format = DataFormat::UNDEFINED;
+
+		// Helper function to choose between UNORM and FLOAT
+		auto chooseFormat = [](int components, bool isFloat) {
+			switch (components) {
+			case 1: return isFloat ? DataFormat::FLOAT : DataFormat::UNORM;
+			case 2: return isFloat ? DataFormat::FLOAT2 : DataFormat::UNORM2;
+			case 3: return isFloat ? DataFormat::FLOAT3 : DataFormat::UNORM3;
+			case 4: return isFloat ? DataFormat::FLOAT4 : DataFormat::UNORM4;
+			default: return DataFormat::UNDEFINED;
+			}
+		};
+
+		bool isFloat = false;
+
+		// Check bits per channel
+		if (image.bits == 32) {
+			isFloat = true; 
+		}
+		else if (image.bits != 8 && image.bits != 16) {
+			std::cerr << "Unexpected bit depth: " << image.bits << std::endl;
+			return DataFormat::UNDEFINED;
+		}
+
+		// These are typically UNORM
+		if (image.mimeType == "image/png" || image.mimeType == "image/jpeg") {
+			isFloat = false;  
+		}
+
+		// Determine format based on components and float/int
+		format = chooseFormat(image.component, isFloat);
 	}
 }
 
