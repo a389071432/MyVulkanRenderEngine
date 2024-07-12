@@ -7,8 +7,7 @@ namespace zzcVulkanRenderEngine {
 	public:
 		gltfScene();
 		~gltfScene();
-		void add_mesh(const std::string& filename) override;
-		void prepare() override;
+		void add_model(const std::string& filename) override;
 
 	private:
 		template<typename T>

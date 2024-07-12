@@ -4,16 +4,18 @@
 #include"glm/glm.hpp"
 #include<vector>
 #include"GPUDevice.h"
+#include<vulkan/vulkan.h>
 
 namespace zzcVulkanRenderEngine {
     struct PBRMaterial {
-        DescriptorSetsHandle descriptorSets;
-
         // Indices used for bindless textures.
         TextureHandle       albedo;
-        TextureHandle       roughness;
+        TextureHandle       metal_roughness;
         TextureHandle       normal;
         TextureHandle       occlusion;
+        TextureHandle       emissive;
+
+        DescriptorSetsHandle descriptorSets;
     };
 
     struct Mesh {
@@ -30,6 +32,8 @@ namespace zzcVulkanRenderEngine {
         u32 uv_offset;
         
         u32 primitive_cnt;
+
+        void destroy();
     };
 
 
@@ -43,11 +47,13 @@ namespace zzcVulkanRenderEngine {
     // (the instance-specific parameters are passed as an array bound to a descriptor)
     class Scene {
     public:
-        virtual void add_mesh(const std::string& filename) = 0;
-        virtual void prepare() = 0;
+        virtual void add_model(const std::string& filename) = 0;
+        void remove_model(u32 index);
+        /*virtual void prepare() = 0;*/
     protected:
         GPUDevice* device;
         std::vector<Mesh> meshes;
+        std::vector<std::vector<Mesh>> models; // a model is defined as a set of meshes
 
         //// only store the handle of resources on device
         //std::vector<BufferHandle> buffers;

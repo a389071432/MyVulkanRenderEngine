@@ -12,7 +12,7 @@ namespace zzcVulkanRenderEngine {
 
     }
 
-    void gltfScene::add_mesh(const std::string& filename) {
+    void gltfScene::add_model(const std::string& filename) {
         // load from gltf
         ::tinygltf::Model model;
         ::tinygltf::TinyGLTF loader;
@@ -119,8 +119,28 @@ namespace zzcVulkanRenderEngine {
             newMesh.tangent_buffer = device->createBufferFromData(tanData);
             newMesh.uv_buffer = device->createBufferFromData(uvData);
             newMesh.index_buffer = device->createBufferFromData(indexData);
+
+            // associate the pbr material
+            // TODO: each primitive may refer to different materials
+            // (Now we assume that all primitives from the same mesh all share the same material)
+            u32 mtIndex = mesh.primitives[0].material;
+            newMesh.material.albedo = textureHandles[model.textures[model.materials[mtIndex].pbrMetallicRoughness.baseColorTexture.index].source];
+            newMesh.material.metal_roughness= textureHandles[model.textures[model.materials[mtIndex].pbrMetallicRoughness.metallicRoughnessTexture.index].source];
+            newMesh.material.normal = textureHandles[model.textures[model.materials[mtIndex].normalTexture.index].source];
+            newMesh.material.occlusion = textureHandles[model.textures[model.materials[mtIndex].occlusionTexture.index].source];
+            newMesh.material.emissive = textureHandles[model.textures[model.materials[mtIndex].emissiveTexture.index].source];
+
+            // create sampler for each texture
+            
+
             meshes.push_back(newMesh);
+
+
         }
+        models.push_back(meshes);
+
+        // TODO: a unified way to manage all models, enabling efficient addition and removal of models
+
     }
 
     template<typename T>
