@@ -302,6 +302,36 @@ namespace zzcVulkanRenderEngine {
 		bufferPool.release_resource(handle);
 	}
 
+	VkSampler GPUDevice::createSampler(SamplerCreation createInfo) {
+		VkSamplerCreateInfo samplerCI{};
+		samplerCI.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerCI.minFilter = createInfo.minFilter;
+		samplerCI.magFilter = createInfo.magFilter;
+		samplerCI.mipmapMode = createInfo.mipMode;
+		samplerCI.addressModeU = createInfo.address_mode_u;
+		samplerCI.addressModeV = createInfo.address_mode_v;
+		samplerCI.addressModeW = createInfo.address_mode_w;
+		samplerCI.unnormalizedCoordinates = VK_FALSE;
+		samplerCI.borderColor= VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+		samplerCI.anisotropyEnable = createInfo.enableAnisotropy;
+		if (createInfo.enableAnisotropy) {
+			float maxAniso = queryMaxAnisotropy();
+			ASSERT(
+				createInfo.anisotropy < maxAniso,
+				"Assertion failed: required anisotropy exceeds the value supported by device!"
+			);
+		}
+		samplerCI.compareEnable = createInfo.enableCompare;
+		samplerCI.compareOp = createInfo.compareOp;
+		samplerCI
+	}
+
+	float GPUDevice::queryMaxAnisotropy() {
+		VkPhysicalDeviceProperties properties{};
+		vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+		return properties.limits.maxSamplerAnisotropy;
+	}
+
 	TextureHandle GPUDevice::createTexture(const TextureCreation createInfo) {
 		// Require a resource first
 		TextureHandle handle = requireTexture();

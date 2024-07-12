@@ -59,6 +59,7 @@ namespace zzcVulkanRenderEngine {
 		PipelineLayoutHandle createPipelineLayout(const PipelineLayoutCreation createInfo);
 		GraphicsPipelineHandle createGraphicsPipeline(const GraphicsPipelineCreation createInfo);
 		FramebufferHandle createFramebuffer(const FramebufferCreation createInfo);
+		VkSampler createSampler(SamplerCreation createInfo);
 
 		// Resource access
 		TextureHandle requireTexture();
@@ -85,7 +86,7 @@ namespace zzcVulkanRenderEngine {
 		TextureHandle getSwapChainImageByIndex(u32 index);
 		VkExtent2D getSwapChainExtent();
 
-		//helper functions for application-level operations
+		//helper functions for application-level requests
 		template<typename T>
 		BufferHandle& createBufferFromData(const std::vector<T>& data);
 		template<typename T>
@@ -94,6 +95,7 @@ namespace zzcVulkanRenderEngine {
 		void transferImageInDevice(TextureHandle src, TextureHandle dst, VkExtent2D copyExtent);
 		void transferBufferToImage2DInDevice(BufferHandle buffer, TextureHandle tex, u32 width, u32 height);
 		void imageLayoutTransition(TextureHandle tex, GraphResourceAccessType targetAccess);
+		float queryMaxAnisotropy();
 
 		//internal hepler functions
 		uint32_t helper_findSuitableMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);

@@ -23,6 +23,30 @@ namespace zzcVulkanRenderEngine {
 	const BufferHandle INVALID_BUFFER_HANDLE = -1;
 	const DescriptorSetsHandle INVALID_DESCRIPTORSETS_HANDLE = -1;
 
+	// TODO: wrap the enumerations?
+	struct SamplerCreation {
+		VkFilter                        minFilter = VK_FILTER_NEAREST;
+		VkFilter                        magFilter = VK_FILTER_NEAREST;
+		VkSamplerMipmapMode             mipMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+
+		VkSamplerAddressMode            address_mode_u = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		VkSamplerAddressMode            address_mode_v = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		VkSamplerAddressMode            address_mode_w = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+
+		bool enableAnisotropy = false;
+		float anisotropy = 0;
+		bool enableCompare = false;
+		// TODO: wrap this to enum
+		VkCompareOp compareOp = VK_COMPARE_OP_ALWAYS;
+		
+
+		SamplerCreation& setFilterMode(VkFilter min, VkFilter mag);
+		SamplerCreation& setMipMode(VkSamplerMipmapMode mip);
+		SamplerCreation& setAddressMode(VkSamplerAddressMode u, VkSamplerAddressMode v, VkSamplerAddressMode w);
+		SamplerCreation& setAnisotropy(bool enable, float anisotropy);
+		SamplerCreation& setCompareOp(bool enable, VkCompareOp compareOp);
+	};
+
 	struct Texture {
 		VkImage image;
 		VkImageView imageView;
