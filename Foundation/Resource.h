@@ -53,7 +53,9 @@ namespace zzcVulkanRenderEngine {
 		VkDeviceMemory mem;
 		VkFormat format;
 		VkSampler sampler;
-		GraphResourceAccessType access;
+		std::vector<GraphResourceAccessType> access;   // defined separately for each mip level of the texture (NOT SURE, NEED CONFIRMATION)
+		u16 width, height, depth;
+		u16 nMips;
 
 		VmaAllocation vmaAlloc;    // record allocation info on device, useful for aliasing memory allocation
 

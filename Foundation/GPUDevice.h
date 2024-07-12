@@ -90,11 +90,11 @@ namespace zzcVulkanRenderEngine {
 		template<typename T>
 		BufferHandle& createBufferFromData(const std::vector<T>& data);
 		template<typename T>
-		TextureHandle& createTexture2DFromData(const std::vector<T>& data, u32 width, u32 height, DataFormat format);
+		TextureHandle& createTexture2DFromData(const std::vector<T>& data, u16 width, u16 height, u16 nMips, DataFormat format);
 		void transferBufferInDevice(VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDeviceSize copySize);
 		void transferImageInDevice(TextureHandle src, TextureHandle dst, VkExtent2D copyExtent);
 		void transferBufferToImage2DInDevice(BufferHandle buffer, TextureHandle tex, u32 width, u32 height);
-		void imageLayoutTransition(TextureHandle tex, GraphResourceAccessType targetAccess);
+		void imageLayoutTransition(TextureHandle tex, GraphResourceAccessType targetAccess, u16 baseMip, u16 nMips);
 		float queryMaxAnisotropy();
 
 		//internal hepler functions
@@ -167,5 +167,6 @@ namespace zzcVulkanRenderEngine {
 		QueueFamilyInfos helper_selectQueueFamilies(VkPhysicalDevice phyDevice, u32 requiredQueues);
 		std::vector<VkDeviceQueueCreateInfo>& helper_getQueueCreateInfos(QueueFamilyInfos queueInfos,u32 requiredQueues);
 		VkShaderModule helper_createShaderModule(const std::vector<char>& code);
+		void helper_generateMipMaps(TextureHandle tex, u16 nMips);
 	};
 }

@@ -886,7 +886,7 @@ namespace zzcVulkanRenderEngine {
 	}
 
 	template<typename T>
-	TextureHandle& GPUDevice::createTexture2DFromData(const std::vector<T>& data, u32 width, u32 height, DataFormat format) {
+	TextureHandle& GPUDevice::createTexture2DFromData(const std::vector<T>& data, u16 width, u16 height, u16 nMips, DataFormat format) {
 		//create a staging buffer
 		BufferCreation stageCI{};
 		stageCI.setSize(bufferSize)
@@ -907,7 +907,7 @@ namespace zzcVulkanRenderEngine {
 		texCI.setType(TextureType::Texture2D)
 			.setFormat(format)
 			.setSize(width, height, 1)
-			.setMipLevels(1);
+			.setMipLevels(nMips);
 		TextureHandle texHandle = createTexture(texCI);
 		Texture& tex = getTexture(texHandle);
 
@@ -916,6 +916,16 @@ namespace zzcVulkanRenderEngine {
 
 		// release the staging buffer
 		removeBuffer(stage);
+
+		// generate mip levels if requried
+		if (nMips > 1) {
+			auxiCmdBuffer.begin();
+			// set layout transition for all mip levels
+			// so that the i-th mip level will be transitioned to the layout COPY_DST when performing the copy from i-1 to i
+			imageLayoutTransition(texHandle, GraphResourceAccessType::COPY_DST, 0, nMips);
+			helper_generateMipMaps(texHandle, nMips);
+			auxiCmdBuffer.end();
+		}
 	}
 
 	void GPUDevice::transferBufferInDevice(VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDeviceSize copySize) {
@@ -933,12 +943,12 @@ namespace zzcVulkanRenderEngine {
 		GraphResourceAccessType srcAccess = srcImage.access;
 		GraphResourceAccessType dstAccess = dstImage.access;
 
+		// layout transition before copy 
+		imageLayoutTransition(src, GraphResourceAccessType::COPY_SRC, 0, 1);
+		imageLayoutTransition(dst, GraphResourceAccessType::COPY_DST, 0, 1);
+
 		// copy
 		auxiCmdBuffer.cmdCopyImage(srcImage, dstImage, copyExtent);
-
-		// restore to original layout
-		auxiCmdBuffer.cmdInsertImageBarrier(srcImage, srcAccess, 0, 1);
-		auxiCmdBuffer.cmdInsertImageBarrier(dstImage, dstAccess, 0, 1);
 
 		auxiCmdBuffer.end();
 
@@ -946,20 +956,18 @@ namespace zzcVulkanRenderEngine {
 
 	}
 
+	// NOTE: this func only transfer buffer data to the first mip level of texture
 	void GPUDevice::transferBufferToImage2DInDevice(BufferHandle bHnd, TextureHandle texHnd, u32 width, u32 height) {
 		auxiCmdBuffer.begin();
 		Buffer& buffer = getBuffer(bHnd);
 		Texture& image = getTexture(texHnd);
-		GraphResourceAccessType ori_access = image.access;
 
 		// layout transition before transferring
-		auxiCmdBuffer.cmdInsertImageBarrier(image, GraphResourceAccessType::COPY_DST, 0, 1);
+		//auxiCmdBuffer.cmdInsertImageBarrier(image, GraphResourceAccessType::COPY_DST, 0, 1);
+		imageLayoutTransition(texHnd, GraphResourceAccessType::COPY_DST, 0, 1);
 		
 		// transfer data
 		auxiCmdBuffer.cmdCopyBufferToImage(buffer, image, width, height, 1);
-
-		// restore to original layout
-		auxiCmdBuffer.cmdInsertImageBarrier(image, ori_access, 0, 1);
 
 		auxiCmdBuffer.end();
 
@@ -967,10 +975,20 @@ namespace zzcVulkanRenderEngine {
 
 	}
 
-	void GPUDevice::imageLayoutTransition(TextureHandle tex, GraphResourceAccessType targetAccess) {
+	// transition the image layout
+	// tex determines the the oldLayout
+	// targetAccess determines the newLayout
+	void GPUDevice::imageLayoutTransition(TextureHandle texHandle, GraphResourceAccessType targetAccess, u16 baseMip, u16 nMips) {
 		auxiCmdBuffer.begin();
-		Texture& image = getTexture(tex);
-		auxiCmdBuffer.cmdInsertImageBarrier(image, targetAccess, 0, 1);
+
+		// insert barrier for each mip level separately 
+		// also update the texture state for tracking
+		for (u16 i = baseMip; i < nMips; i++) {
+			Texture& tex = getTexture(texHandle);
+			auxiCmdBuffer.cmdInsertImageBarrier(tex, targetAccess, baseMip);
+			tex.access[i] = targetAccess;
+		}
+
 		auxiCmdBuffer.end();
 
 		// submit to queue
@@ -1198,5 +1216,22 @@ namespace zzcVulkanRenderEngine {
 			}
 		}
 		throw std::runtime_error("failed to find a suitable memory type!");
+	}
+
+	void GPUDevice::helper_generateMipMaps(TextureHandle texHandle, u16 nMips) {
+		Texture& tex = getTexture(texHandle);
+		u16 mipWidth = tex.width;
+		u16 mipHeight = tex.height;
+
+		for (u16 i = 1; i < nMips; i++) {
+			// transit the previous miplevel layout for copy
+			//auxiCmdBuffer.cmdInsertImageBarrier(tex, GraphResourceAccessType::COPY_SRC, i - 1, 1);
+			imageLayoutTransition(texHandle, GraphResourceAccessType::COPY_SRC, i - 1, 1);
+			
+			// copy data from mip level i-1 to i
+			VkOffset3D srcRegion = { mipWidth,mipHeight,1 };
+			VkOffset3D dstRegion = { mipWidth>1? mipWidth/2:1, mipHeight > 1 ? mipHeight / 2 : 1,1 };
+			auxiCmdBuffer.cmdBlitImage(tex, tex, i - 1, i, srcRegion, dstRegion);
+		}
 	}
  }
