@@ -303,6 +303,7 @@ namespace zzcVulkanRenderEngine {
 	}
 
 	VkSampler GPUDevice::createSampler(SamplerCreation createInfo) {
+		VkSampler sampler;
 		VkSamplerCreateInfo samplerCI{};
 		samplerCI.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 		samplerCI.minFilter = createInfo.minFilter;
@@ -323,7 +324,14 @@ namespace zzcVulkanRenderEngine {
 		}
 		samplerCI.compareEnable = createInfo.enableCompare;
 		samplerCI.compareOp = createInfo.compareOp;
-		samplerCI
+		samplerCI.minLod = createInfo.minLod;
+		samplerCI.maxLod = createInfo.maxLod;
+		samplerCI.mipLodBias = createInfo.lodBias;
+		ASSERT(
+			vkCreateSampler(device, &samplerCI, nullptr, &sampler) == VK_SUCCESS,
+			"Assertion failed: sampler creation failed!"
+		);
+		return sampler;
 	}
 
 	float GPUDevice::queryMaxAnisotropy() {
@@ -340,7 +348,9 @@ namespace zzcVulkanRenderEngine {
 		// Fill in the structure 
 		texture.format = util_getFormat(createInfo.format);
 		texture.sampler = VK_NULL_HANDLE;
-		texture.access = GraphResourceAccessType::UNDEFINED;    //initialized to be undefined
+		for (u16 i = 0; i < createInfo.nMipLevels; i++) {
+			texture.access[i] = GraphResourceAccessType::UNDEFINED;    //initialized to be undefined
+		}
 
 		// Create image
 		VkImageCreateInfo imageCI;
@@ -919,13 +929,17 @@ namespace zzcVulkanRenderEngine {
 
 		// generate mip levels if requried
 		if (nMips > 1) {
-			auxiCmdBuffer.begin();
 			// set layout transition for all mip levels
 			// so that the i-th mip level will be transitioned to the layout COPY_DST when performing the copy from i-1 to i
 			imageLayoutTransition(texHandle, GraphResourceAccessType::COPY_DST, 0, nMips);
+			auxiCmdBuffer.begin();
 			helper_generateMipMaps(texHandle, nMips);
 			auxiCmdBuffer.end();
 		}
+
+		// since the texture will be read by shader during rendering
+		// insert barrier to transition it to appropriate layout
+		imageLayoutTransition(texHand)
 	}
 
 	void GPUDevice::transferBufferInDevice(VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDeviceSize copySize) {

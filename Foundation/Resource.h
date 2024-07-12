@@ -39,9 +39,12 @@ namespace zzcVulkanRenderEngine {
 		// TODO: wrap this to enum
 		VkCompareOp compareOp = VK_COMPARE_OP_ALWAYS;
 		
+		float minLod = 0.0;
+		float maxLod = 0.0;
+		float lodBias = 0.0;
 
 		SamplerCreation& setFilterMode(VkFilter min, VkFilter mag);
-		SamplerCreation& setMipMode(VkSamplerMipmapMode mip);
+		SamplerCreation& setMipMode(VkSamplerMipmapMode mip, float minLod, float maxLod, float lodBias);
 		SamplerCreation& setAddressMode(VkSamplerAddressMode u, VkSamplerAddressMode v, VkSamplerAddressMode w);
 		SamplerCreation& setAnisotropy(bool enable, float anisotropy);
 		SamplerCreation& setCompareOp(bool enable, VkCompareOp compareOp);

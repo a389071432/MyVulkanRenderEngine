@@ -18,6 +18,8 @@ namespace zzcVulkanRenderEngine {
 			return VK_ACCESS_TRANSFER_READ_BIT;
 		case GraphResourceAccessType::COPY_DST:
 			return VK_ACCESS_TRANSFER_WRITE_BIT;
+		case GraphResourceAccessType::UNDEFINED:
+			return VK_ACCESS_NONE;
 		default:
 			ASSERT(false, "Assertion failed: invalid Enum GraphResourceAccessType!");
 			break;
@@ -52,6 +54,8 @@ namespace zzcVulkanRenderEngine {
 			return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 		case GraphResourceAccessType::PRESENT:
 			return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		case GraphResourceAccessType::UNDEFINED:
+				return VK_IMAGE_LAYOUT_UNDEFINED;
 		default:
 			ASSERT(false, "Assertion failed: invalid Enum GraphResourceAccessType!");
 			break;
@@ -72,6 +76,8 @@ namespace zzcVulkanRenderEngine {
 			return VK_PIPELINE_STAGE_TRANSFER_BIT;
 		case GraphResourceAccessType::COPY_DST:
 			return VK_PIPELINE_STAGE_TRANSFER_BIT;
+		case GraphResourceAccessType::UNDEFINED:
+			return VK_PIPELINE_STAGE_NONE;;
 		default:
 			ASSERT(false, "Assertion failed: invalid Enum GraphResourceAccessType!");
 			break;
