@@ -28,8 +28,8 @@ namespace zzcVulkanRenderEngine {
             const auto& image = model.images[i];
             TextureHandle handle = device->createTexture2DFromData(
                 image.image,
-                static_cast<u32>(image.width),
-                static_cast<u32>(image.height),
+                static_cast<u16>(image.width),
+                static_cast<u16>(image.height),
                 util_getDataFormat(image)
             );
         }
@@ -124,14 +124,64 @@ namespace zzcVulkanRenderEngine {
             // TODO: each primitive may refer to different materials
             // (Now we assume that all primitives from the same mesh all share the same material)
             u32 mtIndex = mesh.primitives[0].material;
-            newMesh.material.albedo = textureHandles[model.textures[model.materials[mtIndex].pbrMetallicRoughness.baseColorTexture.index].source];
-            newMesh.material.metal_roughness= textureHandles[model.textures[model.materials[mtIndex].pbrMetallicRoughness.metallicRoughnessTexture.index].source];
-            newMesh.material.normal = textureHandles[model.textures[model.materials[mtIndex].normalTexture.index].source];
-            newMesh.material.occlusion = textureHandles[model.textures[model.materials[mtIndex].occlusionTexture.index].source];
-            newMesh.material.emissive = textureHandles[model.textures[model.materials[mtIndex].emissiveTexture.index].source];
+            // allocate descriptors for the material
+            DescriptorSetLayoutsCreation layoutCI{};
+            u32 baseColorIndex = model.materials[mtIndex].pbrMetallicRoughness.baseColorTexture.index;
+            u32 metalRoughIndex = model.materials[mtIndex].pbrMetallicRoughness.metallicRoughnessTexture.index;
+            u32 normalIndex = model.materials[mtIndex].normalTexture.index;
+            u32 occlusionIndex = model.materials[mtIndex].occlusionTexture.index;
+            u32 emissiveIndex = model.materials[mtIndex].emissiveTexture.index;
 
-            // create sampler for each texture
-            
+            if (baseColorIndex >= 0) {
+                newMesh.material.albedo = textureHandles[model.textures[baseColorIndex].source];
+                layoutCI.addBinding({
+                        BindingType::IMAGE_SAMPLER,
+                        ShaderStage::FRAG,
+                        0,
+                        0
+                    });
+            }
+            if (metalRoughIndex >= 0) {
+                newMesh.material.metal_roughness = textureHandles[model.textures[metalRoughIndex].source];
+                layoutCI.addBinding({
+                        BindingType::IMAGE_SAMPLER,
+                        ShaderStage::FRAG,
+                        0,
+                        0
+                    });
+            }
+            if (normalIndex >= 0) {
+                newMesh.material.normal = textureHandles[model.textures[normalIndex].source];
+                layoutCI.addBinding({
+                        BindingType::IMAGE_SAMPLER,
+                        ShaderStage::FRAG,
+                        0,
+                        0
+                    });
+            }
+            if (occlusionIndex >= 0) {
+                newMesh.material.occlusion = textureHandles[model.textures[occlusionIndex].source];
+                layoutCI.addBinding({
+                        BindingType::IMAGE_SAMPLER,
+                        ShaderStage::FRAG,
+                        0,
+                        0
+                    });
+            }
+            if (emissiveIndex >= 0) {
+                newMesh.material.emissive = textureHandles[model.textures[emissiveIndex].source];
+                layoutCI.addBinding({
+                        BindingType::IMAGE_SAMPLER,
+                        ShaderStage::FRAG,
+                        0,
+                        0
+                    });
+            }
+
+            DescriptorSetLayoutsHandle setLayout = device->createDescriptorSetLayouts(layoutCI);
+            DescriptorSetsAlloc setAlloc{};
+            setAlloc.setLayoutsHandle(setLayout);
+            newMesh.material.descriptorSets = device->createDescriptorSets(setAlloc);
 
             meshes.push_back(newMesh);
 

@@ -143,6 +143,7 @@ namespace zzcVulkanRenderEngine {
 		descPoolCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		descPoolCI.poolSizeCount = 2;
 		descPoolCI.pPoolSizes = poolSizes.data();
+		descPoolCI.maxSets = maxSets;
 		ASSERT(
 			vkCreateDescriptorPool(device, &descPoolCI, nullptr, &descriptorPool) == VK_SUCCESS,
 			"Assertion failed: failed to create descriptor pool"

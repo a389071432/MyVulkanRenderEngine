@@ -155,7 +155,7 @@ namespace zzcVulkanRenderEngine {
 		VkDescriptorPool descriptorPool;
 		u32 maxUBDescritors = MAX_UNIFORM_BUFFER_DESCRIPTORS;
 		u32 maxSamplerDescritors = MAX_IMAGE_SAMPLER_DESCRIPTORS;
-
+		u32 maxSets = MAX_SETS;
 
 		// Resource management
 		ResourcePool<Texture, TextureHandle> texturePool;
