@@ -5,6 +5,7 @@
 #include<algorithm>
 #include<Windows.h>
 #include<vulkan/vulkan_win32.h>
+#include<array>
 
 namespace zzcVulkanRenderEngine {
 	GPUDevice::GPUDevice(GPUDeviceCreation createInfo) 
@@ -130,6 +131,22 @@ namespace zzcVulkanRenderEngine {
 		);
 
 		// TODO: Create descriptorPool
+		std::array<VkDescriptorPoolSize, 2> poolSizes;
+
+		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSizes[0].descriptorCount = maxUBDescritors;
+
+		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		poolSizes[1].descriptorCount = maxSamplerDescritors;
+
+		VkDescriptorPoolCreateInfo descPoolCI{};
+		descPoolCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		descPoolCI.poolSizeCount = 2;
+		descPoolCI.pPoolSizes = poolSizes.data();
+		ASSERT(
+			vkCreateDescriptorPool(device, &descPoolCI, nullptr, &descriptorPool) == VK_SUCCESS,
+			"Assertion failed: failed to create descriptor pool"
+		);
 
 		// CREATE COMMANDPOOL
 		VkCommandPoolCreateInfo cmdPoolCI{};
@@ -411,7 +428,8 @@ namespace zzcVulkanRenderEngine {
 		);
 
 		// TODO: create sampler for texture (study details before this) 
-
+		SamplerCreation samplerCI{};
+		texture.sampler = createSampler(samplerCI);
 
 		return handle;
 	}

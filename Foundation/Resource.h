@@ -50,6 +50,7 @@ namespace zzcVulkanRenderEngine {
 		SamplerCreation& setCompareOp(bool enable, VkCompareOp compareOp);
 	};
 
+	// TODO: add params for sampler settings
 	struct Texture {
 		VkImage image;
 		VkImageView imageView;

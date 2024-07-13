@@ -9,6 +9,9 @@
 namespace zzcVulkanRenderEngine {
 	// Default configs
 	const u32 DEFAULT_POOL_SIZE = 512;
+	const u32 MAX_UNIFORM_BUFFER_DESCRIPTORS = 100;
+	const u32 MAX_IMAGE_SAMPLER_DESCRIPTORS = 100;
+	const u32 MAX_SETS = 50;
 	const u32 MAX_FRAME_IN_FLIGHT = 2;
 	const u32 SWAPCHAIN_IMAGES = 3;
 
@@ -105,6 +108,7 @@ namespace zzcVulkanRenderEngine {
 		// Default settings 
 		// may be later moved to Engine class
 		const u32 poolSize = DEFAULT_POOL_SIZE;
+
 		const u32 frameInFlight = MAX_FRAME_IN_FLIGHT;
 		const u32 nSwapChainImages = SWAPCHAIN_IMAGES;
 
@@ -149,6 +153,9 @@ namespace zzcVulkanRenderEngine {
 
 		// Descriptor pool
 		VkDescriptorPool descriptorPool;
+		u32 maxUBDescritors = MAX_UNIFORM_BUFFER_DESCRIPTORS;
+		u32 maxSamplerDescritors = MAX_IMAGE_SAMPLER_DESCRIPTORS;
+
 
 		// Resource management
 		ResourcePool<Texture, TextureHandle> texturePool;
