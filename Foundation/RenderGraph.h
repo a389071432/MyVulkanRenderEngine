@@ -7,6 +7,7 @@
 #include"Resource.h"
 #include"GPUDevice.h"
 #include<unordered_map>
+#include"Scene.h"
 
 namespace zzcVulkanRenderEngine {
 	typedef u32 GraphNodeHandle;
@@ -37,6 +38,8 @@ namespace zzcVulkanRenderEngine {
 	u32 INVALID_BINDING = -1;
 	struct GraphResource {
 		bool isExternal=false;
+		DescriptorSetLayoutsHandle externalDescLayouts;   // mandatory if isExternal=True, used to created the pipelinelayout for node
+
 		GraphResourceType type;   
 		ResourceInfo info;
 		std::string key;           // used to uniquely identify a resource, note that 'final' represent the final output to display
@@ -110,7 +113,7 @@ namespace zzcVulkanRenderEngine {
         // (note that external resources like PBR textures, camera can be accessed by name and registered by handle, this is automatically done in compile())
         // execute() may include logic for binding pipeline/vertex/indices/descriptorsets
 		virtual void init(GPUDevice* device)=0;
-		virtual void execute(CommandBuffer* cmdBuffer, GPUDevice* device)=0;
+		virtual void execute(CommandBuffer* cmdBuffer, GPUDevice* device, Scene* scene)=0;
 		
 		// for type determination
 		virtual void asGraphics();

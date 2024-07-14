@@ -102,4 +102,10 @@ namespace zzcVulkanRenderEngine {
 		SAMPLE_64,
 		SAMPLE_MAX
 	};
+
+	enum class PipelineBindPoint {
+		GRAPHICS,
+		COMPUTE,
+		RAY_TRACING
+	};
 }

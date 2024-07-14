@@ -204,12 +204,14 @@ namespace zzcVulkanRenderEngine {
 			layoutsCI.setNodeType(node->type);
 			if (node->type == GraphNodeType::GRAPHICS) {
 				for (GraphResource& r : node->inputs) {
-					layoutsCI.addBinding({
-						util_getBindingType(r.type,true),
-						r.accessStage,
-						r.groupId,
-						r.binding
-						});
+					if (r.isExternal == false) {
+						layoutsCI.addBinding({
+	                          util_getBindingType(r.type,true),
+	                          r.accessStage,
+	                          r.groupId,
+	                          r.binding
+							});
+					}
 				}
 				node->descriptorSetLayouts = device->createDescriptorSetLayouts(layoutsCI);
 			}
@@ -283,10 +285,22 @@ namespace zzcVulkanRenderEngine {
 		}
 
 	    // TODO: STEP 2 (create pipelineLayout for the node)
+		// NOTE: need to concatenate multiple descriptor sets from internal and external resources
 		for (u32 i = 0; i < nodes.size(); i++) {
 			GraphNodeBase* node = nodes.at(i);
 			PipelineLayoutCreation layoutCI{};
-			layoutCI.setDescLayouts(node->descriptorSetLayouts);
+			// descLayout for internal resources
+			layoutCI.addDescLayouts(node->descriptorSetLayouts);
+			// descLayout for external resources
+			for (GraphResource& r : node->inputs) {
+				if (r.isExternal == true) {
+					ASSERT(
+						r.externalDescLayouts != INVALID_DESCRIPTORSET_LAYOUTS_HANDLE,
+						"Assertion failed: descriptorSet layout is not defined for external resource!"
+					);
+					layoutCI.addDescLayouts(r.externalDescLayouts);
+				}
+			}
 			node->pipelineLayout = device->createPipelineLayout(layoutCI);
 		}
 
@@ -374,11 +388,11 @@ namespace zzcVulkanRenderEngine {
 			for (GraphResource& r : node.outputs) {
 				Texture& texture = device->getTexture(r.info.texture.texHandle);
 				if (r.type == GraphResourceType::TEXTURE) {
-					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::WRITE_ATTACHMENT, 0, 1);
+					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::WRITE_ATTACHMENT, 0);
 					texture.setAccessType(GraphResourceAccessType::WRITE_ATTACHMENT);
 				}
 				else if (r.type == GraphResourceType::DEPTH_MAP) {
-					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::WRITE_DEPTH, 0, 1);
+					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::WRITE_DEPTH, 0);
 					texture.setAccessType(GraphResourceAccessType::WRITE_DEPTH);
 				}
 				else if (r.type == GraphResourceType::BUFFER) {

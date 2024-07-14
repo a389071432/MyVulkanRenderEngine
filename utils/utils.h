@@ -322,6 +322,23 @@ namespace zzcVulkanRenderEngine {
 		// Determine format based on components and float/int
 		format = chooseFormat(image.component, isFloat);
 	}
+
+	inline VkPipelineBindPoint util_getPipelineBindPoint(PipelineBindPoint bindPoint) {
+		switch (bindPoint)
+		{
+		case zzcVulkanRenderEngine::PipelineBindPoint::GRAPHICS:
+			return VK_PIPELINE_BIND_POINT_GRAPHICS;
+			break;
+		case zzcVulkanRenderEngine::PipelineBindPoint::COMPUTE:
+			return VK_PIPELINE_BIND_POINT_COMPUTE;
+			break;
+		case zzcVulkanRenderEngine::PipelineBindPoint::RAY_TRACING:
+			return VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR;
+			break;
+		default:
+			break;
+		}
+	}
 }
 
 

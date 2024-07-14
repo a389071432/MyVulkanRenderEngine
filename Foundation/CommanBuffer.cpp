@@ -175,4 +175,35 @@ namespace zzcVulkanRenderEngine {
 		// NOTE: here we always assume that the image have been transitioned into the default layout
 		vkCmdBlitImage(cmdBuffer, srcTex.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dstTex.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
 	}
+
+	void CommandBuffer::cmdSetViewport(float width, float height) {
+		VkViewport viewport{};
+		viewport.height = height;
+		viewport.width = width;
+		viewport.minDepth = (float)0.0f;
+		viewport.maxDepth = (float)1.0f;
+		vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
+	}
+
+	void CommandBuffer::cmdSetScissor(u32 width, u32 height, int offsetX, int offsetY) {
+		VkRect2D scissor{};
+		scissor.extent.width = width;
+		scissor.extent.height = height;
+		scissor.offset.x = offsetX;
+		scissor.offset.y = offsetY;
+		vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
+	}
+
+	void CommandBuffer::cmdBindDescriptorSets(PipelineBindPoint bindPoint, VkPipelineLayout pipeLayout, std::vector<VkDescriptorSet> sets) {
+		vkCmdBindDescriptorSets(
+			cmdBuffer,
+			util_getPipelineBindPoint(bindPoint),
+			pipeLayout,
+			0,
+			static_cast<uint32_t>(sets.size()),
+			sets.data(),
+			0,
+			nullptr
+		);
+	}
 }

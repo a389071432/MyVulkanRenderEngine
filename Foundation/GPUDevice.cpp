@@ -660,13 +660,17 @@ namespace zzcVulkanRenderEngine {
 		PipelineLayoutHandle handle = requirePipelineLayout();
 		VkPipelineLayout& pipelineLayout = getPipelineLayout(handle);
 
+		std::vector<VkDescriptorSetLayout> combinedLayouts;
+		for (auto handle : createInfo.descLayoutsHandles) {
+			std::vector<VkDescriptorSetLayout>& layouts = getDescriptorSetLayouts(handle);
+			combinedLayouts.insert(combinedLayouts.end(), layouts.begin(), layouts.end());
+		}
 		VkPipelineLayoutCreateInfo layoutCI{};
 		layoutCI.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		layoutCI.pushConstantRangeCount = 0;                     // by default no push constants
 		layoutCI.pPushConstantRanges = VK_NULL_HANDLE;
-		std::vector<VkDescriptorSetLayout>& descLayouts = getDescriptorSetLayouts(createInfo.descLayoutsHandle);
-		layoutCI.setLayoutCount = static_cast<uint32_t>(descLayouts.size());
-		layoutCI.pSetLayouts = descLayouts.data();
+		layoutCI.setLayoutCount = static_cast<uint32_t>(combinedLayouts.size());
+		layoutCI.pSetLayouts = combinedLayouts.data();
 		
 		ASSERT(
 			vkCreatePipelineLayout(device, &layoutCI, nullptr, &pipelineLayout) == VK_SUCCESS,

@@ -178,11 +178,59 @@ namespace zzcVulkanRenderEngine {
                     });
             }
 
+            // descriptor set for pbr materials
             DescriptorSetLayoutsHandle setLayout = device->createDescriptorSetLayouts(layoutCI);
             DescriptorSetsAlloc setAlloc{};
             setAlloc.setLayoutsHandle(setLayout);
             newMesh.material.descriptorSets = device->createDescriptorSets(setAlloc);
+            newMesh.material.setLayout = setLayout;
 
+            //write sets
+            std::vector<DescriptorSetWrite> writes;
+            if (baseColorIndex >= 0) {
+                writes.push_back(
+                    DescriptorSetWrite()
+                    .setType(BindingType::IMAGE_SAMPLER)
+                    .setDstSet(0)
+                    .setDstBinding(0)
+                    .setBufferHandle(INVALID_BUFFER_HANDLE)
+                    .setTexHandle(newMesh.material.albedo)
+                );
+            }
+
+            if (metalRoughIndex >= 0) {
+                writes.push_back(
+                    DescriptorSetWrite()
+                    .setType(BindingType::IMAGE_SAMPLER)
+                    .setDstSet(0)
+                    .setDstBinding(1)
+                    .setBufferHandle(INVALID_BUFFER_HANDLE)
+                    .setTexHandle(newMesh.material.metal_roughness)
+                );
+            }
+
+            if (normalIndex >= 0) {
+                writes.push_back(
+                    DescriptorSetWrite()
+                    .setType(BindingType::IMAGE_SAMPLER)
+                    .setDstSet(0)
+                    .setDstBinding(2)
+                    .setBufferHandle(INVALID_BUFFER_HANDLE)
+                    .setTexHandle(newMesh.material.normal)
+                );
+            }
+
+            if (occlusionIndex >= 0) {
+                writes.push_back(
+                    DescriptorSetWrite()
+                    .setType(BindingType::IMAGE_SAMPLER)
+                    .setDstSet(0)
+                    .setDstBinding(3)
+                    .setBufferHandle(INVALID_BUFFER_HANDLE)
+                    .setTexHandle(newMesh.material.occlusion)
+                );
+            }
+            device->writeDescriptorSets(writes, newMesh.material.descriptorSets);
             meshes.push_back(newMesh);
 
 

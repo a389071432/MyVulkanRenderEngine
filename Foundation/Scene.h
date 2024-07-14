@@ -15,6 +15,7 @@ namespace zzcVulkanRenderEngine {
         TextureHandle       occlusion;
         TextureHandle       emissive;
 
+        DescriptorSetLayoutsHandle setLayouts;
         DescriptorSetsHandle descriptorSets;
     };
 
@@ -49,11 +50,14 @@ namespace zzcVulkanRenderEngine {
     public:
         virtual void add_model(const std::string& filename) = 0;
         void remove_model(u32 index);
+        int getModelCount();
+        std::vector<Mesh>& getModel(int index);
         /*virtual void prepare() = 0;*/
     protected:
         GPUDevice* device;
         std::vector<Mesh> meshes;
         std::vector<std::vector<Mesh>> models; // a model is defined as a set of meshes
+        GraphicsPipelineCreation::VertexInput vertexInfo;
 
         //// only store the handle of resources on device
         //std::vector<BufferHandle> buffers;

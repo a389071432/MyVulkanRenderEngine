@@ -22,6 +22,7 @@ namespace zzcVulkanRenderEngine {
 	const TextureHandle INVALID_TEXTURE_HANDLE = -1;
 	const BufferHandle INVALID_BUFFER_HANDLE = -1;
 	const DescriptorSetsHandle INVALID_DESCRIPTORSETS_HANDLE = -1;
+	const DescriptorSetLayoutsHandle INVALID_DESCRIPTORSET_LAYOUTS_HANDLE = -1;
 
 	// TODO: wrap the enumerations?
 	struct SamplerCreation {
@@ -162,9 +163,10 @@ namespace zzcVulkanRenderEngine {
 	};
 
 	struct PipelineLayoutCreation {
-		DescriptorSetLayoutsHandle descLayoutsHandle;
+		/*DescriptorSetLayoutsHandle descLayoutsHandle;*/
+		std::vector<DescriptorSetLayoutsHandle> descLayoutsHandles;
 
-		DescriptorSetLayoutsHandle& setDescLayouts(DescriptorSetLayoutsHandle descLayoutsHandle);
+		DescriptorSetLayoutsHandle& addDescLayouts(DescriptorSetLayoutsHandle descLayoutsHandle);
 	};
 
 	struct GraphicsPipelineCreation {
