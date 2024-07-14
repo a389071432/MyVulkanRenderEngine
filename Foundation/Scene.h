@@ -9,28 +9,32 @@
 namespace zzcVulkanRenderEngine {
     struct PBRMaterial {
         // Indices used for bindless textures.
-        TextureHandle       albedo;
-        TextureHandle       metal_roughness;
-        TextureHandle       normal;
-        TextureHandle       occlusion;
-        TextureHandle       emissive;
+        TextureHandle       albedo = INVALID_TEXTURE_HANDLE;
+        TextureHandle       metal_roughness = INVALID_TEXTURE_HANDLE;
+        TextureHandle       normal = INVALID_TEXTURE_HANDLE;
+        TextureHandle       occlusion = INVALID_TEXTURE_HANDLE;
+        TextureHandle       emissive = INVALID_TEXTURE_HANDLE;
 
         DescriptorSetLayoutsHandle setLayouts;
-        DescriptorSetsHandle descriptorSets;
+        DescriptorSetsHandle descriptorSets = INVALID_DESCRIPTORSETS_HANDLE;
     };
 
     struct Mesh {
         PBRMaterial material;
-        BufferHandle position_buffer;
-        BufferHandle index_buffer;
-        BufferHandle tangent_buffer;
-        BufferHandle normal_buffer;
-        BufferHandle uv_buffer;
+        BufferHandle vertex_buffer;
+        //BufferHandle position_buffer;
+        //BufferHandle tangent_buffer;
+        //BufferHandle normal_buffer;
+        //BufferHandle uv_buffer;
 
-        u32 position_offset;
-        u32 tangent_offset;
-        u32 normal_offset;
-        u32 uv_offset;
+        BufferHandle index_buffer;
+
+        u32 index_count;
+
+        //u32 position_offset;
+        //u32 tangent_offset;
+        //u32 normal_offset;
+        //u32 uv_offset;
         
         u32 primitive_cnt;
 

@@ -34,13 +34,13 @@ namespace zzcVulkanRenderEngine {
             );
         }
 
+        bool hasNorm = false;
+        bool hasTan = false;
+        bool hasUV = false;
         for (const auto& mesh : model.meshes) {
             Mesh newMesh;
             newMesh.primitive_cnt = mesh.primitives.size();
-            std::vector<float> posData;
-            std::vector<float> normData;
-            std::vector<float> tanData;
-            std::vector<float> uvData;
+            std::vector<float> vertexData;
             std::vector<uint32_t> indexData;
 
             u32 vertexCount = 0;
@@ -74,51 +74,54 @@ namespace zzcVulkanRenderEngine {
 
                 // Gather per-vertex data
                 // Position
+                ASSERT(
+                    attribs.find("POSITION") != attribs.end(),
+                    "Assertion failed: missing attribute POSTION from gltf!"
+                );
                 const ::tinygltf::Accessor& posAccessor = model.accessors[attribs.at("POSITION")];
-                for (size_t i = 0; i < posAccessor.count; ++i) {
+                for (size_t i = 0; i < posAccessor.count; i++) {
                     for (int j = 0; j < 3; ++j) {
-                        posData.push_back(GetAttributeValue<float>(model, posAccessor, i, j));
+                        vertexData.push_back(GetAttributeValue<float>(model, posAccessor, i, j));
                     }
                 }
 
                 // Normal
-                for (size_t i = 0; i < posAccessor.count; ++i) {
-
-                    if (attribs.find("NORMAL") != attribs.end()) {
-                        const ::tinygltf::Accessor& accessor = model.accessors[attribs.at("NORMAL")];
+                if (attribs.find("NORMAL") != attribs.end()) {
+                    hasNorm = true;
+                    const ::tinygltf::Accessor& normAccessor = model.accessors[attribs.at("NORMAL")];
+                    for (size_t i = 0; i < normAccessor.count; i++) {
                         for (int j = 0; j < 3; ++j) {
-                            normData.push_back(GetAttributeValue<float>(model, accessor, i, j));
+                            vertexData.push_back(GetAttributeValue<float>(model, normAccessor, i, j));
                         }
                     }
                 }
 
                 // Tangent
-                for (size_t i = 0; i < posAccessor.count; ++i) {
-
-                    if (attribs.find("TANGENT") != attribs.end()) {
-                        const ::tinygltf::Accessor& accessor = model.accessors[attribs.at("TANGENT")];
-                        for (int j = 0; j < 4; ++j) {
-                            tanData.push_back(GetAttributeValue<float>(model, accessor, i, j));
+                if (attribs.find("TANGENT") != attribs.end()) {
+                    hasTan = true;
+                    const ::tinygltf::Accessor& tanAccessor = model.accessors[attribs.at("NORMAL")];
+                    for (size_t i = 0; i < tanAccessor.count; i++) {
+                        for (int j = 0; j < 3; ++j) {
+                            vertexData.push_back(GetAttributeValue<float>(model, tanAccessor, i, j));
                         }
                     }
                 }
 
                 // UV
-                for (size_t i = 0; i < posAccessor.count; ++i) {
-                    if (attribs.find("TEXCOORD_0") != attribs.end()) {
-                        const ::tinygltf::Accessor& accessor = model.accessors[attribs.at("TEXCOORD_0")];
-                        for (int j = 0; j < 2; ++j) {
-                            uvData.push_back(GetAttributeValue<float>(model, accessor, i, j));
+                if (attribs.find("TEXCOORD_0") != attribs.end()) {
+                    hasUV = true;
+                    const ::tinygltf::Accessor& uvAccessor = model.accessors[attribs.at("TEXCOORD_0")];
+                    for (size_t i = 0; i < uvAccessor.count; i++) {
+                        for (int j = 0; j < 2; j++) {
+                            vertexData.push_back(GetAttributeValue<float>(model, uvAccessor, i, j));
                         }
                     }
                 }
             }
 
-            newMesh.position_buffer = device->createBufferFromData(posData);
-            newMesh.normal_buffer = device->createBufferFromData(normData);
-            newMesh.tangent_buffer = device->createBufferFromData(tanData);
-            newMesh.uv_buffer = device->createBufferFromData(uvData);
+            newMesh.vertex_buffer = device->createBufferFromData(vertexData);
             newMesh.index_buffer = device->createBufferFromData(indexData);
+            newMesh.index_count = indexData.size();
 
             // associate the pbr material
             // TODO: each primitive may refer to different materials
@@ -235,6 +238,30 @@ namespace zzcVulkanRenderEngine {
 
 
         }
+        // set vertex input format
+        vertexInfo.addVertexAttribute({ 0, 0, 0,DataFormat::FLOAT3 });
+        u32 vertexSize = 3 * sizeof(float);
+        u32 offset = 3 * sizeof(float);
+        u32 location = 1;
+        if (hasNorm) {
+            vertexInfo.addVertexAttribute({ 0,location,offset,DataFormat::FLOAT3 });
+            vertexSize += 3 * sizeof(float);
+            location++;
+            offset += 3 * sizeof(float);
+        }
+        if (hasTan) {
+            vertexInfo.addVertexAttribute({ 0,location,offset,DataFormat::FLOAT3 });
+            vertexSize += 3 * sizeof(float);
+            location++;
+            offset += 3 * sizeof(float);
+        }
+        if (hasUV) {
+            vertexInfo.addVertexAttribute({ 0,location,offset,DataFormat::FLOAT2 });
+            vertexSize += 2 * sizeof(float);
+            location++;
+            offset += 2 * sizeof(float);
+        }
+        vertexInfo.setBindingDesc({ 0, vertexSize, VertexInputRate::VERTEX });
         models.push_back(meshes);
 
         // TODO: a unified way to manage all models, enabling efficient addition and removal of models

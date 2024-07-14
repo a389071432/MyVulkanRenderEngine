@@ -206,4 +206,21 @@ namespace zzcVulkanRenderEngine {
 			nullptr
 		);
 	}
+
+	void CommandBuffer::cmdBindVertex(Buffer& vertexBuffer) {
+		VkDeviceSize offsets[1]{ 0 };
+		vkCmdBindVertexBuffers(cmdBuffer, 0, 1, &vertexBuffer.buffer, offsets);
+	}
+
+	void CommandBuffer::cmdBindIndexBuffer(Buffer& indexBuffer) {
+		vkCmdBindIndexBuffer(cmdBuffer, indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+	}
+
+	void CommandBuffer::cmdBindGraphicsPipeline(VkPipeline pipeline){
+		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+	}
+
+	void CommandBuffer::cmdDrawIndexed(u32 index_cnt, u32 instance_cnt) {
+		vkCmdDrawIndexed(cmdBuffer, index_cnt, instance_cnt, 0, 0, 1);
+	}
 }

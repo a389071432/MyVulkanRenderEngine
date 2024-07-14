@@ -37,25 +37,25 @@ namespace zzcVulkanRenderEngine {
 			// Update dynamic scissor state
 			cmdBuffer->cmdSetScissor(device->getSwapChainExtent().height, (float)device->getSwapChainExtent().width, 0, 0);
 
+			// Bind the pipeline
+			cmdBuffer->cmdBindGraphicsPipeline(device->getGraphicsPipeline(pipelineHandle));
+
 			// Bind the vertex and textures for each model and mesh
 			for (u32 i = 0; i < scene->getModelCount(); i++) {
 				std::vector<Mesh>& model = scene->getModel(i);
+				std::vector<VkDescriptorSet> setsToBind;
+				setsToBind.resize(2);
+				setsToBind[0] = device->getDescriptorSets(GraphNodeBase::descriptorSets)[0];
 				for (Mesh& mesh : model) {
-					std::array<>
+					cmdBuffer->cmdBindVertex(device->getBuffer(mesh.vertex_buffer));
+					cmdBuffer->cmdBindIndexBuffer(device->getBuffer(mesh.index_buffer));
+					if (mesh.material.descriptorSets != INVALID_DESCRIPTORSETS_HANDLE) {
+						setsToBind[1] = device->getDescriptorSets(mesh.material.descriptorSets)[0];
+						cmdBuffer->cmdBindDescriptorSets(PipelineBindPoint::GRAPHICS, device->getPipelineLayout(pipelineHandle), setsToBind);
+					}
+					cmdBuffer->cmdDrawIndexed(mesh.index_count, 1);
 				}
 			}
-			cmdBuffer->cmdBindDescriptorSets(PipelineBindPoint::GRAPHICS, device->getPipelineLayout(pipelineHandle), device->getDescriptorSets(GraphNodeBase::descriptorSets));
-
-			// Bind the rendering pipeline
-			// The pipeline (state object) contains all states of the rendering pipeline, binding it will set all the states specified at pipeline creation time
-			vkCmdBindPipeline(commandBuffers[currentBuffer], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-			// Bind triangle vertex buffer (contains position and colors)
-			VkDeviceSize offsets[1]{ 0 };
-			vkCmdBindVertexBuffers(commandBuffers[currentBuffer], 0, 1, &vertices.buffer, offsets);
-			// Bind triangle index buffer
-			vkCmdBindIndexBuffer(commandBuffers[currentBuffer], indices.buffer, 0, VK_INDEX_TYPE_UINT32);
-			// Draw indexed triangle
-			vkCmdDrawIndexed(commandBuffers[currentBuffer], indices.count, 1, 0, 0, 1);
 		}
 	};
 }

@@ -25,6 +25,10 @@ namespace zzcVulkanRenderEngine {
 		void cmdSetViewport(float width, float height);
 		void cmdSetScissor(u32 width, u32 height, int offsetX, int offsetY);
 		void cmdBindDescriptorSets(PipelineBindPoint bindPoint, VkPipelineLayout pipeLayout, std::vector<VkDescriptorSet> sets);
+		void cmdBindVertex(Buffer& vertexBuffer);
+		void cmdBindIndexBuffer(Buffer& indexBuffer);
+		void cmdBindGraphicsPipeline(VkPipeline pipeline);
+		void cmdDrawIndexed(u32 index_cnt, u32 instance_cnt);
 	private:
 		VkCommandBuffer cmdBuffer;
 	};
