@@ -99,6 +99,8 @@ namespace zzcVulkanRenderEngine {
 		void transferBufferToImage2DInDevice(BufferHandle buffer, TextureHandle tex, u32 width, u32 height);
 		void imageLayoutTransition(TextureHandle tex, GraphResourceAccessType targetAccess, u16 baseMip, u16 nMips);
 		float queryMaxAnisotropy();
+		void submitCmds(VkQueue queue, std::vector<VkCommandBuffer> cmdBuffes, std::vector<VkSemaphore> waitSemas, std::vector<VkPipelineStageFlags> waitStages, std::vector<VkSemaphore> signalSemas, VkFence fence);
+		void submitCmds(VkQueue queue, VkCommandBuffer cmdBuffe);
 
 		//internal hepler functions
 		uint32_t helper_findSuitableMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -164,7 +166,7 @@ namespace zzcVulkanRenderEngine {
 		ResourcePool<VkPipeline, GraphicsPipelineHandle> graphicsPipelinePool;
 		ResourcePool<VkPipeline, ComputePipelineHandle> computePipelinePool;
 
-		// helpers
+		// helpers (invisible to application-level coding)
 		bool helper_checkQueueSatisfication(VkPhysicalDevice phyDevice,u32 requiredQueues);
 		bool helper_checkExtensionSupport(VkPhysicalDevice phyDevice, const std::vector<const char*>& requiredExtensions);
 		SwapChainSupportDetails helper_querySwapChainSupport(VkPhysicalDevice phyDevice);

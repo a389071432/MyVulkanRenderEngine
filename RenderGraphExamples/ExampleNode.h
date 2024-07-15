@@ -7,27 +7,27 @@
 namespace zzcVulkanRenderEngine {
 	struct ExampleNode : public GraphicsNode<ExampleNode> {
 	public:
-		// define extra variables
-		struct Vertex {
-			float position[3];
-			float color[3];
-		};
+		//// define extra variables
+		//struct Vertex {
+		//	float position[3];
+		//	float color[3];
+		//};
 
-		// define the triangle
-		std::vector<Vertex> vertices{
-			{ {  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
-			{ { -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
-			{ {  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
-		};
-		std::vector<uint32_t> indices{ 0, 1, 2 };
+		//// define the triangle
+		//std::vector<Vertex> vertices{
+		//	{ {  1.0f,  1.0f, 0.0f }, { 1.0f, 0.0f, 0.0f } },
+		//	{ { -1.0f,  1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f } },
+		//	{ {  0.0f, -1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } }
+		//};
+		//std::vector<uint32_t> indices{ 0, 1, 2 };
 
-		BufferHandle vertexBuffer;
-		BufferHandle indexBuffer;
+		//BufferHandle vertexBuffer;
+		//BufferHandle indexBuffer;
 
 		// overwrite the interfaces
 		void init(GPUDevice* device) override {
-			vertexBuffer = device->createBufferFromData(vertices);
-			indexBuffer = device->createBufferFromData(indices);
+			//vertexBuffer = device->createBufferFromData(vertices);
+			//indexBuffer = device->createBufferFromData(indices);
 		}
 
 		void execute(CommandBuffer* cmdBuffer, GPUDevice* device, Scene* scene) override {

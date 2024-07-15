@@ -81,22 +81,14 @@ namespace zzcVulkanRenderEngine {
 			presentFinalImage(imageIndex);
 
 			// Submit to queue
-			VkSubmitInfo submitInfo{};
-			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-			submitInfo.waitSemaphoreCount = 1;
-			submitInfo.pWaitSemaphores = &semaphoresImageAvailable[currentFrame];
-			VkPipelineStageFlags waitStages[]={ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-			submitInfo.pWaitDstStageMask = waitStages;
-			submitInfo.signalSemaphoreCount = 1;
-			submitInfo.pSignalSemaphores = &semaphoresRenderDone[currentFrame];
-			submitInfo.commandBufferCount = 1;
-			VkCommandBuffer cmdBuffer = _cmdBuffer.getCmdBuffer();
-			submitInfo.pCommandBuffers = &(cmdBuffer);
-
-			ASSERT(
-				vkQueueSubmit(device->getMainQueue(), 1, &submitInfo, fencesFrame[currentFrame]) == VK_SUCCESS,
-				"Assertion failed: QueueSubmit failed!"
-			);
+			device->submitCmds(
+				device->getMainQueue(), 
+				{ _cmdBuffer.getCmdBuffer() }, 
+				{ semaphoresImageAvailable[currentFrame]},
+				{ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT },
+				{ semaphoresRenderDone[currentFrame] },
+				fencesFrame[currentFrame]
+				);
 
 			// Present
 			VkPresentInfoKHR presentInfo{};

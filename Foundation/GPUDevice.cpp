@@ -969,6 +969,9 @@ namespace zzcVulkanRenderEngine {
 		auxiCmdBuffer.begin();
 		auxiCmdBuffer.cmdCopyBuffer(srcBuffer, dstBuffer, copySize);
 		auxiCmdBuffer.end();
+
+		// submit to queue
+		submitCmds(mainQueue, auxiCmdBuffer.getCmdBuffer());
 	}
 
 	void GPUDevice::transferImageInDevice(TextureHandle src, TextureHandle dst, VkExtent2D copyExtent) {
@@ -990,6 +993,7 @@ namespace zzcVulkanRenderEngine {
 		auxiCmdBuffer.end();
 
 		// submit to queue
+		submitCmds(mainQueue, auxiCmdBuffer.getCmdBuffer());
 
 	}
 
@@ -1009,6 +1013,7 @@ namespace zzcVulkanRenderEngine {
 		auxiCmdBuffer.end();
 
 		// submit to queue
+		submitCmds(mainQueue, auxiCmdBuffer.getCmdBuffer());
 
 	}
 
@@ -1029,7 +1034,43 @@ namespace zzcVulkanRenderEngine {
 		auxiCmdBuffer.end();
 
 		// submit to queue
+		submitCmds(mainQueue, auxiCmdBuffer.getCmdBuffer());
 
+	}
+
+	// TODO: this should be a member function of class Queue, wrapping the VkQueue
+	void GPUDevice::submitCmds(VkQueue queue, std::vector<VkCommandBuffer> cmdBuffesToSubmit, std::vector<VkSemaphore> waitSemas, std::vector<VkPipelineStageFlags> waitStages, std::vector<VkSemaphore> signalSemas, VkFence fence) {
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = waitSemas.data();
+		submitInfo.pWaitDstStageMask = waitStages.data();
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = signalSemas.data();
+		submitInfo.commandBufferCount = static_cast<uint32_t>(cmdBuffesToSubmit.size());
+		submitInfo.pCommandBuffers = cmdBuffesToSubmit.data();
+
+		ASSERT(
+			vkQueueSubmit(queue, 1, &submitInfo, fence) == VK_SUCCESS,
+			"Assertion failed: QueueSubmit failed!"
+		);
+	}
+
+	void GPUDevice::submitCmds(VkQueue queue, VkCommandBuffer cmdBuffer) {
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.waitSemaphoreCount = 0;
+		submitInfo.pWaitSemaphores = nullptr;
+		submitInfo.pWaitDstStageMask = nullptr;
+		submitInfo.signalSemaphoreCount = 0;
+		submitInfo.pSignalSemaphores = nullptr;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &cmdBuffer;
+
+		ASSERT(
+			vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE) == VK_SUCCESS,
+			"Assertion failed: QueueSubmit failed!"
+		);
 	}
 
 	// helper: check whether the physical device support all required types of queues
