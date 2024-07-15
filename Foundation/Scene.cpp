@@ -13,5 +13,9 @@ namespace zzcVulkanRenderEngine {
 		);
 		return models[index];
 	}
+
+	void Scene::remove_model(u32 index) {
+
+	}
 }
 

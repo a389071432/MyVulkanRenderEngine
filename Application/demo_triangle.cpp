@@ -2,6 +2,7 @@
 #include"Foundation/RenderGraph.h"
 #include"Foundation/Engine.h"
 #include"RenderGraphExamples/ExampleNode.h"
+#include"Foundation/SimpleScene.h"
 
 using namespace zzcVulkanRenderEngine;
 
@@ -9,16 +10,17 @@ int main() {
 	GPUDeviceCreation gpuCI{};
 	Engine engine;
 	RenderGraph graph;
+	SimpleScene scene;
 
 	//define the render graph
 	ExampleNode node;
 	node.setType(GraphNodeType::GRAPHICS)
-		.setOutputs({
-			{
-				false,                                 // isExternal
-				GraphResourceType::TEXTURE,            // resource type
-				ResourceInfo{                          // Explicitly initialize ResourceInfo
-					.texture = {                       // Initialize the texture member of the union
+		.setOutputs(std::vector<GraphResource>{
+			GraphResource{
+				.isExternal = false,                                 
+				.type = GraphResourceType::TEXTURE,            
+				.info = ResourceInfo{                          
+					.texture = {                       
 						800,                           // width
 						600,                           // height
 						1,                             // depth
@@ -29,25 +31,29 @@ int main() {
 						TextureHandle{}                // Add texHandle (initialize as needed)
 					}
 				},
-				"final",                               // unique key
-				0,                                     // groupId (to which descriptor set it belongs)
-				0,                                     // binding point (in a descriptor set)
-				ShaderStage::DONT_CARE                 // shader stage that would access the resource
+				.key = "final",                               
+				.groupId = 0,                                     // groupId (to which descriptor set it belongs)
+				.binding = 0,                                     // binding point (in a descriptor set)
+				.accessStage = ShaderStage::DONT_CARE             // shader stage that would access the resource
 			},
 		})
 		.setPipelineInfo(
-			{
+			GraphicsPipelineInfo{
 				.shaders = {
 				  .vertShaderPath = "",
 				  .fragShaderPath = ""
                 },
+				//.vertexInput = {
+				//   .bindingDesc={0,sizeof(ExampleNode::Vertex),VertexInputRate::VERTEX},
+				//   .attributes = {
+				//	   {0,0,offsetof(ExampleNode::Vertex,position),DataFormat::FLOAT3},
+			 //          {0,1,offsetof(ExampleNode::Vertex,color),DataFormat::FLOAT3},
+			 //      }
+    //            },
 				.vertexInput = {
-				   .bindingDesc={0,sizeof(ExampleNode::Vertex),VertexInputRate::VERTEX},
-				   .attributes = {
-					   {0,0,offsetof(ExampleNode::Vertex,position),DataFormat::FLOAT3},
-			           {0,1,offsetof(ExampleNode::Vertex,color),DataFormat::FLOAT3},
-			       }
-                },
+			        .bindingDesc=scene.vertexInfo.bindingDesc,
+					.attributes=scene.vertexInfo.attributes
+			     },
 				.rasterInfo = {
 				   .cullMode = CullMode::BACK,
 				   .frontFace = FrontFace::CONTER_CLOCKWISE,

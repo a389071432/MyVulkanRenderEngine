@@ -56,12 +56,12 @@ namespace zzcVulkanRenderEngine {
         void remove_model(u32 index);
         int getModelCount();
         std::vector<Mesh>& getModel(int index);
+        GraphicsPipelineCreation::VertexInput vertexInfo;
         /*virtual void prepare() = 0;*/
     protected:
         GPUDevice* device;
         std::vector<Mesh> meshes;
         std::vector<std::vector<Mesh>> models; // a model is defined as a set of meshes
-        GraphicsPipelineCreation::VertexInput vertexInfo;
 
         //// only store the handle of resources on device
         //std::vector<BufferHandle> buffers;

@@ -56,7 +56,7 @@ namespace zzcVulkanRenderEngine {
 	}
 
 	void Engine::mainLoop() {
-		while () {
+		while (!glfwWindowShouldClose(window)) {
 			// Temp varaibles
 			VkDevice _device = device->getDevice();
 			VkSwapchainKHR _swapChain = device->getSwapChain();

@@ -35,6 +35,12 @@ namespace zzcVulkanRenderEngine {
 		
 		// CREATE VULKAN INSTANCE
 		// TODO: glfw extensions
+		// enable the validation layer
+		ASSERT(
+			checkInstanceLayerSupport(createInfo.requiredLayers) == true,
+			"Assertion failed: required layers are not fully available!"
+		);
+
 		VkInstanceCreateInfo instanceCI{};
 		instanceCI.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		instanceCI.enabledExtensionCount = 0;
@@ -47,6 +53,9 @@ namespace zzcVulkanRenderEngine {
 		appInfo.engineVersion = VK_MAKE_VERSION(0, 0, 1);
 		appInfo.pEngineName = "zzc Vulkan Render Engine";
 		instanceCI.pApplicationInfo = &appInfo;
+		instanceCI.enabledLayerCount = createInfo.requiredLayers.size();
+		instanceCI.ppEnabledLayerNames = createInfo.requiredLayers.data();
+
 		ASSERT(
 			vkCreateInstance(&instanceCI, nullptr, &vkInstance) == VK_SUCCESS,
 			"Assertion failed: CreateInstanceFailed!"
@@ -170,8 +179,9 @@ namespace zzcVulkanRenderEngine {
 			cmdAllocInfo.commandBufferCount = 1;
 			cmdAllocInfo.commandPool = commandPool;
 			cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			VkCommandBuffer cb = cmdBuffers.at(i).getCmdBuffer();
 			ASSERT(
-				vkAllocateCommandBuffers(device, &cmdAllocInfo, &cmdBuffers.at(i).getCmdBuffer()) == VK_SUCCESS,
+				vkAllocateCommandBuffers(device, &cmdAllocInfo, &cb) == VK_SUCCESS,
 				"Assertion failed: AllocateCommandBuffers failed!"
 			);
 		}
@@ -182,8 +192,9 @@ namespace zzcVulkanRenderEngine {
 		cmdAllocInfo.commandBufferCount = 1;
 		cmdAllocInfo.commandPool = commandPool;
 		cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		VkCommandBuffer cb = auxiCmdBuffer.getCmdBuffer();
 		ASSERT(
-			vkAllocateCommandBuffers(device, &cmdAllocInfo, &auxiCmdBuffer.getCmdBuffer()) == VK_SUCCESS,
+			vkAllocateCommandBuffers(device, &cmdAllocInfo, &cb) == VK_SUCCESS,
 			"Assertion failed: Allocate the auxiliary command buffer failed!"
 		);
 
@@ -246,7 +257,7 @@ namespace zzcVulkanRenderEngine {
 
 			texture.format = surfaceFormat.format;
 			texture.sampler = VK_NULL_HANDLE;
-			texture.access = GraphResourceAccessType::PRESENT;  
+			texture.access[0] = GraphResourceAccessType::PRESENT;  
 			texture.image = swapChainImages[i];
 
 			index2handle_swapchain.insert({i,handle});
@@ -974,14 +985,15 @@ namespace zzcVulkanRenderEngine {
 		submitCmds(mainQueue, auxiCmdBuffer.getCmdBuffer());
 	}
 
+	// NOTE: this function operates on only the first mip level of both images
 	void GPUDevice::transferImageInDevice(TextureHandle src, TextureHandle dst, VkExtent2D copyExtent) {
 		auxiCmdBuffer.begin();
 
 		// get the textures 
 		Texture& srcImage = getTexture(src);
 		Texture& dstImage = getTexture(dst);
-		GraphResourceAccessType srcAccess = srcImage.access;
-		GraphResourceAccessType dstAccess = dstImage.access;
+		GraphResourceAccessType srcAccess = srcImage.access[0];
+		GraphResourceAccessType dstAccess = dstImage.access[0];
 
 		// layout transition before copy 
 		imageLayoutTransition(src, GraphResourceAccessType::COPY_SRC, 0, 1);
@@ -1023,10 +1035,10 @@ namespace zzcVulkanRenderEngine {
 	void GPUDevice::imageLayoutTransition(TextureHandle texHandle, GraphResourceAccessType targetAccess, u16 baseMip, u16 nMips) {
 		auxiCmdBuffer.begin();
 
+		Texture& tex = getTexture(texHandle);
 		// insert barrier for each mip level separately 
 		// also update the texture state for tracking
 		for (u16 i = baseMip; i < nMips; i++) {
-			Texture& tex = getTexture(texHandle);
 			auxiCmdBuffer.cmdInsertImageBarrier(tex, targetAccess, baseMip);
 			tex.access[i] = targetAccess;
 		}
@@ -1117,9 +1129,35 @@ namespace zzcVulkanRenderEngine {
 		std::vector<VkExtensionProperties> availableExtensions(extensionsCnt);
 		vkEnumerateDeviceExtensionProperties(phyDevice, nullptr, &extensionsCnt, availableExtensions.data());
 
-		for (const auto& extension : requiredExtensions) {
-			auto it = std::find(availableExtensions.begin(), availableExtensions.end(), extension);
-			if (it == availableExtensions.end())
+		for (const char* extension : requiredExtensions) {
+			bool found = false;
+			for (const auto availableExtension : availableExtensions) {
+				if (strcmp(extension, availableExtension.extensionName)) {
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+				return false;
+		}
+		return true;
+	}
+
+	bool GPUDevice::checkInstanceLayerSupport(const std::vector<const char*>& requiredLayers) {
+		uint32_t layerCnt;
+		vkEnumerateInstanceLayerProperties(&layerCnt, nullptr);
+		std::vector<VkLayerProperties> availableLayers(layerCnt);
+		vkEnumerateInstanceLayerProperties(&layerCnt, availableLayers.data());
+
+		for (const char* layer : requiredLayers) {
+			bool found = false;
+			for (const auto availableLayer : availableLayers) {
+				if (strcmp(layer, availableLayer.layerName)) {
+					found = true;
+					break;
+				}
+			}
+			if (!found)
 				return false;
 		}
 		return true;

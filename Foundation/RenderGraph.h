@@ -121,7 +121,7 @@ namespace zzcVulkanRenderEngine {
 
 	// Use the  Curiously Recurring Template Pattern (CRTP)
 	template<typename Derived>
-	struct GraphNode: public GraphNodeBase {
+	struct GraphNode: virtual public GraphNodeBase {
 	public:
 		//// specified by the user
 		//GraphNodeType type;
@@ -150,14 +150,14 @@ namespace zzcVulkanRenderEngine {
 		//PipelineLayoutHandle pipelineLayout;
 	};
 
-	struct GraphicsNodeBase : public GraphNodeBase {
+	struct GraphicsNodeBase : virtual public GraphNodeBase {
 	public:
 		GraphicsPipelineInfo pipelineInfo;
 		GraphicsPipelineHandle pipelineHandle;
 	};
 
 	template<typename Derived>
-	struct GraphicsNode : public GraphNode<Derived>, GraphicsNodeBase {
+	struct GraphicsNode : public GraphNode<Derived>, public GraphicsNodeBase {
 	public:
 		//GraphicsPipelineInfo pipelineInfo;
 		//GraphicsPipelineHandle pipelineHandle;

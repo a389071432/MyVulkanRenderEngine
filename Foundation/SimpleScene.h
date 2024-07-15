@@ -2,7 +2,8 @@
 #include"Scene.h"
 
 namespace zzcVulkanRenderEngine {
-	class SimpleScene :Scene {
+	class SimpleScene : public Scene {
+	public:
 		SimpleScene() {}
 		~SimpleScene() {}
 		void add_model(const std::string& filename) override {

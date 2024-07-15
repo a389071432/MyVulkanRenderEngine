@@ -19,6 +19,7 @@ namespace zzcVulkanRenderEngine {
 	struct GPUDeviceCreation {
 		u32 requireQueueFamlies = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT;
 		std::vector<const char*> requiredExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+		std::vector<const char*> requiredLayers = { VK_LAYER_KHRONOS_validation };
 	};
 
 	struct QueueInfo {
@@ -79,7 +80,7 @@ namespace zzcVulkanRenderEngine {
 		std::vector<VkDescriptorSet>& getDescriptorSets(DescriptorSetsHandle handle);
 		VkRenderPass& getRenderPass(RenderPassHandle handle);
 		VkFramebuffer& getFramebuffer(FramebufferHandle handle);
-		VkPipelineLayout& getPipelineLayout(PipelineLayoutHandle& handle);
+		VkPipelineLayout& getPipelineLayout(PipelineLayoutHandle handle);
 		VkPipeline& getGraphicsPipeline(GraphicsPipelineHandle handle);
 
 		// Resource removal
@@ -177,5 +178,6 @@ namespace zzcVulkanRenderEngine {
 		std::vector<VkDeviceQueueCreateInfo>& helper_getQueueCreateInfos(QueueFamilyInfos queueInfos,u32 requiredQueues);
 		VkShaderModule helper_createShaderModule(const std::vector<char>& code);
 		void helper_generateMipMaps(TextureHandle tex, u16 nMips);
+		bool checkInstanceLayerSupport(const std::vector<const char*>& requiredLayers);
 	};
 }
