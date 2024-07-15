@@ -177,7 +177,7 @@ namespace zzcVulkanRenderEngine {
 		~RenderGraph();
 		void addNode(GraphNodeBase* node);
 		void compile();
-		void execute(CommandBuffer& cmdBuffer);
+		void execute(CommandBuffer* cmdBuffer, GPUDevice* device, Scene* scene);
 		TextureHandle& getTextureByKey(std::string key);
 		BufferHandle& getBufferByKey(std::string key);
 	private:

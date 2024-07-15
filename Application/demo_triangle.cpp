@@ -8,6 +8,7 @@ using namespace zzcVulkanRenderEngine;
 
 int main() {
 	GPUDeviceCreation gpuCI{};
+	GPUDevice device(gpuCI);
 	Engine engine;
 	RenderGraph graph;
 	SimpleScene scene;
@@ -70,4 +71,9 @@ int main() {
 	graph.addNode(
 		&node
 	);
+
+	engine.setDevice(&device);
+	engine.setRenderGraph(&graph);
+	engine.setScene(&scene);
+	engine.run();
 }

@@ -329,14 +329,14 @@ namespace zzcVulkanRenderEngine {
 
 	}
 
-	void RenderGraph::execute(CommandBuffer& cmdBuffer) {
-		cmdBuffer.begin();
+	void RenderGraph::execute(CommandBuffer* cmdBuffer, GPUDevice* device, Scene* scene) {
+		cmdBuffer->begin();
 		for (u32 i = 0; i < topologyOrder.size(); i++) {
 			u32 index = topologyOrder.at(i);
 			GraphNodeBase* node = nodes.at(index);
 
 			// Insert barriers for both input and output resources
-			insert_barriers(cmdBuffer, *node);
+			insert_barriers(*cmdBuffer, *node);
 
 			// Begin the render pass
 			std::vector<VkClearValue> clearValues;
@@ -353,21 +353,21 @@ namespace zzcVulkanRenderEngine {
 
 			VkRenderPassBeginInfo beginInfo{};
 			beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			beginInfo.renderPass = node->renderPass;
-			beginInfo.framebuffer = node->framebuffer;
+			beginInfo.renderPass = device->getRenderPass(node->renderPass);
+			beginInfo.framebuffer = device->getFramebuffer(node->framebuffer);
 			beginInfo.renderArea.extent.width = node->outputs[0].info.texture.width;
 			beginInfo.renderArea.extent.height = node->outputs[0].info.texture.height;
 			beginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 			beginInfo.pClearValues = clearValues.data();
-			cmdBuffer.cmdBeginRenderPass(beginInfo);
+			cmdBuffer->cmdBeginRenderPass(beginInfo);
 
 			// Execute the node using user-defined method
-			node->execute(&cmdBuffer,device);
+			node->execute(cmdBuffer,device,scene);
 
 			//End the render pass
-			cmdBuffer.cmdEndRenderPass();
+			cmdBuffer->cmdEndRenderPass();
 		}
-		cmdBuffer.end();
+		cmdBuffer->end();
 	}
 
 	void RenderGraph::insert_barriers(CommandBuffer& cmdBuffer, GraphNodeBase& node) {
@@ -376,8 +376,8 @@ namespace zzcVulkanRenderEngine {
 			for (GraphResource& r : node.inputs) {
 				Texture& texture = device->getTexture(r.info.texture.texHandle);
 				if (r.type == GraphResourceType::TEXTURE) {
-					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::READ_TEXTURE, 0, 1);
-					texture.setAccessType(GraphResourceAccessType::READ_TEXTURE);    // necessary to track the state of texture to determine initialLayout
+					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::READ_TEXTURE, 0);
+					texture.setAccessType(GraphResourceAccessType::READ_TEXTURE,0,1);    // necessary to track the state of texture to determine initialLayout
 				}
 				else if (r.type == GraphResourceType::BUFFER) {
 					
@@ -389,11 +389,11 @@ namespace zzcVulkanRenderEngine {
 				Texture& texture = device->getTexture(r.info.texture.texHandle);
 				if (r.type == GraphResourceType::TEXTURE) {
 					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::WRITE_ATTACHMENT, 0);
-					texture.setAccessType(GraphResourceAccessType::WRITE_ATTACHMENT);
+					texture.setAccessType(GraphResourceAccessType::WRITE_ATTACHMENT,0,1);
 				}
 				else if (r.type == GraphResourceType::DEPTH_MAP) {
 					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::WRITE_DEPTH, 0);
-					texture.setAccessType(GraphResourceAccessType::WRITE_DEPTH);
+					texture.setAccessType(GraphResourceAccessType::WRITE_DEPTH, 0,1);
 				}
 				else if (r.type == GraphResourceType::BUFFER) {
 

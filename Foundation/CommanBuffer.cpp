@@ -97,8 +97,8 @@ namespace zzcVulkanRenderEngine {
 
 		vkCmdCopyImage(
 			cmdBuffer,
-			src.image, util_getImageLayout(src.access),
-			dst.image, util_getImageLayout(dst.access),
+			src.image, util_getImageLayout(src.access[0]),
+			dst.image, util_getImageLayout(dst.access[0]),
 			1, &copyRegion
 		);
 	}

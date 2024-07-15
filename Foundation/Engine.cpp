@@ -14,7 +14,7 @@ namespace zzcVulkanRenderEngine {
 		// Check for completeness
 		ASSERT(device != nullptr, "Device is NULL!");
 		ASSERT(renderGraph != nullptr, "RenderGraph is NULL!");
-		
+		ASSERT(scene != nullptr, "Scene is NULL!");
 
 		// init sync objects
 		fencesFrame.resize(frameInFlight);
@@ -25,7 +25,6 @@ namespace zzcVulkanRenderEngine {
 			VkFenceCreateInfo fenceCI{};
 			fenceCI.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 			fenceCI.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-			vkCreateFence(device->getDevice(), &fenceCI, nullptr, &fencesFrame[i]);
 			ASSERT(
 				vkCreateFence(device->getDevice(), &fenceCI, nullptr, &fencesFrame[i]) == VK_SUCCESS,
 				"Assertion failed: CreateFence failed!"
@@ -55,6 +54,8 @@ namespace zzcVulkanRenderEngine {
 		mainLoop();
 	}
 
+	// TODO: remove _device
+	// all operations move to GPUDevice
 	void Engine::mainLoop() {
 		while (!glfwWindowShouldClose(window)) {
 			// Temp varaibles
@@ -74,7 +75,7 @@ namespace zzcVulkanRenderEngine {
 			);
 
 			// Execture the renderGraph (involves recording commands)
-			renderGraph->execute(_cmdBuffer);
+			renderGraph->execute(&_cmdBuffer, device, scene);
 
 
 			// TODO: a dedicated renderpass (fullQuad) to write the resulting image from renderGraph to the final swapchain image for presentation
@@ -121,6 +122,10 @@ namespace zzcVulkanRenderEngine {
 
 	void Engine::setRenderGraph(RenderGraph* graph) {
 		renderGraph = graph;
+	}
+
+	void Engine::setScene(Scene* _scene) {
+		scene = _scene;
 	}
 
 	void Engine::setPresentFormat(DataFormat _format) {

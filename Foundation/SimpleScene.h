@@ -21,6 +21,11 @@ namespace zzcVulkanRenderEngine {
 			mesh.index_count = indexData.size();
 
 			mesh.material.descriptorSets = INVALID_DESCRIPTORSETS_HANDLE;
+
+			// specify the vertex input info
+			vertexInfo.setBindingDesc({ 0,6 * sizeof(float),VertexInputRate::VERTEX })
+				.addVertexAttribute({ 0,0,0,DataFormat::FLOAT3 })
+				.addVertexAttribute({ 0,1,3 * sizeof(float),DataFormat::FLOAT3 });
 		}
 	};
 }

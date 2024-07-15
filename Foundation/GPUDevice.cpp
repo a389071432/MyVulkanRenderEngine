@@ -13,7 +13,11 @@ namespace zzcVulkanRenderEngine {
 		,bufferPool(poolSize)
 	    ,descriptorSetsPool(poolSize)
 	    ,graphicsPipelinePool(poolSize)
-	    ,computePipelinePool(poolSize){
+	    ,computePipelinePool(poolSize)
+	    ,descriptorSetLayoutsPool(poolSize)
+	    ,renderPassPool(poolSize)
+	    ,framebufferPool(poolSize)
+	    ,pipelineLayoutPool(poolSize){
 
 		// TODO: fill in createInfos
 
@@ -37,14 +41,16 @@ namespace zzcVulkanRenderEngine {
 		// TODO: glfw extensions
 		// enable the validation layer
 		ASSERT(
-			checkInstanceLayerSupport(createInfo.requiredLayers) == true,
+			helper_checkInstanceLayerSupport(createInfo.requiredLayers) == true,
 			"Assertion failed: required layers are not fully available!"
 		);
 
+		std::vector<const char*> instanceExtensions = helper_getRequiredInstanceExtensions(true);
+
 		VkInstanceCreateInfo instanceCI{};
 		instanceCI.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-		instanceCI.enabledExtensionCount = 0;
-		instanceCI.ppEnabledExtensionNames = nullptr;
+		instanceCI.enabledExtensionCount = static_cast<uint32_t>(instanceExtensions.size());
+		instanceCI.ppEnabledExtensionNames = instanceExtensions.data();
 		VkApplicationInfo appInfo{};
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 		appInfo.apiVersion = VK_API_VERSION_1_3;
@@ -55,6 +61,7 @@ namespace zzcVulkanRenderEngine {
 		instanceCI.pApplicationInfo = &appInfo;
 		instanceCI.enabledLayerCount = createInfo.requiredLayers.size();
 		instanceCI.ppEnabledLayerNames = createInfo.requiredLayers.data();
+
 
 		ASSERT(
 			vkCreateInstance(&instanceCI, nullptr, &vkInstance) == VK_SUCCESS,
@@ -307,6 +314,26 @@ namespace zzcVulkanRenderEngine {
 		return bufferPool.require_resource();
 	}
 
+	DescriptorSetLayoutsHandle GPUDevice::requireDescriptorSetLayouts() {
+		return descriptorSetLayoutsPool.require_resource();
+	}
+
+	RenderPassHandle GPUDevice::requireRenderPass() {
+		return renderPassPool.require_resource();
+	}
+
+	FramebufferHandle GPUDevice::requireFramebuffer() {
+		return framebufferPool.require_resource();
+	}
+
+	PipelineLayoutHandle GPUDevice::requirePipelineLayout() {
+		return pipelineLayoutPool.require_resource();
+	}
+
+	GraphicsPipelineHandle GPUDevice::requireGraphicsPipeline() {
+		return graphicsPipelinePool.require_resource();
+	}
+
 	DescriptorSetsHandle GPUDevice::requireDescriptorSets() {
 		return descriptorSetsPool.require_resource();
 	}
@@ -317,6 +344,26 @@ namespace zzcVulkanRenderEngine {
 
 	Buffer& GPUDevice::getBuffer(BufferHandle handle) {
 		return bufferPool.get_resource(handle);
+	}
+
+	std::vector<VkDescriptorSetLayout>& GPUDevice::getDescriptorSetLayouts(DescriptorSetLayoutsHandle handle) {
+		return descriptorSetLayoutsPool.get_resource(handle);
+	}
+
+	VkRenderPass& GPUDevice::getRenderPass(RenderPassHandle handle) {
+		return renderPassPool.get_resource(handle);
+	}
+
+	VkFramebuffer& GPUDevice::getFramebuffer(FramebufferHandle handle) {
+		return framebufferPool.get_resource(handle);
+	}
+
+	VkPipelineLayout& GPUDevice::getPipelineLayout(PipelineLayoutHandle handle) {
+		return pipelineLayoutPool.get_resource(handle);
+	}
+
+	VkPipeline& GPUDevice::getGraphicsPipeline(GraphicsPipelineHandle handle) {
+		return graphicsPipelinePool.get_resource(handle);
 	}
 
 	std::vector<VkDescriptorSet>& GPUDevice::getDescriptorSets(DescriptorSetsHandle handle) {
@@ -911,7 +958,7 @@ namespace zzcVulkanRenderEngine {
 			.setUsage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
 			.setProp(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
 			.setShareMode(ResourceSharingMode::EXCLUSIVE);
-		Bufferhandle stage = createBuffer(stageCI);
+		BufferHandle stage = createBuffer(stageCI);
 		Buffer& stageBuffer = getBuffer(stage);
 
 		//fill in the staging buffer
@@ -921,7 +968,7 @@ namespace zzcVulkanRenderEngine {
 		vkUnmapMemory(device, stageBuffer.mem);
 
 		//transfer the vertices data from staging buffer to vertex buffer (by sumbitting commands)
-		transferBufferInDevice(stagingBuffer, vertexBuffer, bufferSize);
+		transferBufferInDevice(stageBuffer, mainBuffer, bufferSize);
 
 		//release the stagging buffer and free the memory
 		removeBuffer(stage);
@@ -933,6 +980,7 @@ namespace zzcVulkanRenderEngine {
 	TextureHandle& GPUDevice::createTexture2DFromData(const std::vector<T>& data, u16 width, u16 height, u16 nMips, DataFormat format) {
 		//create a staging buffer
 		BufferCreation stageCI{};
+		VkDeviceSize bufferSize = VkDeviceSize(sizeof(T) * data.size());
 		stageCI.setSize(bufferSize)
 			.setUsage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
 			.setProp(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
@@ -973,7 +1021,7 @@ namespace zzcVulkanRenderEngine {
 
 		// since the texture will be read by shader during rendering
 		// insert barrier to transition it to appropriate layout
-		imageLayoutTransition(texHand)
+		imageLayoutTransition(texHandle);
 	}
 
 	void GPUDevice::transferBufferInDevice(VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDeviceSize copySize) {
@@ -1038,7 +1086,7 @@ namespace zzcVulkanRenderEngine {
 		Texture& tex = getTexture(texHandle);
 		// insert barrier for each mip level separately 
 		// also update the texture state for tracking
-		for (u16 i = baseMip; i < nMips; i++) {
+		for (u16 i = baseMip; i < baseMip + nMips; i++) {
 			auxiCmdBuffer.cmdInsertImageBarrier(tex, targetAccess, baseMip);
 			tex.access[i] = targetAccess;
 		}
@@ -1143,7 +1191,7 @@ namespace zzcVulkanRenderEngine {
 		return true;
 	}
 
-	bool GPUDevice::checkInstanceLayerSupport(const std::vector<const char*>& requiredLayers) {
+	bool GPUDevice::helper_checkInstanceLayerSupport(const std::vector<const char*>& requiredLayers) {
 		uint32_t layerCnt;
 		vkEnumerateInstanceLayerProperties(&layerCnt, nullptr);
 		std::vector<VkLayerProperties> availableLayers(layerCnt);
@@ -1176,6 +1224,8 @@ namespace zzcVulkanRenderEngine {
 		vkGetPhysicalDeviceSurfacePresentModesKHR(phyDevice, windowSurface, &presentModesCnt, nullptr);
 		details.presentModes.resize(presentModesCnt);
 		vkGetPhysicalDeviceSurfacePresentModesKHR(phyDevice, windowSurface, &presentModesCnt,details.presentModes.data());
+
+		return details;
 	}
 
 	VkSurfaceFormatKHR GPUDevice::helper_selectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
@@ -1349,5 +1399,19 @@ namespace zzcVulkanRenderEngine {
 			VkOffset3D dstRegion = { mipWidth>1? mipWidth/2:1, mipHeight > 1 ? mipHeight / 2 : 1,1 };
 			auxiCmdBuffer.cmdBlitImage(tex, tex, i - 1, i, srcRegion, dstRegion);
 		}
+	}
+
+	std::vector<const char*> GPUDevice::helper_getRequiredInstanceExtensions(bool enableValidation) {
+		uint32_t glfwExtensionCount = 0;
+		const char** glfwExtensions;
+		glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+		std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+
+		if (enableValidation) {
+			extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		}
+
+		return extensions;
 	}
  }

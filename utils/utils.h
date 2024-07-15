@@ -84,24 +84,24 @@ namespace zzcVulkanRenderEngine {
 		}
 	}
 
-	inline VkPipelineStageFlags util_getPipelineStageFlags(ShaderStage accessStage) {
-		switch (accessType)
-		{
-		case GraphResourceAccessType::READ_TEXTURE:
-			return VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-		case GraphResourceAccessType::WRITE_ATTACHMENT:
-			return VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		case GraphResourceAccessType::WRITE_DEPTH:
-			return VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		case GraphResourceAccessType::COPY_SRC:
-			return VK_PIPELINE_STAGE_TRANSFER_BIT;
-		case GraphResourceAccessType::COPY_DST:
-			return VK_PIPELINE_STAGE_TRANSFER_BIT;
-		default:
-			ASSERT(false, "Assertion failed: invalid Enum GraphResourceAccessType!");
-			break;
-		}
-	}
+	//inline VkPipelineStageFlags util_getPipelineStageFlags(ShaderStage accessStage) {
+	//	switch (accessType)
+	//	{
+	//	case GraphResourceAccessType::READ_TEXTURE:
+	//		return VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	//	case GraphResourceAccessType::WRITE_ATTACHMENT:
+	//		return VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	//	case GraphResourceAccessType::WRITE_DEPTH:
+	//		return VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+	//	case GraphResourceAccessType::COPY_SRC:
+	//		return VK_PIPELINE_STAGE_TRANSFER_BIT;
+	//	case GraphResourceAccessType::COPY_DST:
+	//		return VK_PIPELINE_STAGE_TRANSFER_BIT;
+	//	default:
+	//		ASSERT(false, "Assertion failed: invalid Enum GraphResourceAccessType!");
+	//		break;
+	//	}
+	//}
 
 	inline VkImageType util_getImageType(TextureType textureType) {
 		switch (textureType)

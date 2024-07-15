@@ -4,6 +4,7 @@
 #include"datatypes.h"
 #include"GPUDevice.h"
 #include"RenderGraph.h"
+#include"Scene.h"
 
 namespace zzcVulkanRenderEngine {
 	class Engine {
@@ -14,6 +15,7 @@ namespace zzcVulkanRenderEngine {
 		void run();
 		void setDevice(GPUDevice* device);
 		void setRenderGraph(RenderGraph* graph);
+		void setScene(Scene* scene);
 		void setPresentFormat(DataFormat format);
 		void setDisplayResolution(u32 width, u32 height);
 	private:
@@ -22,6 +24,7 @@ namespace zzcVulkanRenderEngine {
 		GLFWwindow* window;
 		GPUDevice* device;
 		RenderGraph* renderGraph;
+		Scene* scene;
 
 		u32 currentFrame = 0;
 

@@ -30,6 +30,7 @@ namespace zzcVulkanRenderEngine {
                 image.image,
                 static_cast<u16>(image.width),
                 static_cast<u16>(image.height),
+                1,
                 util_getDataFormat(image)
             );
         }
@@ -186,7 +187,7 @@ namespace zzcVulkanRenderEngine {
             DescriptorSetsAlloc setAlloc{};
             setAlloc.setLayoutsHandle(setLayout);
             newMesh.material.descriptorSets = device->createDescriptorSets(setAlloc);
-            newMesh.material.setLayout = setLayout;
+            newMesh.material.setLayouts = setLayout;
 
             //write sets
             std::vector<DescriptorSetWrite> writes;

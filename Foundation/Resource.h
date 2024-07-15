@@ -65,7 +65,7 @@ namespace zzcVulkanRenderEngine {
 		VmaAllocation vmaAlloc;    // record allocation info on device, useful for aliasing memory allocation
 
 		Texture() {};
-		void setAccessType(GraphResourceAccessType access);
+		void setAccessType(GraphResourceAccessType access, u16 baseMip, u16 nMips);
 	};
 
 	struct TextureCreation {
