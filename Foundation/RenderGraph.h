@@ -126,12 +126,12 @@ namespace zzcVulkanRenderEngine {
 
 		union {
 			struct {
-				GraphicsPipelineInfo pipelineInfo;
+				GraphicsPipelineInfo* pipelineInfo;
 				GraphicsPipelineHandle pipelineHandle;
 			}graphicPipeline;
 
 			struct {
-				ComputePipelineInfo pipelineInfo;
+				ComputePipelineInfo* pipelineInfo;
 				ComputePipelineHandle pipelineHandle;
 			}computePipeline;
 		}pipeline;
@@ -152,12 +152,12 @@ namespace zzcVulkanRenderEngine {
 			return *this;
 		}
 
-		GraphNode& setGraphicsPipelineInfo(GraphicsPipelineInfo pipelineInfo) {
+		GraphNode& setGraphicsPipelineInfo(GraphicsPipelineInfo* pipelineInfo) {
 			pipeline.graphicPipeline.pipelineInfo = pipelineInfo;
 			return *this;
 		}
 
-		GraphNode& setComputePipelineInfo(ComputePipelineInfo pipelineInfo) {
+		GraphNode& setComputePipelineInfo(ComputePipelineInfo* pipelineInfo) {
 			pipeline.computePipeline.pipelineInfo = pipelineInfo;
 			return *this;
 		}

@@ -39,7 +39,7 @@ int main() {
 			},
 		})
 		.setGraphicsPipelineInfo(
-			GraphicsPipelineInfo{
+			new GraphicsPipelineInfo{
 				.shaders = {
 				  .vertShaderPath = "",
 				  .fragShaderPath = ""

@@ -314,12 +314,12 @@ namespace zzcVulkanRenderEngine {
 			if (node->type == GraphNodeType::GRAPHICS) {
 				GraphicsPipelineCreation gPipelineCI{};
 				GraphicsPipelineCreation ci{};
-				GraphicsPipelineInfo& pipeInfo = node->pipeline.graphicPipeline.pipelineInfo;
-				ci.setShaderInfo({ pipeInfo.shaders.vertShaderPath, pipeInfo.shaders.fragShaderPath });
-				ci.setVertexInput({ pipeInfo.vertexInput.bindingDesc, pipeInfo.vertexInput.attributes });
-				ci.setRasterizerInfo({ pipeInfo.rasterInfo.cullMode, pipeInfo.rasterInfo.frontFace });
-				ci.setMSAAInfo({ pipeInfo.msaa.nSamplesPerPixel });
-				ci.setDepthStencilInfo({ pipeInfo.depthStencil.enableDepth });
+				GraphicsPipelineInfo* pipeInfo = node->pipeline.graphicPipeline.pipelineInfo;
+				ci.setShaderInfo({ pipeInfo->shaders.vertShaderPath, pipeInfo->shaders.fragShaderPath });
+				ci.setVertexInput({ pipeInfo->vertexInput.bindingDesc, pipeInfo->vertexInput.attributes });
+				ci.setRasterizerInfo({ pipeInfo->rasterInfo.cullMode, pipeInfo->rasterInfo.frontFace });
+				ci.setMSAAInfo({ pipeInfo->msaa.nSamplesPerPixel });
+				ci.setDepthStencilInfo({ pipeInfo->depthStencil.enableDepth });
 				node->pipeline.graphicPipeline.pipelineHandle = device->createGraphicsPipeline(ci);
 			}
 		}
