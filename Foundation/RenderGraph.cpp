@@ -6,24 +6,24 @@
 #include"utils/utils.h"
 
 namespace zzcVulkanRenderEngine {
-	// For GraphNode
-	template<typename Derived>
-	Derived& GraphNode<Derived>::setType(GraphNodeType _type) {
-		type = _type;
-		return *this;
-	}
+	//// For GraphNode
+	//template<typename Derived>
+	//Derived& GraphNode<Derived>::setType(GraphNodeType _type) {
+	//	type = _type;
+	//	return *this;
+	//}
 
-	template<typename Derived>
-	Derived& GraphNode<Derived>::setInputs(std::vector<GraphResource> _inputs) {
-		inputs = _inputs;
-		return *this;
-	}
+	//template<typename Derived>
+	//Derived& GraphNode<Derived>::setInputs(std::vector<GraphResource> _inputs) {
+	//	inputs = _inputs;
+	//	return *this;
+	//}
 
-	template<typename Derived>
-	Derived& GraphNode<Derived>::setOutputs(std::vector<GraphResource> _outputs) {
-		outputs = _outputs;
-		return *this;
-	}
+	//template<typename Derived>
+	//Derived& GraphNode<Derived>::setOutputs(std::vector<GraphResource> _outputs) {
+	//	outputs = _outputs;
+	//	return *this;
+	//}
 
 	// For RenderGraph
 	RenderGraph::RenderGraph() {
@@ -35,7 +35,7 @@ namespace zzcVulkanRenderEngine {
 	}
 
 
-	void RenderGraph::addNode(GraphNodeBase* node){
+	void RenderGraph::addNode(GraphNode* node){
 		nodes.push_back(node);
 	}
 
@@ -53,7 +53,7 @@ namespace zzcVulkanRenderEngine {
 		// for each node, check whether the required external input resources exists
 		// if exist, register the handle for that resource
 		for (u32 i = 0; i < nodes.size(); i++) {
-			GraphNodeBase* node = nodes.at(i);
+			GraphNode* node = nodes.at(i);
 			for (GraphResource& r : node->inputs) {
 				if (r.isExternal) {
 					if (r.type == GraphResourceType::BUFFER) {
@@ -82,7 +82,7 @@ namespace zzcVulkanRenderEngine {
 		//a map used to record the producer of resources
 		std::map<std::string, GraphNodeHandle> producer;
 		for (u32 i = 0; i < nodes.size(); i++) {
-			GraphNodeBase* node = nodes.at(i);
+			GraphNode* node = nodes.at(i);
 			for (GraphResource& r : node->outputs) {
 				producer.insert({ r.key,(GraphNodeHandle)i });
 			}
@@ -91,7 +91,7 @@ namespace zzcVulkanRenderEngine {
 		//add edges
 		graph.resize(nodes.size());
 		for (u32 i = 0; i < nodes.size(); i++) {
-			GraphNodeBase* node = nodes.at(i);
+			GraphNode* node = nodes.at(i);
 			for (GraphResource& r : node->inputs) {
 				if (r.isExternal)
 					continue;
@@ -147,7 +147,7 @@ namespace zzcVulkanRenderEngine {
 		std::map<std::string, u32>ref_count;
 		for (u32 i = 0; i < topologyOrder.size(); i++) {
 			u32 index = topologyOrder.at(i);
-			GraphNodeBase* node = nodes.at(index);
+			GraphNode* node = nodes.at(index);
 			for (GraphResource& r : node->inputs) {
 				auto it = ref_count.find(r.key);
 				if (it == ref_count.end()) {
@@ -163,7 +163,7 @@ namespace zzcVulkanRenderEngine {
 		std::queue<TextureHandle> texFreelist;
 		for (u32 i = 0; i < topologyOrder.size(); i++) {
 			u32 index = topologyOrder.at(i);
-			GraphNodeBase* node = nodes.at(index);
+			GraphNode* node = nodes.at(index);
 
 			// Create resource on device and assign the obtained handle to GraphResource
 			for (GraphResource& r : node->outputs) {
@@ -199,7 +199,9 @@ namespace zzcVulkanRenderEngine {
 
 	   // TODO: STEP 2 (create descriptorSetLayouts for the node)
 		for (u32 i = 0; i < nodes.size(); i++) {
-			GraphNodeBase* node = nodes.at(i);
+			GraphNode* node = nodes.at(i);
+			if (!(node->inputs.size() > 0))
+				continue;
 			DescriptorSetLayoutsCreation layoutsCI{};
 			layoutsCI.setNodeType(node->type);
 			if (node->type == GraphNodeType::GRAPHICS) {
@@ -222,7 +224,9 @@ namespace zzcVulkanRenderEngine {
 
 	   // TODO: STEP 2 (allocate descriptorSets for the node)
 		for (u32 i = 0; i < nodes.size(); i++) {
-			GraphNodeBase* node = nodes.at(i);
+			GraphNode* node = nodes.at(i);
+			if (!(node->inputs.size() > 0))
+				continue;
 			DescriptorSetsAlloc setsAllocInfo{};
 			setsAllocInfo.layoutsHandle = node->descriptorSetLayouts;
 			node->descriptorSets = device->createDescriptorSets(setsAllocInfo);
@@ -230,7 +234,7 @@ namespace zzcVulkanRenderEngine {
 
 	   // TODO: STEP 2 (write descriptorSets for the node)
 		for (u32 i = 0; i < nodes.size(); i++) {
-			GraphNodeBase* node = nodes.at(i);
+			GraphNode* node = nodes.at(i);
 			std::vector<DescriptorSetWrite> writes;
 			if (node->type == GraphNodeType::GRAPHICS) {
 				for (GraphResource& r : node->inputs) {
@@ -251,7 +255,7 @@ namespace zzcVulkanRenderEngine {
 
        // TODO: STEP 3 (create render pass for the node)
 		for (u32 i = 0; i < nodes.size(); i++) {
-			GraphNodeBase* node = nodes.at(i);
+			GraphNode* node = nodes.at(i);
 			RenderPassCreation creation{};
 			if (node->type == GraphNodeType::GRAPHICS) {
 				for (GraphResource& r : node->outputs) {
@@ -265,7 +269,7 @@ namespace zzcVulkanRenderEngine {
 
        // TODO: STEP 4 (create framebuffer for the node)
 		for (u32 i = 0; i < nodes.size(); i++) {
-			GraphNodeBase* node = nodes.at(i);
+			GraphNode* node = nodes.at(i);
 			FramebufferCreation creation{};
 			if (node->type == GraphNodeType::GRAPHICS) {
 				u32 width = -1;
@@ -287,7 +291,7 @@ namespace zzcVulkanRenderEngine {
 	    // TODO: STEP 2 (create pipelineLayout for the node)
 		// NOTE: need to concatenate multiple descriptor sets from internal and external resources
 		for (u32 i = 0; i < nodes.size(); i++) {
-			GraphNodeBase* node = nodes.at(i);
+			GraphNode* node = nodes.at(i);
 			PipelineLayoutCreation layoutCI{};
 			// descLayout for internal resources
 			layoutCI.addDescLayouts(node->descriptorSetLayouts);
@@ -306,25 +310,24 @@ namespace zzcVulkanRenderEngine {
 
 	    // TODO: STEP 2 (create pipeline for the node)
 		for (u32 i = 0; i < nodes.size(); i++) {
-			GraphNodeBase* node = nodes.at(i);
+			GraphNode* node = nodes.at(i);
 			if (node->type == GraphNodeType::GRAPHICS) {
 				GraphicsPipelineCreation gPipelineCI{};
-				GraphicsNodeBase* gNode = dynamic_cast<GraphicsNodeBase*>(node);
-				ASSERT(gNode, "Assertion failed: casting from GraphNodeBase* to GraphicsNodeBase* failed!");
 				GraphicsPipelineCreation ci{};
-				ci.setShaderInfo({ gNode->pipelineInfo.shaders.vertShaderPath,gNode->pipelineInfo.shaders.fragShaderPath });
-				ci.setVertexInput({ gNode->pipelineInfo.vertexInput.bindingDesc, gNode->pipelineInfo.vertexInput.attributes });
-				ci.setRasterizerInfo({ gNode->pipelineInfo.rasterInfo.cullMode,gNode->pipelineInfo.rasterInfo.frontFace });
-				ci.setMSAAInfo({ gNode->pipelineInfo.msaa.nSamplesPerPixel });
-				ci.setDepthStencilInfo({ gNode->pipelineInfo.depthStencil.enableDepth });
-				gNode->pipelineHandle = device->createGraphicsPipeline(ci);
+				GraphicsPipelineInfo& pipeInfo = node->pipeline.graphicPipeline.pipelineInfo;
+				ci.setShaderInfo({ pipeInfo.shaders.vertShaderPath, pipeInfo.shaders.fragShaderPath });
+				ci.setVertexInput({ pipeInfo.vertexInput.bindingDesc, pipeInfo.vertexInput.attributes });
+				ci.setRasterizerInfo({ pipeInfo.rasterInfo.cullMode, pipeInfo.rasterInfo.frontFace });
+				ci.setMSAAInfo({ pipeInfo.msaa.nSamplesPerPixel });
+				ci.setDepthStencilInfo({ pipeInfo.depthStencil.enableDepth });
+				node->pipeline.graphicPipeline.pipelineHandle = device->createGraphicsPipeline(ci);
 			}
 		}
 
 		// init all nodes
 		for (u32 i = 0; i < nodes.size(); i++) {
-			GraphNodeBase* node = nodes.at(i);
-			node->init(device);
+			GraphNode* node = nodes.at(i);
+			node->render->init(device);
 		}
 
 	}
@@ -333,7 +336,7 @@ namespace zzcVulkanRenderEngine {
 		cmdBuffer->begin();
 		for (u32 i = 0; i < topologyOrder.size(); i++) {
 			u32 index = topologyOrder.at(i);
-			GraphNodeBase* node = nodes.at(index);
+			GraphNode* node = nodes.at(index);
 
 			// Insert barriers for both input and output resources
 			insert_barriers(*cmdBuffer, *node);
@@ -362,7 +365,7 @@ namespace zzcVulkanRenderEngine {
 			cmdBuffer->cmdBeginRenderPass(beginInfo);
 
 			// Execute the node using user-defined method
-			node->execute(cmdBuffer,device,scene);
+			node->render->execute(cmdBuffer,device,scene,node);
 
 			//End the render pass
 			cmdBuffer->cmdEndRenderPass();
@@ -370,7 +373,7 @@ namespace zzcVulkanRenderEngine {
 		cmdBuffer->end();
 	}
 
-	void RenderGraph::insert_barriers(CommandBuffer& cmdBuffer, GraphNodeBase& node) {
+	void RenderGraph::insert_barriers(CommandBuffer& cmdBuffer, GraphNode& node) {
 		if (node.type == GraphNodeType::GRAPHICS) {
 			// add barrier for input resources
 			for (GraphResource& r : node.inputs) {

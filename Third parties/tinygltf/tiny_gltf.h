@@ -756,6 +756,7 @@ struct PbrMetallicRoughness {
 // Each extension should be stored in a ParameterMap.
 // members not in the values could be included in the ParameterMap
 // to keep a single material model
+// TODO: each Material may have a separate pipeline to determine how to render it
 struct Material {
   std::string name;
 

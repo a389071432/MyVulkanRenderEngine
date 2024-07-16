@@ -60,7 +60,7 @@
     <ClInclude Include="Foundation\GraphNode.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="RenderGraphExamples\ExampleNode.h">
+    <ClInclude Include="RenderGraphExamples\ExampleRender.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Foundation\Scene.h">

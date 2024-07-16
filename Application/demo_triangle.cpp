@@ -1,7 +1,7 @@
 #include"Foundation/GPUDevice.h"
 #include"Foundation/RenderGraph.h"
 #include"Foundation/Engine.h"
-#include"RenderGraphExamples/ExampleNode.h"
+#include"RenderGraphExamples/ExampleRender.h"
 #include"Foundation/SimpleScene.h"
 
 using namespace zzcVulkanRenderEngine;
@@ -14,7 +14,7 @@ int main() {
 	SimpleScene scene;
 
 	//define the render graph
-	ExampleNode node;
+	GraphNode node;
 	node.setType(GraphNodeType::GRAPHICS)
 		.setOutputs(std::vector<GraphResource>{
 			GraphResource{
@@ -38,7 +38,7 @@ int main() {
 				.accessStage = ShaderStage::DONT_CARE             // shader stage that would access the resource
 			},
 		})
-		.setPipelineInfo(
+		.setGraphicsPipelineInfo(
 			GraphicsPipelineInfo{
 				.shaders = {
 				  .vertShaderPath = "",
@@ -71,7 +71,6 @@ int main() {
 	graph.addNode(
 		&node
 	);
-
 	engine.setDevice(&device);
 	engine.setRenderGraph(&graph);
 	engine.setScene(&scene);

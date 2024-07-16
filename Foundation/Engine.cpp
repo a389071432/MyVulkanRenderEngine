@@ -47,6 +47,9 @@ namespace zzcVulkanRenderEngine {
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 		window = glfwCreateWindow(scr_width, scr_width, "Vulkan", nullptr, nullptr);
+
+		// compile the render graph
+		renderGraph->compile();
 	}
 
 	void Engine::run() {

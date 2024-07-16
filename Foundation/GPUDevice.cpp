@@ -6,6 +6,7 @@
 #include<Windows.h>
 #include<vulkan/vulkan_win32.h>
 #include<array>
+#include<limits>
 
 namespace zzcVulkanRenderEngine {
 	GPUDevice::GPUDevice(GPUDeviceCreation createInfo) 
@@ -1179,7 +1180,7 @@ namespace zzcVulkanRenderEngine {
 
 		for (const char* extension : requiredExtensions) {
 			bool found = false;
-			for (const auto availableExtension : availableExtensions) {
+			for (const auto& availableExtension : availableExtensions) {
 				if (strcmp(extension, availableExtension.extensionName)) {
 					found = true;
 					break;
@@ -1199,7 +1200,7 @@ namespace zzcVulkanRenderEngine {
 
 		for (const char* layer : requiredLayers) {
 			bool found = false;
-			for (const auto availableLayer : availableLayers) {
+			for (const auto& availableLayer : availableLayers) {
 				if (strcmp(layer, availableLayer.layerName)) {
 					found = true;
 					break;
@@ -1247,7 +1248,10 @@ namespace zzcVulkanRenderEngine {
 	}
 
 	VkExtent2D GPUDevice::helper_selectSwapExtent(const VkSurfaceCapabilitiesKHR capabilities) {
-		if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+		//if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+		//	return capabilities.currentExtent;
+		//}
+		if (capabilities.currentExtent.width != 3) {
 			return capabilities.currentExtent;
 		}
 		else {
@@ -1273,7 +1277,7 @@ namespace zzcVulkanRenderEngine {
 	// TODO: a better strategy to select queues
 	// TODO: for transfer queue
 	QueueFamilyInfos GPUDevice::helper_selectQueueFamilies(VkPhysicalDevice phyDevice, u32 requiredQueues) {
-		QueueFamilyInfos familyInfos;
+		QueueFamilyInfos familyInfos{};
 
 		u32 propertyCnt;
 		vkGetPhysicalDeviceQueueFamilyProperties(phyDevice, &propertyCnt, nullptr);

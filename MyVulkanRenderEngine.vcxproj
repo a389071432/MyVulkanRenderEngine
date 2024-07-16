@@ -169,7 +169,7 @@
     <ClInclude Include="Foundation\GPUDevice.h" />
     <ClInclude Include="Foundation\Scene.h" />
     <ClInclude Include="Foundation\SimpleScene.h" />
-    <ClInclude Include="RenderGraphExamples\ExampleNode.h" />
+    <ClInclude Include="RenderGraphExamples\ExampleRender.h" />
     <ClInclude Include="utils\utils.h" />
   </ItemGroup>
   <ItemGroup>

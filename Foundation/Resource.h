@@ -64,7 +64,6 @@ namespace zzcVulkanRenderEngine {
 
 		VmaAllocation vmaAlloc;    // record allocation info on device, useful for aliasing memory allocation
 
-		Texture() {};
 		void setAccessType(GraphResourceAccessType access, u16 baseMip, u16 nMips);
 	};
 
@@ -105,7 +104,6 @@ namespace zzcVulkanRenderEngine {
 		VkBuffer buffer;
 		VkDeviceMemory mem;
 		VkDeviceSize size;
-		Buffer() {};
 	};
 
 	struct BindingDesc {
@@ -179,8 +177,8 @@ namespace zzcVulkanRenderEngine {
 			VertexBindingDesc bindingDesc;
 			std::vector<VertexAttribute> attributes;
 			
-			VertexInput& setBindingDesc(VertexBindingDesc bindingDesc);
-			VertexInput& addVertexAttribute(VertexAttribute attribute);
+			VertexInput& setBindingDesc(VertexBindingDesc _bindingDesc) { bindingDesc = _bindingDesc; return *this; };
+			VertexInput& addVertexAttribute(VertexAttribute attribute) { attributes.push_back(attribute); return *this; };
 		}vertexInput;
 
 		struct RasterizerInfo {
