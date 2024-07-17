@@ -92,10 +92,96 @@ namespace zzcVulkanRenderEngine {
 
 		//helper functions for application-level requests
 		template<typename T>
-		BufferHandle& createBufferFromData(const std::vector<T>& data);
+		BufferHandle& createBufferFromData(const std::vector<T>& data) {
+
+			VkDeviceSize bufferSize = VkDeviceSize(sizeof(T) * data.size());
+
+			//create vertex buffer (inaccessable by host, exclusive by GPU)
+			BufferCreation mainCI{};
+			mainCI.setSize(bufferSize)
+				.setUsage(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT)
+				.setProp(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+				.setShareMode(ResourceSharingMode::EXCLUSIVE);
+			BufferHandle main = createBuffer(mainCI);
+			Buffer& mainBuffer = getBuffer(main);
+
+			//create staging buffer (accessible by host, only used for transfering vertex data from host to GPU)
+			BufferCreation stageCI{};
+			stageCI.setSize(bufferSize)
+				.setUsage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
+				.setProp(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+				.setShareMode(ResourceSharingMode::EXCLUSIVE);
+			BufferHandle stage = createBuffer(stageCI);
+			Buffer& stageBuffer = getBuffer(stage);
+
+			//fill in the staging buffer
+			void* pData;
+			vkMapMemory(device, stageBuffer.mem, 0, bufferSize, 0, &pData);
+			memcpy(pData, data.data(), bufferSize);
+			vkUnmapMemory(device, stageBuffer.mem);
+
+			//transfer the vertices data from staging buffer to vertex buffer (by sumbitting commands)
+			transferBufferInDevice(stage, main, bufferSize);
+
+			//release the stagging buffer and free the memory
+			removeBuffer(stage);
+
+			return main;
+		}
+
 		template<typename T>
-		TextureHandle& createTexture2DFromData(const std::vector<T>& data, u16 width, u16 height, u16 nMips, DataFormat format);
-		void transferBufferInDevice(VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDeviceSize copySize);
+		TextureHandle& createTexture2DFromData(const std::vector<T>& data, u16 width, u16 height, u16 nMips, DataFormat format) {
+			//create a staging buffer
+			BufferCreation stageCI{};
+			VkDeviceSize bufferSize = VkDeviceSize(sizeof(T) * data.size());
+			stageCI.setSize(bufferSize)
+				.setUsage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
+				.setProp(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+				.setShareMode(ResourceSharingMode::EXCLUSIVE);
+			BufferHandle stage = createBuffer(stageCI);
+			Buffer& stageBuffer = getBuffer(stage);
+
+			//fill in the staging buffer
+			void* pData;
+			vkMapMemory(device, stageBuffer.mem, 0, bufferSize, 0, &pData);
+			memcpy(pData, data.data(), bufferSize);
+			vkUnmapMemory(device, stageBuffer.mem);
+
+			// create the image
+			TextureCreation texCI{};
+			texCI.setType(TextureType::Texture2D)
+				.setFormat(format)
+				.setSize(width, height, 1)
+				.setMipLevels(nMips);
+			TextureHandle texHandle = createTexture(texCI);
+			Texture& tex = getTexture(texHandle);
+
+			// transfer data in device
+			transferBufferToImage2DInDevice(stage, texHandle, width, height);
+
+			// release the staging buffer
+			removeBuffer(stage);
+
+			// generate mip levels if requried
+			if (nMips > 1) {
+				// set layout transition for all mip levels
+				// so that the i-th mip level will be transitioned to the layout COPY_DST when performing the copy from i-1 to i
+				imageLayoutTransition(texHandle, GraphResourceAccessType::COPY_DST, 0, nMips);
+				auxiCmdBuffer.begin();
+				helper_generateMipMaps(texHandle, nMips);
+				auxiCmdBuffer.end();
+			}
+
+			// since the texture will be read by shader during rendering
+			// insert barrier to transition it to appropriate layout to be ready for sampling
+			imageLayoutTransition(texHandle, GraphResourceAccessType::READ_TEXTURE, 0, nMips);
+
+			return texHandle;
+		}
+
+		//void transferBufferInDevice(VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDeviceSize copySize);
+
+		void transferBufferInDevice(BufferHandle srcBuffer, BufferHandle dstBuffer, VkDeviceSize copySize);
 		void transferImageInDevice(TextureHandle src, TextureHandle dst, VkExtent2D copyExtent);
 		void transferBufferToImage2DInDevice(BufferHandle buffer, TextureHandle tex, u32 width, u32 height);
 		void imageLayoutTransition(TextureHandle tex, GraphResourceAccessType targetAccess, u16 baseMip, u16 nMips);

@@ -1,3 +1,5 @@
+#pragma once
+
 #include"GPUDevice.h"
 #include"assert.h"
 #include"utils/utils.h"
@@ -961,95 +963,108 @@ namespace zzcVulkanRenderEngine {
 		return handle;
 	}
 
-	template<typename T>
-	BufferHandle& GPUDevice::createBufferFromData(const std::vector<T>& data) {
+	//template<typename T>
+	//BufferHandle& GPUDevice::createBufferFromData(const std::vector<T>& data) {
 
-		VkDeviceSize bufferSize = VkDeviceSize(sizeof(T) * data.size());
+	//	VkDeviceSize bufferSize = VkDeviceSize(sizeof(T) * data.size());
 
-		//create vertex buffer (inaccessable by host, exclusive by GPU)
-		BufferCreation mainCI{};
-		mainCI.setSize(bufferSize)
-			.setUsage(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT)
-			.setProp(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
-			.setShareMode(ResourceSharingMode::EXCLUSIVE);
-		BufferHandle main = createBuffer(mainCI);
-		Buffer& mainBuffer = getBuffer(main);
+	//	//create vertex buffer (inaccessable by host, exclusive by GPU)
+	//	BufferCreation mainCI{};
+	//	mainCI.setSize(bufferSize)
+	//		.setUsage(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT)
+	//		.setProp(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
+	//		.setShareMode(ResourceSharingMode::EXCLUSIVE);
+	//	BufferHandle main = createBuffer(mainCI);
+	//	Buffer& mainBuffer = getBuffer(main);
 
-		//create staging buffer (accessible by host, only used for transfering vertex data from host to GPU)
-		BufferCreation stageCI{};
-		stageCI.setSize(bufferSize)
-			.setUsage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
-			.setProp(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
-			.setShareMode(ResourceSharingMode::EXCLUSIVE);
-		BufferHandle stage = createBuffer(stageCI);
-		Buffer& stageBuffer = getBuffer(stage);
+	//	//create staging buffer (accessible by host, only used for transfering vertex data from host to GPU)
+	//	BufferCreation stageCI{};
+	//	stageCI.setSize(bufferSize)
+	//		.setUsage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
+	//		.setProp(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+	//		.setShareMode(ResourceSharingMode::EXCLUSIVE);
+	//	BufferHandle stage = createBuffer(stageCI);
+	//	Buffer& stageBuffer = getBuffer(stage);
 
-		//fill in the staging buffer
-		void* pdata;
-		vkMapMemory(device, stageBuffer.mem, 0, bufferSize, 0, &data);
-		memcpy(pdata, data.data(), bufferSize);
-		vkUnmapMemory(device, stageBuffer.mem);
+	//	//fill in the staging buffer
+	//	void* pData;
+	//	vkMapMemory(device, stageBuffer.mem, 0, bufferSize, 0, &pData);
+	//	memcpy(pData, data.data(), bufferSize);
+	//	vkUnmapMemory(device, stageBuffer.mem);
 
-		//transfer the vertices data from staging buffer to vertex buffer (by sumbitting commands)
-		transferBufferInDevice(stageBuffer, mainBuffer, bufferSize);
+	//	//transfer the vertices data from staging buffer to vertex buffer (by sumbitting commands)
+	//	transferBufferInDevice(stage, main, bufferSize);
 
-		//release the stagging buffer and free the memory
-		removeBuffer(stage);
+	//	//release the stagging buffer and free the memory
+	//	removeBuffer(stage);
 
-		return main;
-	}
+	//	return main;
+	//}
 
-	template<typename T>
-	TextureHandle& GPUDevice::createTexture2DFromData(const std::vector<T>& data, u16 width, u16 height, u16 nMips, DataFormat format) {
-		//create a staging buffer
-		BufferCreation stageCI{};
-		VkDeviceSize bufferSize = VkDeviceSize(sizeof(T) * data.size());
-		stageCI.setSize(bufferSize)
-			.setUsage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
-			.setProp(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
-			.setShareMode(ResourceSharingMode::EXCLUSIVE);
-		BufferHandle stage = createBuffer(stageCI);
-		Buffer& stageBuffer = getBuffer(stage);
+	//template<typename T>
+	//TextureHandle& GPUDevice::createTexture2DFromData(const std::vector<T>& data, u16 width, u16 height, u16 nMips, DataFormat format) {
+	//	//create a staging buffer
+	//	BufferCreation stageCI{};
+	//	VkDeviceSize bufferSize = VkDeviceSize(sizeof(T) * data.size());
+	//	stageCI.setSize(bufferSize)
+	//		.setUsage(VK_BUFFER_USAGE_TRANSFER_SRC_BIT)
+	//		.setProp(VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+	//		.setShareMode(ResourceSharingMode::EXCLUSIVE);
+	//	BufferHandle stage = createBuffer(stageCI);
+	//	Buffer& stageBuffer = getBuffer(stage);
 
-		//fill in the staging buffer
-		void* pdata;
-		vkMapMemory(device, stageBuffer.mem, 0, bufferSize, 0, &data);
-		memcpy(pdata, data.data(), bufferSize);
-		vkUnmapMemory(device, stageBuffer.mem);
+	//	//fill in the staging buffer
+	//	void* pData;
+	//	vkMapMemory(device, stageBuffer.mem, 0, bufferSize, 0, &pData);
+	//	memcpy(pData, data.data(), bufferSize);
+	//	vkUnmapMemory(device, stageBuffer.mem);
 
-		// create the image
-		TextureCreation texCI{};
-		texCI.setType(TextureType::Texture2D)
-			.setFormat(format)
-			.setSize(width, height, 1)
-			.setMipLevels(nMips);
-		TextureHandle texHandle = createTexture(texCI);
-		Texture& tex = getTexture(texHandle);
+	//	// create the image
+	//	TextureCreation texCI{};
+	//	texCI.setType(TextureType::Texture2D)
+	//		.setFormat(format)
+	//		.setSize(width, height, 1)
+	//		.setMipLevels(nMips);
+	//	TextureHandle texHandle = createTexture(texCI);
+	//	Texture& tex = getTexture(texHandle);
 
-		// transfer data in device
-		transferBufferToImage2DInDevice(stage, tex, width, height);
+	//	// transfer data in device
+	//	transferBufferToImage2DInDevice(stage, texHandle, width, height);
 
-		// release the staging buffer
-		removeBuffer(stage);
+	//	// release the staging buffer
+	//	removeBuffer(stage);
 
-		// generate mip levels if requried
-		if (nMips > 1) {
-			// set layout transition for all mip levels
-			// so that the i-th mip level will be transitioned to the layout COPY_DST when performing the copy from i-1 to i
-			imageLayoutTransition(texHandle, GraphResourceAccessType::COPY_DST, 0, nMips);
-			auxiCmdBuffer.begin();
-			helper_generateMipMaps(texHandle, nMips);
-			auxiCmdBuffer.end();
-		}
+	//	// generate mip levels if requried
+	//	if (nMips > 1) {
+	//		// set layout transition for all mip levels
+	//		// so that the i-th mip level will be transitioned to the layout COPY_DST when performing the copy from i-1 to i
+	//		imageLayoutTransition(texHandle, GraphResourceAccessType::COPY_DST, 0, nMips);
+	//		auxiCmdBuffer.begin();
+	//		helper_generateMipMaps(texHandle, nMips);
+	//		auxiCmdBuffer.end();
+	//	}
 
-		// since the texture will be read by shader during rendering
-		// insert barrier to transition it to appropriate layout
-		imageLayoutTransition(texHandle);
-	}
+	//	// since the texture will be read by shader during rendering
+	//	// insert barrier to transition it to appropriate layout to be ready for sampling
+	//	imageLayoutTransition(texHandle,GraphResourceAccessType::READ_TEXTURE,0,nMips);
 
-	void GPUDevice::transferBufferInDevice(VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDeviceSize copySize) {
+	//	return texHandle;
+	//}
+
+	//void GPUDevice::transferBufferInDevice(VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDeviceSize copySize) {
+	//	auxiCmdBuffer.begin();
+	//	auxiCmdBuffer.cmdCopyBuffer(srcBuffer, dstBuffer, copySize);
+	//	auxiCmdBuffer.end();
+
+	//	// submit to queue
+	//	submitCmds(mainQueue, auxiCmdBuffer.getCmdBuffer());
+	//}
+
+	void GPUDevice::transferBufferInDevice(BufferHandle srcBuffer, BufferHandle dstBuffer, VkDeviceSize copySize) {
+		Buffer& src = getBuffer(srcBuffer);
+		Buffer& dst = getBuffer(dstBuffer);
 		auxiCmdBuffer.begin();
-		auxiCmdBuffer.cmdCopyBuffer(srcBuffer, dstBuffer, copySize);
+		auxiCmdBuffer.cmdCopyBuffer(src.buffer, dst.buffer, copySize);
 		auxiCmdBuffer.end();
 
 		// submit to queue
