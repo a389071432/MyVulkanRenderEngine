@@ -72,6 +72,18 @@
     <ClInclude Include="Foundation\SimpleScene.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Third parties\tinygltf\json.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Third parties\tinygltf\stb_image.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Third parties\tinygltf\stb_image_write.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Third parties\tinygltf\tiny_gltf.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Foundation\RenderGraph.cpp">

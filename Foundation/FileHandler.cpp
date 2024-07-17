@@ -10,7 +10,7 @@ namespace zzcVulkanRenderEngine {
 
 	}
 
-	static std::vector<char> read(std::string filename) {
+	std::vector<char> FileHandler::read(std::string filename) {
         std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
         if (!file.is_open()) {

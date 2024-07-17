@@ -64,47 +64,48 @@ namespace zzcVulkanRenderEngine {
 		}
 	}
 
-	// For ResourcePool
-	template<typename T, typename ResourceHandle>
-	ResourcePool<T,ResourceHandle>::ResourcePool(u32 poolSize) {
-		ASSERT(poolSize <= maxPoolSize, "required pool size exceeds maximum limit!");
+	//// For ResourcePool
+	//template<class T, class ResourceHandle>
+	//ResourcePool<T,ResourceHandle>::ResourcePool(u32 poolSize) {
+	//	ASSERT(poolSize <= maxPoolSize, "required pool size exceeds maximum limit!");
 
-		data.reserve(poolSize);
-		for (u32 i = 0; i < poolSize; i++) {
-			data.push_back(T());
-		}
+	//	data.reserve(poolSize);
+	//	for (u32 i = 0; i < poolSize; i++) {
+	//		T t;
+	//		data.push_back(t);
+	//	}
 
-		for (u32 i = 0; i < data.size(); i++) {
-			freeList.push(i);
-		}
-	}
+	//	for (u32 i = 0; i < data.size(); i++) {
+	//		freeList.push(i);
+	//	}
+	//}
 
-	template <typename T, typename ResourceHandle>
-	ResourcePool<T, ResourceHandle>::~ResourcePool() {
+	//template<class T, class ResourceHandle>
+	//ResourcePool<T, ResourceHandle>::~ResourcePool() {
 
-	}
+	//}
 
-	template <typename T, typename ResourceHandle>
-	ResourceHandle ResourcePool<T, ResourceHandle>::require_resource() {
-		ASSERT(!freeList.empty(), "no available resource!");
+	//template<class T, class ResourceHandle>
+	//ResourceHandle ResourcePool<T, ResourceHandle>::require_resource() {
+	//	ASSERT(!freeList.empty(), "no available resource!");
 
-		ResourceHandle handle = freeList.front();
-		freeList.pop();
-		return handle;
-	}
+	//	ResourceHandle handle = freeList.front();
+	//	freeList.pop();
+	//	return handle;
+	//}
 
-	template <typename T, typename ResourceHandle>
-	T& ResourcePool<T, ResourceHandle>::get_resource(ResourceHandle handle) {
-		ASSERT(handle>=0 && handle<data.size(), "invalid resource handle!");
+	//template<class T, class ResourceHandle>
+	//T& ResourcePool<T, ResourceHandle>::get_resource(ResourceHandle handle) {
+	//	ASSERT(handle>=0 && handle<data.size(), "invalid resource handle!");
 
-		return data.at(handle);
-	}
+	//	return data.at(handle);
+	//}
 
-	template <typename T, typename ResourceHandle>
-	void ResourcePool<T, ResourceHandle>::release_resource(ResourceHandle handle) {
-		ASSERT(handle >= 0 && handle < data.size(), "invalid resource handle!");
+	//template<class T, class ResourceHandle>
+	//void ResourcePool<T, ResourceHandle>::release_resource(ResourceHandle handle) {
+	//	ASSERT(handle >= 0 && handle < data.size(), "invalid resource handle!");
 
-		freeList.push(handle);
-	}
+	//	freeList.push(handle);
+	//}
 
 }

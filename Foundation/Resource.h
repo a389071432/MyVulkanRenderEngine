@@ -6,6 +6,7 @@
 #include"enums.h"
 #include"datatypes.h"
 #include"vulkan/vulkan.h"
+#include"assert.h"
 
 namespace zzcVulkanRenderEngine {
 	typedef u32 TextureHandle;
@@ -244,17 +245,50 @@ namespace zzcVulkanRenderEngine {
 	};
 
 	// TODO: An optimized version for 2D data
-	template<typename T, typename ResourceHandle>
+	template<class T, class ResourceHandle>
 	class ResourcePool {
 	public:
-		ResourcePool(u32 poolSize);
-		~ResourcePool();
-		ResourceHandle require_resource();
-		T& get_resource(ResourceHandle handle);
-		void release_resource(ResourceHandle handle);
+		ResourcePool(u32 poolSize) {
+			ASSERT(poolSize <= maxPoolSize, "required pool size exceeds maximum limit!");
+
+			data.reserve(poolSize);
+			for (u32 i = 0; i < poolSize; i++) {
+				T t;
+				data.push_back(t);
+			}
+
+			for (u32 i = 0; i < data.size(); i++) {
+				freeList.push(i);
+			}
+		}
+
+		~ResourcePool() {
+
+		}
+
+		ResourceHandle require_resource() {
+			ASSERT(!freeList.empty(), "no available resource!");
+
+			ResourceHandle handle = freeList.front();
+			freeList.pop();
+			return handle;
+		}
+
+		T& get_resource(ResourceHandle handle) {
+			ASSERT(handle >= 0 && handle < data.size(), "invalid resource handle!");
+
+			return data.at(handle);
+		}
+
+		void release_resource(ResourceHandle handle) {
+			ASSERT(handle >= 0 && handle < data.size(), "invalid resource handle!");
+
+			freeList.push(handle);
+		}
+
 	private:
 		u32 poolSize;
-		const u32 maxPoolSize;
+		const u32 maxPoolSize = 512;
 		std::vector<T> data;
 		std::queue<ResourceHandle> freeList;
 	};

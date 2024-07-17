@@ -7,6 +7,6 @@ namespace zzcVulkanRenderEngine {
 	public:
 		FileHandler();
 		~FileHandler();
-		static std::vector<char> read(std::string filePath);
+		std::vector<char> read(std::string filePath);
 	};
 }

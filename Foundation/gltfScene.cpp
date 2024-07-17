@@ -1,7 +1,10 @@
 #include"gltfScene.h"
-#include"Third parties/tinygltf/tiny_gltf.h"
 #include"assert.h"
 #include"utils/utils.h"
+#define TINYGLTF_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include"Third parties/tinygltf/tiny_gltf.h"
 
 namespace zzcVulkanRenderEngine {
     gltfScene::gltfScene() {
