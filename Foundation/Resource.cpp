@@ -64,19 +64,6 @@ namespace zzcVulkanRenderEngine {
 		}
 	}
 
-	//// For DescriptorSetsCreation
-	//DescriptorSetsCreation& DescriptorSetsCreation::setNodeType(GraphNodeType _nodeType) {
-	//	nodeType = _nodeType;
-	//}
-
-	//DescriptorSetsCreation& DescriptorSetsCreation::addInput(BindingDesc binding) {
-	//	inputs.push_back(binding);
-	//}
-
-	//DescriptorSetsCreation& DescriptorSetsCreation::addOutput(BindingDesc binding) {
-	//	outputs.push_back(binding);
-	//}
-
 	// For ResourcePool
 	template<typename T, typename ResourceHandle>
 	ResourcePool<T,ResourceHandle>::ResourcePool(u32 poolSize) {
@@ -119,4 +106,5 @@ namespace zzcVulkanRenderEngine {
 
 		freeList.push(handle);
 	}
+
 }

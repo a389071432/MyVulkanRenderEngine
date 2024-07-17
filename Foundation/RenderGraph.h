@@ -59,8 +59,8 @@ namespace zzcVulkanRenderEngine {
 			VertexBindingDesc bindingDesc;
 			std::vector<VertexAttribute> attributes;
 
-			VertexInput& setBindingDesc(VertexBindingDesc bindingDesc);
-			VertexInput& addVertexAttribute(VertexAttribute attribute);
+			//VertexInput& setBindingDesc(VertexBindingDesc bindingDesc);
+			//VertexInput& addVertexAttribute(VertexAttribute attribute);
 		}vertexInput;
 
 		struct RasterizerInfo {
@@ -78,12 +78,12 @@ namespace zzcVulkanRenderEngine {
 
 		PipelineLayoutHandle pipelineLayoutHandle;
 
-		GraphicsPipelineInfo& setShaderInfo(ShaderInfo shaderInfo);
-		GraphicsPipelineInfo& setVertexInput(VertexInput vertexInput);
-		GraphicsPipelineInfo& setRasterizerInfo(RasterizerInfo rasterInfo);
-		GraphicsPipelineInfo& setMSAAInfo(MSAAInfo msaaInfo);
-		GraphicsPipelineInfo& setDepthStencilInfo(DepthStencilInfo depthStencilInfo);
-		GraphicsPipelineInfo& setPipelineLayout(PipelineLayoutHandle pipelineLayoutHandle);
+		GraphicsPipelineInfo& setShaderInfo(ShaderInfo shaderInfo) { shaders = shaderInfo; return *this; }
+		GraphicsPipelineInfo& setVertexInput(VertexInput _vertexInput) { vertexInput = _vertexInput; return *this;}
+		GraphicsPipelineInfo& setRasterizerInfo(RasterizerInfo _rasterInfo) { rasterInfo = _rasterInfo; return *this; }
+		GraphicsPipelineInfo& setMSAAInfo(MSAAInfo _msaaInfo) { msaa = _msaaInfo; return *this; }
+		GraphicsPipelineInfo& setDepthStencilInfo(DepthStencilInfo depthStencilInfo) { depthStencil = depthStencilInfo; return *this; }
+		GraphicsPipelineInfo& setPipelineLayout(PipelineLayoutHandle handle) { pipelineLayoutHandle = handle; return *this; }
 	};
 	
 	struct ComputePipelineInfo {

@@ -6,23 +6,29 @@
 #include"utils/utils.h"
 
 namespace zzcVulkanRenderEngine {
-	//// For GraphNode
-	//template<typename Derived>
-	//Derived& GraphNode<Derived>::setType(GraphNodeType _type) {
-	//	type = _type;
-	//	return *this;
+	//// For the GraphicsPipelineInfo
+	//GraphicsPipelineInfo& setShaderInfo(GraphicsPipelineInfo::ShaderInfo _shaderInfo) {
+
 	//}
 
-	//template<typename Derived>
-	//Derived& GraphNode<Derived>::setInputs(std::vector<GraphResource> _inputs) {
-	//	inputs = _inputs;
-	//	return *this;
+	//GraphicsPipelineInfo& setVertexInput(GraphicsPipelineInfo::VertexInput _vertexInput) {
+
 	//}
 
-	//template<typename Derived>
-	//Derived& GraphNode<Derived>::setOutputs(std::vector<GraphResource> _outputs) {
-	//	outputs = _outputs;
-	//	return *this;
+	//GraphicsPipelineInfo& setRasterizerInfo(GraphicsPipelineInfo::RasterizerInfo _rasterInfo) {
+
+	//}
+
+	//GraphicsPipelineInfo& setMSAAInfo(GraphicsPipelineInfo::MSAAInfo _msaaInfo) {
+
+	//}
+
+	//GraphicsPipelineInfo& setDepthStencilInfo(GraphicsPipelineInfo::DepthStencilInfo depthStencilInfo) {
+
+	//}
+
+	//GraphicsPipelineInfo& setPipelineLayout(PipelineLayoutHandle pipelineLayoutHandle) {
+
 	//}
 
 	// For RenderGraph

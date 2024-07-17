@@ -1,11 +1,11 @@
 #pragma once
-#include <stdint.h>
 #include<vector>
 #include<queue>
 #include<string>
-#include"vma/vk_mem_alloc.h"
+//#include"vma/vk_mem_alloc.h"
 #include"enums.h"
 #include"datatypes.h"
+#include"vulkan/vulkan.h"
 
 namespace zzcVulkanRenderEngine {
 	typedef u32 TextureHandle;
@@ -44,11 +44,22 @@ namespace zzcVulkanRenderEngine {
 		float maxLod = 0.0;
 		float lodBias = 0.0;
 
-		SamplerCreation& setFilterMode(VkFilter min, VkFilter mag);
-		SamplerCreation& setMipMode(VkSamplerMipmapMode mip, float minLod, float maxLod, float lodBias);
-		SamplerCreation& setAddressMode(VkSamplerAddressMode u, VkSamplerAddressMode v, VkSamplerAddressMode w);
-		SamplerCreation& setAnisotropy(bool enable, float anisotropy);
-		SamplerCreation& setCompareOp(bool enable, VkCompareOp compareOp);
+		SamplerCreation& setFilterMode(VkFilter min, VkFilter mag) { minFilter = min; magFilter = mag; return *this; }
+		SamplerCreation& setMipMode(VkSamplerMipmapMode mip, float _minLod, float _maxLod, float _lodBias) { 
+			mipMode = mip; 
+			minLod = _minLod;
+			maxLod = _maxLod;
+			lodBias = _lodBias;
+			return *this;
+		}
+		SamplerCreation& setAddressMode(VkSamplerAddressMode u, VkSamplerAddressMode v, VkSamplerAddressMode w) {
+			address_mode_u = u;
+			address_mode_v = v;
+			address_mode_w = w;
+			return *this;
+		}
+		SamplerCreation& setAnisotropy(bool enable, float _anisotropy) { enableAnisotropy = enable; anisotropy = _anisotropy; return *this; }
+		SamplerCreation& setCompareOp(bool enable, VkCompareOp _compareOp) { enableCompare = enable; compareOp = _compareOp; return *this; }
 	};
 
 	// TODO: add params for sampler settings
@@ -62,7 +73,7 @@ namespace zzcVulkanRenderEngine {
 		u16 width, height, depth;
 		u16 nMips;
 
-		VmaAllocation vmaAlloc;    // record allocation info on device, useful for aliasing memory allocation
+		//VmaAllocation vmaAlloc;    // record allocation info on device, useful for aliasing memory allocation
 
 		void setAccessType(GraphResourceAccessType access, u16 baseMip, u16 nMips);
 	};
@@ -117,14 +128,14 @@ namespace zzcVulkanRenderEngine {
 		std::vector<BindingDesc> bindings;
 		GraphNodeType nodeType;
 
-		DescriptorSetLayoutsCreation& setNodeType(GraphNodeType nodeType);
-		DescriptorSetLayoutsCreation& addBinding(BindingDesc binding);
+		DescriptorSetLayoutsCreation& setNodeType(GraphNodeType type) { nodeType = type; return *this; }
+		DescriptorSetLayoutsCreation& addBinding(BindingDesc binding) { bindings.push_back(binding); return *this; }
 	};
 
 	struct DescriptorSetsAlloc {
 		DescriptorSetLayoutsHandle layoutsHandle;
 
-		DescriptorSetsAlloc& setLayoutsHandle(DescriptorSetLayoutsHandle layouts);
+		DescriptorSetsAlloc& setLayoutsHandle(DescriptorSetLayoutsHandle layouts) { layoutsHandle = layouts; return *this; }
 	};
 
 	struct DescriptorSetWrite {
@@ -139,11 +150,11 @@ namespace zzcVulkanRenderEngine {
 		u16 dstSetId;
 		u16 dstBinding;
 
-		DescriptorSetWrite& setType(BindingType type);
-		DescriptorSetWrite& setDstSet(u16 setId);
-		DescriptorSetWrite& setDstBinding(u16 binding);
-		DescriptorSetWrite& setTexHandle(TextureHandle texHandle);
-		DescriptorSetWrite& setBufferHandle(BufferHandle bufferHandle);
+		DescriptorSetWrite& setType(BindingType _type) { type = _type; return *this; }
+		DescriptorSetWrite& setDstSet(u16 setId) { dstSetId = setId; return *this; }
+		DescriptorSetWrite& setDstBinding(u16 binding) { dstBinding = binding; return *this; }
+		DescriptorSetWrite& setTexHandle(TextureHandle texHandle) { resource.texHandle = texHandle; return *this; }
+		DescriptorSetWrite& setBufferHandle(BufferHandle bufferHandle) { resource.bufferhandle = bufferHandle; return *this; }
 	};
 
 	struct VertexBindingDesc {
@@ -164,7 +175,7 @@ namespace zzcVulkanRenderEngine {
 		/*DescriptorSetLayoutsHandle descLayoutsHandle;*/
 		std::vector<DescriptorSetLayoutsHandle> descLayoutsHandles;
 
-		DescriptorSetLayoutsHandle& addDescLayouts(DescriptorSetLayoutsHandle descLayoutsHandle);
+		PipelineLayoutCreation& addDescLayouts(DescriptorSetLayoutsHandle handle) { descLayoutsHandles.push_back(handle); return *this; }
 	};
 
 	struct GraphicsPipelineCreation {
@@ -200,13 +211,12 @@ namespace zzcVulkanRenderEngine {
 			RenderPassHandle renderPassHandle;
 		}renderPassInfo;
 
-		GraphicsPipelineCreation& setShaderInfo(ShaderInfo shaderInfo);
-		GraphicsPipelineCreation& setVertexInput(VertexInput vertexInput);
-		GraphicsPipelineCreation& setRasterizerInfo(RasterizerInfo rasterInfo);
-		GraphicsPipelineCreation& setMSAAInfo(MSAAInfo msaaInfo);
-		GraphicsPipelineCreation& setDepthStencilInfo(DepthStencilInfo depthStencilInfo);
-		GraphicsPipelineCreation& setPipelineLayout(PipelineLayoutHandle pipelineLayoutHandle);
-		GraphicsPipelineCreation& setRenderPassInfo(RenderPassInfo renderPassInfo);
+		GraphicsPipelineCreation& setShaderInfo(ShaderInfo shaderInfo) { shaders = shaderInfo; return *this; }
+		GraphicsPipelineCreation& setVertexInput(VertexInput _vertexInput) { vertexInput = _vertexInput; return *this; }
+		GraphicsPipelineCreation& setRasterizerInfo(RasterizerInfo _rasterInfo) { rasterInfo = _rasterInfo; return *this; }
+		GraphicsPipelineCreation& setMSAAInfo(MSAAInfo _msaaInfo) { msaa = _msaaInfo; return *this; }
+		GraphicsPipelineCreation& setDepthStencilInfo(DepthStencilInfo depthStencilInfo) { depthStencil = depthStencilInfo; return *this; }
+		GraphicsPipelineCreation& setRenderPassInfo(RenderPassInfo passInfo) { renderPassInfo = passInfo; return *this; }
 	};
 
 	struct RenderAttachmentInfo {
@@ -217,7 +227,7 @@ namespace zzcVulkanRenderEngine {
 	struct RenderPassCreation {
 		std::vector<RenderAttachmentInfo> attachmentInfos;
 
-		RenderPassCreation& addAttachInfo(RenderAttachmentInfo info);
+		RenderPassCreation& addAttachInfo(RenderAttachmentInfo info) { attachmentInfos.push_back(info); return *this; }
 	};
 
 	struct FramebufferCreation {
@@ -227,10 +237,10 @@ namespace zzcVulkanRenderEngine {
 		u32 height;
 		u32 layers = 1;
 
-		FramebufferCreation& addAttachment(TextureHandle tex);
-		FramebufferCreation& setRenderPass(RenderPassHandle renderpass);
-		FramebufferCreation& setSize(u32 width,u32 height);
-		FramebufferCreation& setLayers(u32 nLayers);
+		FramebufferCreation& addAttachment(TextureHandle tex) { attachments.push_back(tex); return *this; }
+		FramebufferCreation& setRenderPass(RenderPassHandle renderpass) { renderPassHandle = renderpass; return *this; }
+		FramebufferCreation& setSize(u32 _width, u32 _height) { width = _width; height = _height; return *this; }
+		FramebufferCreation& setLayers(u32 nLayers) { layers = nLayers; return *this; }
 	};
 
 	// TODO: An optimized version for 2D data
@@ -248,4 +258,5 @@ namespace zzcVulkanRenderEngine {
 		std::vector<T> data;
 		std::queue<ResourceHandle> freeList;
 	};
+
 }

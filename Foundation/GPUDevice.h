@@ -135,7 +135,7 @@ namespace zzcVulkanRenderEngine {
 		std::unordered_map<u32, u32>index2handle_swapchain;
 
 		// GPU memory allocator. Currently using a default one provided by VMA
-		VmaAllocator vmaAllocator;
+		//VmaAllocator vmaAllocator;
 
 		// Device related
 		VkPhysicalDevice physicalDevice;
@@ -170,6 +170,7 @@ namespace zzcVulkanRenderEngine {
 		ResourcePool<VkPipelineLayout, PipelineLayoutHandle> pipelineLayoutPool;
 		ResourcePool<VkPipeline, GraphicsPipelineHandle> graphicsPipelinePool;
 		ResourcePool<VkPipeline, ComputePipelineHandle> computePipelinePool;
+
 
 		// helpers (invisible to application-level coding)
 		bool helper_checkQueueSatisfication(VkPhysicalDevice phyDevice,u32 requiredQueues);

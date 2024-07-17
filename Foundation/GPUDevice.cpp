@@ -18,7 +18,8 @@ namespace zzcVulkanRenderEngine {
 	    ,descriptorSetLayoutsPool(poolSize)
 	    ,renderPassPool(poolSize)
 	    ,framebufferPool(poolSize)
-	    ,pipelineLayoutPool(poolSize){
+	    ,pipelineLayoutPool(poolSize)
+	{
 
 		// TODO: fill in createInfos
 
@@ -137,15 +138,15 @@ namespace zzcVulkanRenderEngine {
 			vkGetDeviceQueue(device, queueFamilyInfos.transferQueue.familyIndex, queueFamilyInfos.transferQueue.queueIndex, &transferQueue);
 
 
-		// Create VMA allocator
-		VmaAllocatorCreateInfo allocatorCI = {};
-		allocatorCI.physicalDevice = physicalDevice;
-		allocatorCI.device = device;
-		allocatorCI.instance = vkInstance;
-		ASSERT(
-			vmaCreateAllocator(&allocatorCI, &vmaAllocator) == VK_SUCCESS,
-			"Assertion failed: VMA Allocator creation failed!"
-		);
+		//// Create VMA allocator
+		//VmaAllocatorCreateInfo allocatorCI = {};
+		//allocatorCI.physicalDevice = physicalDevice;
+		//allocatorCI.device = device;
+		//allocatorCI.instance = vkInstance;
+		//ASSERT(
+		//	vmaCreateAllocator(&allocatorCI, &vmaAllocator) == VK_SUCCESS,
+		//	"Assertion failed: VMA Allocator creation failed!"
+		//);
 
 		// TODO: Create descriptorPool
 		std::array<VkDescriptorPoolSize, 2> poolSizes;
@@ -276,11 +277,11 @@ namespace zzcVulkanRenderEngine {
 
 	}
 
-	inline VkDevice GPUDevice::getDevice() {
+	VkDevice GPUDevice::getDevice() {
 		return device;
 	}
 
-	inline VkSwapchainKHR GPUDevice::getSwapChain() {
+	VkSwapchainKHR GPUDevice::getSwapChain() {
 		return swapChain;
 	}
 
@@ -294,16 +295,16 @@ namespace zzcVulkanRenderEngine {
 		return swapChainExtent;
 	}
 
-	inline CommandBuffer& GPUDevice::getCommandBuffer(u32 index) {
+	CommandBuffer& GPUDevice::getCommandBuffer(u32 index) {
 		ASSERT(index >= 0 && index < cmdBuffers.size(), "Invalid index for getting commandBuffer!");
 		return cmdBuffers.at(index);
 	}
 
-	inline VkQueue GPUDevice::getMainQueue() {
+	VkQueue GPUDevice::getMainQueue() {
 		return mainQueue;
 	}
 
-	inline VkQueue GPUDevice::getPresentQueue() {
+	VkQueue GPUDevice::getPresentQueue() {
 		return presentQueue;
 	}
 
@@ -421,7 +422,7 @@ namespace zzcVulkanRenderEngine {
 		// Require a resource first
 		TextureHandle handle = requireTexture();
 		Texture& texture = getTexture(handle);
-
+		
 		// Fill in the structure 
 		texture.format = util_getFormat(createInfo.format);
 		texture.sampler = VK_NULL_HANDLE;
@@ -453,22 +454,43 @@ namespace zzcVulkanRenderEngine {
 			imageCI.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 		}
 
-		// Allocate memory on device
-		VmaAllocationCreateInfo allocInfo{};
-		allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+		//// Allocate memory on device
+		//VmaAllocationCreateInfo allocInfo{};
+		//allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
-		if (createInfo.aliasTexture == INVALID_TEXTURE_HANDLE) {
-			ASSERT(
-				vmaCreateImage(vmaAllocator, &imageCI, &allocInfo, &texture.image, &texture.vmaAlloc, nullptr) == VK_SUCCESS,
-				"Assertion failed: VMA create image failed!"
-			);
+		//if (createInfo.aliasTexture == INVALID_TEXTURE_HANDLE) {
+		//	ASSERT(
+		//		vmaCreateImage(vmaAllocator, &imageCI, &allocInfo, &texture.image, &texture.vmaAlloc, nullptr) == VK_SUCCESS,
+		//		"Assertion failed: VMA create image failed!"
+		//	);
+		//}
+		//else {
+		//	Texture& aliasTex = getTexture(createInfo.aliasTexture);
+		//	ASSERT(
+		//		vmaCreateAliasingImage(vmaAllocator, aliasTex.vmaAlloc,&imageCI,&texture.image) == VK_SUCCESS,
+		//		"Assertion failed: VMA create image failed!"
+		//	);
+		//}
+
+		ASSERT(
+			vkCreateImage(device, &imageCI, nullptr, &texture.image) == VK_SUCCESS,
+			"Assertion failed: create Image failed!"
+		);
+
+		VkMemoryRequirements memoryRequirements;
+		vkGetImageMemoryRequirements(device, texture.image, &memoryRequirements);
+
+		uint32_t memoryTypeIndex = helper_findSuitableMemoryType(memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+		VkMemoryAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.memoryTypeIndex = memoryTypeIndex;
+		allocInfo.allocationSize = memoryRequirements.size;
+		if (VK_SUCCESS != vkAllocateMemory(device, &allocInfo, nullptr, &texture.mem)) {
+			throw std::runtime_error("failed to allocate memory for image!");
 		}
-		else {
-			Texture& aliasTex = getTexture(createInfo.aliasTexture);
-			ASSERT(
-				vmaCreateAliasingImage(vmaAllocator, aliasTex.vmaAlloc,&imageCI,&texture.image) == VK_SUCCESS,
-				"Assertion failed: VMA create image failed!"
-			);
+
+		if (VK_SUCCESS != vkBindImageMemory(device, texture.image, texture.mem, 0)) {
+			throw std::runtime_error("failed to bind image memory!");
 		}
 		
 		// Create imageView
