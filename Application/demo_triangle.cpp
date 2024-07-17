@@ -41,8 +41,8 @@ int main() {
 		.setGraphicsPipelineInfo(
 			new GraphicsPipelineInfo{
 				.shaders = {
-				  .vertShaderPath = "",
-				  .fragShaderPath = ""
+				  .vertShaderPath = "Shaders/vert.spv",
+				  .fragShaderPath = "Shaders/frag.spv"
                 },
 				//.vertexInput = {
 				//   .bindingDesc={0,sizeof(ExampleNode::Vertex),VertexInputRate::VERTEX},
