@@ -118,11 +118,11 @@ namespace zzcVulkanRenderEngine {
 
 		// automatically generated
         // TODO: following resources should be considered as Resource managed by GPUDevice
-		RenderPassHandle renderPass;
-		FramebufferHandle framebuffer;
+		RenderPassHandle renderPass = INVALID_RENDERPASS_HANDLE;
+		FramebufferHandle framebuffer = INVALID_FRAMEBUFFER_HANDLE;
 		DescriptorSetLayoutsHandle descriptorSetLayouts = INVALID_DESCRIPTORSET_LAYOUTS_HANDLE;
 		DescriptorSetsHandle descriptorSets = INVALID_DESCRIPTORSETS_HANDLE;
-		PipelineLayoutHandle pipelineLayout;
+		PipelineLayoutHandle pipelineLayout = INVALID_PIPELINELAYOUT_HANDLE;
 
 		union {
 			struct {
@@ -176,6 +176,7 @@ namespace zzcVulkanRenderEngine {
 	public:
 		RenderGraph();
 		~RenderGraph();
+		void setDevice(GPUDevice* device);
 		void addNode(GraphNode* node);
 		void compile();
 		void execute(CommandBuffer* cmdBuffer, GPUDevice* device, Scene* scene);

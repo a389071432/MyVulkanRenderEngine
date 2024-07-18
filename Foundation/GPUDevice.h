@@ -45,13 +45,15 @@ namespace zzcVulkanRenderEngine {
 	public:
 		GPUDevice(GPUDeviceCreation createInfo);
 		~GPUDevice();
+		void init();
 
-		// methods for picking members, used by Engine
+		// methods for picking or setting member variables, used by Engine
 		VkDevice getDevice();
 		VkSwapchainKHR getSwapChain();
 		CommandBuffer& getCommandBuffer(u32 index);
 		VkQueue getMainQueue();
 		VkQueue getPresentQueue();
+		void setWindow(GLFWwindow* window);
 
 		// Resource creation
 		TextureHandle createTexture(const TextureCreation createInfo);
@@ -201,6 +203,11 @@ namespace zzcVulkanRenderEngine {
 		const u32 frameInFlight = MAX_FRAME_IN_FLIGHT;
 		const u32 nSwapChainImages = SWAPCHAIN_IMAGES;
 
+		// store the settings
+		u32 enabledQueueFamlies = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT;
+		std::vector<const char*> enabledExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+		std::vector<const char*> enabledLayers = { "VK_LAYER_KHRONOS_validation" };
+
 		// File handler
 		FileHandler fileHandler;
 
@@ -266,7 +273,7 @@ namespace zzcVulkanRenderEngine {
 		VkPresentModeKHR helper_selectSwapPresentMode(const std::vector<VkPresentModeKHR>& availableModes);
 		VkExtent2D helper_selectSwapExtent(const VkSurfaceCapabilitiesKHR capabilities);
 		QueueFamilyInfos helper_selectQueueFamilies(VkPhysicalDevice phyDevice, u32 requiredQueues);
-		std::vector<VkDeviceQueueCreateInfo>& helper_getQueueCreateInfos(QueueFamilyInfos queueInfos,u32 requiredQueues);
+		std::vector<VkDeviceQueueCreateInfo> helper_getQueueCreateInfos(QueueFamilyInfos queueInfos,u32 requiredQueues);
 		VkShaderModule helper_createShaderModule(const std::vector<char>& code);
 		void helper_generateMipMaps(TextureHandle tex, u16 nMips);
 		bool helper_checkInstanceLayerSupport(const std::vector<const char*>& requiredLayers);

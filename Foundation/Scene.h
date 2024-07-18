@@ -52,6 +52,7 @@ namespace zzcVulkanRenderEngine {
     // (the instance-specific parameters are passed as an array bound to a descriptor)
     class Scene {
     public:
+        void setDevice(GPUDevice* device);
         virtual void add_model(const std::string& filename) = 0;
         void remove_model(u32 index);
         int getModelCount();

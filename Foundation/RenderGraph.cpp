@@ -40,6 +40,9 @@ namespace zzcVulkanRenderEngine {
 
 	}
 
+	void RenderGraph::setDevice(GPUDevice* _device) {
+		device = _device;
+	}
 
 	void RenderGraph::addNode(GraphNode* node){
 		nodes.push_back(node);
@@ -252,7 +255,9 @@ namespace zzcVulkanRenderEngine {
 						.setTexHandle(r.type == GraphResourceType::TEXTURE ? r.info.texture.texHandle : INVALID_TEXTURE_HANDLE);
 					writes.push_back(write);
 				}
-				device->writeDescriptorSets(writes, node->descriptorSets);
+				if (node->inputs.size() > 0) {
+					device->writeDescriptorSets(writes, node->descriptorSets);
+				}
 			}
 			else {
 				// TODO: repeat for Compute node
@@ -300,7 +305,9 @@ namespace zzcVulkanRenderEngine {
 			GraphNode* node = nodes.at(i);
 			PipelineLayoutCreation layoutCI{};
 			// descLayout for internal resources
-			layoutCI.addDescLayouts(node->descriptorSetLayouts);
+			if (node->descriptorSetLayouts != INVALID_DESCRIPTORSET_LAYOUTS_HANDLE) {
+				layoutCI.addDescLayouts(node->descriptorSetLayouts);
+			}
 			// descLayout for external resources
 			for (GraphResource& r : node->inputs) {
 				if (r.isExternal == true) {

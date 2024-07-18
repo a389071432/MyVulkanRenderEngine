@@ -9,6 +9,7 @@
 #include<vulkan/vulkan_win32.h>
 #include<array>
 #include<limits>
+#include<set>
 
 namespace zzcVulkanRenderEngine {
 	GPUDevice::GPUDevice(GPUDeviceCreation createInfo) 
@@ -22,35 +23,27 @@ namespace zzcVulkanRenderEngine {
 	    ,framebufferPool(poolSize)
 	    ,pipelineLayoutPool(poolSize)
 	{
-
-		// TODO: fill in createInfos
-
 		cmdBuffers.resize(frameInFlight);
+		enabledQueueFamlies = createInfo.requireQueueFamlies;
+		enabledLayers = createInfo.requiredLayers;
+		enabledExtensions = createInfo.requiredExtensions;
+		
+	}
 
-		// TODO: create windowSurface
-		//VkWin32SurfaceCreateInfoKHR surfaceCI{};
-		//surfaceCI.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-		//surfaceCI.hwnd = glfwGetWin32Window(window);
-		//surfaceCI.hinstance = GetModuleHandle(nullptr);
-		//ASSERT(vkCreateWin32SurfaceKHR(vkInstance, &surfaceCI, nullptr, &windowSurface) == VK_SUCCESS,
-		//	"Failed to create the window surface!"
-		//);
-		
-		ASSERT(glfwCreateWindowSurface(vkInstance, window, nullptr, &windowSurface) != VK_SUCCESS,
-			"Failed to create the window surface!"
-		);
-		
-		
+	GPUDevice::~GPUDevice() {
+
+	}
+
+	void GPUDevice::init() {
 		// CREATE VULKAN INSTANCE
 		// TODO: glfw extensions
 		// enable the validation layer
 		ASSERT(
-			helper_checkInstanceLayerSupport(createInfo.requiredLayers) == true,
+			helper_checkInstanceLayerSupport(enabledLayers) == true,
 			"Assertion failed: required layers are not fully available!"
 		);
 
 		std::vector<const char*> instanceExtensions = helper_getRequiredInstanceExtensions(true);
-
 		VkInstanceCreateInfo instanceCI{};
 		instanceCI.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		instanceCI.enabledExtensionCount = static_cast<uint32_t>(instanceExtensions.size());
@@ -63,23 +56,36 @@ namespace zzcVulkanRenderEngine {
 		appInfo.engineVersion = VK_MAKE_VERSION(0, 0, 1);
 		appInfo.pEngineName = "zzc Vulkan Render Engine";
 		instanceCI.pApplicationInfo = &appInfo;
-		instanceCI.enabledLayerCount = createInfo.requiredLayers.size();
-		instanceCI.ppEnabledLayerNames = createInfo.requiredLayers.data();
-
+		instanceCI.enabledLayerCount = enabledLayers.size();
+		instanceCI.ppEnabledLayerNames = enabledLayers.data();
 
 		ASSERT(
 			vkCreateInstance(&instanceCI, nullptr, &vkInstance) == VK_SUCCESS,
 			"Assertion failed: CreateInstanceFailed!"
 		);
 
+		// TODO: create windowSurface
+		//VkWin32SurfaceCreateInfoKHR surfaceCI{};
+		//surfaceCI.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+		//surfaceCI.hwnd = glfwGetWin32Window(window);
+		//surfaceCI.hinstance = GetModuleHandle(nullptr);
+		//ASSERT(vkCreateWin32SurfaceKHR(vkInstance, &surfaceCI, nullptr, &windowSurface) == VK_SUCCESS,
+		//	"Failed to create the window surface!"
+		//);
+		ASSERT(
+			glfwCreateWindowSurface(vkInstance, window, nullptr, &windowSurface) == VK_SUCCESS,
+			"Failed to create the window surface!"
+		);
+
 		// PICK PHYSICAL DEVICE
 		// TODO: check for extension support
 		uint32_t phyDeviceCnt;
 		ASSERT(
-			vkEnumeratePhysicalDevices(vkInstance, &phyDeviceCnt, nullptr)==VK_SUCCESS,
+			vkEnumeratePhysicalDevices(vkInstance, &phyDeviceCnt, nullptr) == VK_SUCCESS,
 			"Assertion failed: EnumeratePhysicalDevices failed!"
 		);
 		std::vector<VkPhysicalDevice>physicalDevices;
+		physicalDevices.resize(phyDeviceCnt);
 		ASSERT(
 			vkEnumeratePhysicalDevices(vkInstance, &phyDeviceCnt, physicalDevices.data()) == VK_SUCCESS,
 			"Assertion failed: EnumeratePhysicalDevices failed!"
@@ -90,18 +96,18 @@ namespace zzcVulkanRenderEngine {
 			VkPhysicalDeviceProperties properties;
 			VkPhysicalDeviceFeatures features;
 			vkGetPhysicalDeviceProperties(phyDevice, &properties);
-			vkGetPhysicalDeviceFeatures(physicalDevice, &features);
+			vkGetPhysicalDeviceFeatures(phyDevice, &features);
 			if (
-				properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU 
-				&& helper_checkQueueSatisfication(phyDevice,createInfo.requireQueueFamlies)
-				&& helper_checkExtensionSupport(phyDevice,createInfo.requiredExtensions)) {
+				properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU
+				&& helper_checkQueueSatisfication(phyDevice, enabledQueueFamlies)
+				&& helper_checkExtensionSupport(phyDevice, enabledExtensions)) {
 				discreteGPU = phyDevice;
 				break;
 			}
 			if (
-				properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU 
-				&& helper_checkQueueSatisfication(phyDevice, createInfo.requireQueueFamlies)
-				&& helper_checkExtensionSupport(phyDevice, createInfo.requiredExtensions)) {
+				properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU
+				&& helper_checkQueueSatisfication(phyDevice, enabledQueueFamlies)
+				&& helper_checkExtensionSupport(phyDevice, enabledExtensions)) {
 				integrateGPU = phyDevice;
 			}
 		}
@@ -117,14 +123,15 @@ namespace zzcVulkanRenderEngine {
 
 		// CREATE LOGICAL DEVICE (study details before doing this)
 		// TODO: enable a set of extensions (study Raptor for details)
-		queueFamilyInfos = helper_selectQueueFamilies(physicalDevice, createInfo.requireQueueFamlies);
-		std::vector<VkDeviceQueueCreateInfo> queueCIs = helper_getQueueCreateInfos(queueFamilyInfos,createInfo.requireQueueFamlies);
+		queueFamilyInfos = helper_selectQueueFamilies(physicalDevice, enabledQueueFamlies);
+		std::vector<VkDeviceQueueCreateInfo> queueCIs = helper_getQueueCreateInfos(queueFamilyInfos, enabledQueueFamlies);
+
 		VkDeviceCreateInfo deviceCI{};
 		deviceCI.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		deviceCI.queueCreateInfoCount = static_cast<uint32_t>(queueCIs.size());
 		deviceCI.pQueueCreateInfos = queueCIs.data();
-		deviceCI.enabledExtensionCount = static_cast<uint32_t>(createInfo.requiredExtensions.size());
-		deviceCI.ppEnabledExtensionNames = createInfo.requiredExtensions.data();
+		deviceCI.enabledExtensionCount = static_cast<uint32_t>(enabledExtensions.size());
+		deviceCI.ppEnabledExtensionNames = enabledExtensions.data();
 
 		ASSERT(
 			vkCreateDevice(physicalDevice, &deviceCI, nullptr, &device) == VK_SUCCESS,
@@ -132,11 +139,11 @@ namespace zzcVulkanRenderEngine {
 		);
 
 		vkGetDeviceQueue(device, queueFamilyInfos.presentQueue.familyIndex, queueFamilyInfos.presentQueue.queueIndex, &presentQueue);
-		if (createInfo.requireQueueFamlies & VK_QUEUE_GRAPHICS_BIT) 
+		if (enabledQueueFamlies & VK_QUEUE_GRAPHICS_BIT)
 			vkGetDeviceQueue(device, queueFamilyInfos.mainQueue.familyIndex, queueFamilyInfos.mainQueue.queueIndex, &mainQueue);
-		if (createInfo.requireQueueFamlies & VK_QUEUE_COMPUTE_BIT)
+		if (enabledQueueFamlies & VK_QUEUE_COMPUTE_BIT)
 			vkGetDeviceQueue(device, queueFamilyInfos.computeQueue.familyIndex, queueFamilyInfos.computeQueue.queueIndex, &computeQueue);
-		if (createInfo.requireQueueFamlies & VK_QUEUE_TRANSFER_BIT)
+		if (enabledQueueFamlies & VK_QUEUE_TRANSFER_BIT)
 			vkGetDeviceQueue(device, queueFamilyInfos.transferQueue.familyIndex, queueFamilyInfos.transferQueue.queueIndex, &transferQueue);
 
 
@@ -179,7 +186,7 @@ namespace zzcVulkanRenderEngine {
 			"Assertion failed: CreateCommandPool failed!"
 		);
 
-        // CREATE COMMAND BUFFERS
+		// CREATE COMMAND BUFFERS
 		// TODO: multithreads
 		// TODO: secondary command buffer
 		// TODO: (study this for details: https://github.com/ARM-software/vulkan_best_practice_for_mobile_developers/blob/master/samples/performance/command_buffer_usage/command_buffer_usage_tutorial.md)
@@ -203,7 +210,7 @@ namespace zzcVulkanRenderEngine {
 		cmdAllocInfo.commandBufferCount = 1;
 		cmdAllocInfo.commandPool = commandPool;
 		cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		VkCommandBuffer cb = auxiCmdBuffer.getCmdBuffer();
+		VkCommandBuffer& cb = auxiCmdBuffer.getCmdBuffer();
 		ASSERT(
 			vkAllocateCommandBuffers(device, &cmdAllocInfo, &cb) == VK_SUCCESS,
 			"Assertion failed: Allocate the auxiliary command buffer failed!"
@@ -216,7 +223,7 @@ namespace zzcVulkanRenderEngine {
 		VkPresentModeKHR presentMode = helper_selectSwapPresentMode(swapChainSupport.presentModes);
 		VkExtent2D extent = helper_selectSwapExtent(swapChainSupport.capabilities);
 
-		uint32_t imageCount = nSwapChainImages > swapChainSupport.capabilities.minImageCount + 1 ? 
+		uint32_t imageCount = nSwapChainImages > swapChainSupport.capabilities.minImageCount + 1 ?
 			nSwapChainImages : swapChainSupport.capabilities.minImageCount + 1;
 		if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) {
 			imageCount = swapChainSupport.capabilities.maxImageCount;
@@ -260,23 +267,20 @@ namespace zzcVulkanRenderEngine {
 		swapChainFormat = surfaceFormat.format;
 		swapChainExtent = extent;
 
-		// swapchain images are also managed through texture pool
-		for (int i = 0; i < swapChainImages.size();i++) {
+		// swapchain images are also managed through texture pool, only that we do not need to manually create images for them 
+		for (int i = 0; i < swapChainImages.size(); i++) {
 			VkImage& swapImage = swapChainImages[i];
 			TextureHandle handle = requireTexture();
 			Texture& texture = getTexture(handle);
 
 			texture.format = surfaceFormat.format;
 			texture.sampler = VK_NULL_HANDLE;
-			texture.access[0] = GraphResourceAccessType::PRESENT;  
+			texture.access.resize(1);
+			texture.access[0] = GraphResourceAccessType::PRESENT;
 			texture.image = swapChainImages[i];
 
-			index2handle_swapchain.insert({i,handle});
+			index2handle_swapchain.insert({ i,handle });
 		}
-	}
-
-	GPUDevice::~GPUDevice() {
-
 	}
 
 	VkDevice GPUDevice::getDevice() {
@@ -308,6 +312,10 @@ namespace zzcVulkanRenderEngine {
 
 	VkQueue GPUDevice::getPresentQueue() {
 		return presentQueue;
+	}
+
+	void GPUDevice::setWindow(GLFWwindow* _window) {
+		window = _window;
 	}
 
 	TextureHandle GPUDevice::requireTexture() {
@@ -428,12 +436,13 @@ namespace zzcVulkanRenderEngine {
 		// Fill in the structure 
 		texture.format = util_getFormat(createInfo.format);
 		texture.sampler = VK_NULL_HANDLE;
+		texture.access.resize(createInfo.nMipLevels);
 		for (u16 i = 0; i < createInfo.nMipLevels; i++) {
 			texture.access[i] = GraphResourceAccessType::UNDEFINED;    //initialized to be undefined
 		}
 
 		// Create image
-		VkImageCreateInfo imageCI;
+		VkImageCreateInfo imageCI{};
 		imageCI.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		imageCI.arrayLayers = 1;
 		imageCI.format = util_getFormat(createInfo.format);
@@ -495,6 +504,7 @@ namespace zzcVulkanRenderEngine {
 			throw std::runtime_error("failed to bind image memory!");
 		}
 		
+		
 		// Create imageView
 		VkImageViewCreateInfo viewCI{};
 		viewCI.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -521,7 +531,7 @@ namespace zzcVulkanRenderEngine {
 	// TODO: allocate mem using VMA
 	BufferHandle GPUDevice::createBuffer(const BufferCreation createInfo) {
 		// Require a resource first
-		BufferHandle handle = requireTexture();
+		BufferHandle handle = requireBuffer();
 		Buffer& buffer = getBuffer(handle);
 
 		//create the buffer object
@@ -625,6 +635,8 @@ namespace zzcVulkanRenderEngine {
 	}
 
 	void GPUDevice::writeDescriptorSets(const std::vector<DescriptorSetWrite>& writes, DescriptorSetsHandle setsHandle) {
+		if (writes.size() == 0)
+			return;
 		std::vector<VkDescriptorSet>& sets = getDescriptorSets(setsHandle);
 
 		std::vector<VkWriteDescriptorSet>updates;
@@ -700,11 +712,16 @@ namespace zzcVulkanRenderEngine {
 		}
 
 		// create subpass
-		VkSubpassDescription subpassDesc;
+		VkSubpassDescription subpassDesc{};
 		subpassDesc.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpassDesc.colorAttachmentCount = static_cast<uint32_t>(colorAttachRefs.size());
 		subpassDesc.pColorAttachments = colorAttachRefs.data();
-		subpassDesc.pDepthStencilAttachment = &depthRef;
+		subpassDesc.pDepthStencilAttachment = depthMapIndex==-1 ? nullptr : &depthRef;
+		subpassDesc.inputAttachmentCount = 0;
+		subpassDesc.pInputAttachments = nullptr;
+		subpassDesc.preserveAttachmentCount = 0;
+		subpassDesc.pPreserveAttachments = nullptr;
+		subpassDesc.pResolveAttachments = nullptr;
 
 		// dependency between subpasses
 		VkSubpassDependency dependency{};
@@ -744,8 +761,8 @@ namespace zzcVulkanRenderEngine {
 		VkPipelineLayout& pipelineLayout = getPipelineLayout(handle);
 
 		std::vector<VkDescriptorSetLayout> combinedLayouts;
-		for (auto handle : createInfo.descLayoutsHandles) {
-			std::vector<VkDescriptorSetLayout>& layouts = getDescriptorSetLayouts(handle);
+		for (auto descHandle : createInfo.descLayoutsHandles) {
+			std::vector<VkDescriptorSetLayout>& layouts = getDescriptorSetLayouts(descHandle);
 			combinedLayouts.insert(combinedLayouts.end(), layouts.begin(), layouts.end());
 		}
 		VkPipelineLayoutCreateInfo layoutCI{};
@@ -753,7 +770,7 @@ namespace zzcVulkanRenderEngine {
 		layoutCI.pushConstantRangeCount = 0;                     // by default no push constants
 		layoutCI.pPushConstantRanges = VK_NULL_HANDLE;
 		layoutCI.setLayoutCount = static_cast<uint32_t>(combinedLayouts.size());
-		layoutCI.pSetLayouts = combinedLayouts.data();
+		layoutCI.pSetLayouts = combinedLayouts.size()>0 ? nullptr : combinedLayouts.data();
 		
 		ASSERT(
 			vkCreatePipelineLayout(device, &layoutCI, nullptr, &pipelineLayout) == VK_SUCCESS,
@@ -1371,8 +1388,20 @@ namespace zzcVulkanRenderEngine {
 	}
 
 	//TODO: priorities for queue
-	std::vector<VkDeviceQueueCreateInfo>& GPUDevice::helper_getQueueCreateInfos(QueueFamilyInfos queueInfos, u32 requiredQueues) {
+	// NOTE THAT the queue family index for each QueueCreateInfo must be unique
+	std::vector<VkDeviceQueueCreateInfo> GPUDevice::helper_getQueueCreateInfos(QueueFamilyInfos queueInfos, u32 requiredQueues) {
+		std::set<uint32_t> unique_indices;
 		std::vector<VkDeviceQueueCreateInfo> CIs;
+		if (requiredQueues & VK_QUEUE_GRAPHICS_BIT) {
+			unique_indices.insert(queueInfos.mainQueue.familyIndex);
+		}
+
+		if (requiredQueues & VK_QUEUE_COMPUTE_BIT) {
+			unique_indices.insert(queueInfos.computeQueue.familyIndex);
+		}
+		if (requiredQueues & VK_QUEUE_TRANSFER_BIT) {
+			unique_indices.insert(queueInfos.transferQueue.familyIndex);
+		}
 
 		VkDeviceQueueCreateInfo CI{};
 		CI.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -1380,17 +1409,8 @@ namespace zzcVulkanRenderEngine {
 		float prior = 1.0;
 		CI.pQueuePriorities = &prior;
 
-		if (requiredQueues & VK_QUEUE_GRAPHICS_BIT) {
-			CI.queueFamilyIndex = queueInfos.mainQueue.familyIndex;
-			CIs.push_back(CI);
-		}
-
-		if (requiredQueues & VK_QUEUE_COMPUTE_BIT) {
-			CI.queueFamilyIndex = queueInfos.computeQueue.familyIndex;
-			CIs.push_back(CI);
-		}
-		if (requiredQueues & VK_QUEUE_TRANSFER_BIT) {
-			CI.queueFamilyIndex = queueInfos.transferQueue.familyIndex;
+		for (uint32_t family : unique_indices) {
+			CI.queueFamilyIndex = family;
 			CIs.push_back(CI);
 		}
 
@@ -1448,7 +1468,7 @@ namespace zzcVulkanRenderEngine {
 		glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
 		std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-
+		extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
 		if (enableValidation) {
 			extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 		}

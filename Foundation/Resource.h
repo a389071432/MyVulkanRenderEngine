@@ -11,8 +11,8 @@
 namespace zzcVulkanRenderEngine {
 	typedef u32 TextureHandle;
 	typedef u32 BufferHandle;
-	typedef u32 DescriptorSetLayoutsHandle;      // points to a list of layouts
-	typedef u32 DescriptorSetsHandle;            // points to a list of sets
+	typedef u32 DescriptorSetLayoutsHandle;      // refers to a list of layouts
+	typedef u32 DescriptorSetsHandle;            // refers to a list of sets
 	typedef u32 RenderPassHandle;
 	typedef u32 FramebufferHandle;
 	typedef u32 PipelineLayoutHandle;
@@ -24,6 +24,10 @@ namespace zzcVulkanRenderEngine {
 	const BufferHandle INVALID_BUFFER_HANDLE = -1;
 	const DescriptorSetsHandle INVALID_DESCRIPTORSETS_HANDLE = -1;
 	const DescriptorSetLayoutsHandle INVALID_DESCRIPTORSET_LAYOUTS_HANDLE = -1;
+	const PipelineLayoutHandle INVALID_PIPELINELAYOUT_HANDLE = -1;
+	const RenderPassHandle INVALID_RENDERPASS_HANDLE = -1;
+	const FramebufferHandle INVALID_FRAMEBUFFER_HANDLE = -1;
+	typedef u32 FramebufferHandle;
 
 	// TODO: wrap the enumerations?
 	struct SamplerCreation {
@@ -276,7 +280,6 @@ namespace zzcVulkanRenderEngine {
 
 		T& get_resource(ResourceHandle handle) {
 			ASSERT(handle >= 0 && handle < data.size(), "invalid resource handle!");
-
 			return data.at(handle);
 		}
 

@@ -12,7 +12,7 @@ namespace zzcVulkanRenderEngine {
 		~CommandBuffer();
 
 		// Wrapped commands for easy usage, free users from filling in createInfo ...
-		VkCommandBuffer getCmdBuffer();
+		VkCommandBuffer& getCmdBuffer();
 		void begin();
 		void end();
 		void cmdBeginRenderPass(VkRenderPassBeginInfo beginInfo);

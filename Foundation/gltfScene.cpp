@@ -17,6 +17,13 @@ namespace zzcVulkanRenderEngine {
 
     }
 
+
+    // NOTE: currently we assume that all meshes share the same descriptorsetLayout (Scene::commonDescriptorSetLayout)
+    // TODO: separate pipeline and descriptorsetLayout for each mesh
+
+    // NOTE: since each mesh may associate with a separate pipeline, it is supposed that each mesh associates with a separate vertex input
+    // for now, we simply assume that all meshes share the same vertex input
+    // and let the user specify the vertex input explicitly
     void gltfScene::add_model(const std::string& filename) {
         // load from gltf
         ::tinygltf::Model model;
@@ -141,14 +148,16 @@ namespace zzcVulkanRenderEngine {
             u32 occlusionIndex = model.materials[mtIndex].occlusionTexture.index;
             u32 emissiveIndex = model.materials[mtIndex].emissiveTexture.index;
 
+            u16 bindPoint = 0;
             if (baseColorIndex >= 0) {
                 newMesh.material.albedo = textureHandles[model.textures[baseColorIndex].source];
                 layoutCI.addBinding({
                         BindingType::IMAGE_SAMPLER,
                         ShaderStage::FRAG,
                         0,
-                        0
+                        bindPoint
                     });
+                bindPoint++;
             }
             if (metalRoughIndex >= 0) {
                 newMesh.material.metal_roughness = textureHandles[model.textures[metalRoughIndex].source];
@@ -156,8 +165,9 @@ namespace zzcVulkanRenderEngine {
                         BindingType::IMAGE_SAMPLER,
                         ShaderStage::FRAG,
                         0,
-                        0
+                        bindPoint
                     });
+                bindPoint++;
             }
             if (normalIndex >= 0) {
                 newMesh.material.normal = textureHandles[model.textures[normalIndex].source];
@@ -165,8 +175,9 @@ namespace zzcVulkanRenderEngine {
                         BindingType::IMAGE_SAMPLER,
                         ShaderStage::FRAG,
                         0,
-                        0
+                        bindPoint
                     });
+                bindPoint++;
             }
             if (occlusionIndex >= 0) {
                 newMesh.material.occlusion = textureHandles[model.textures[occlusionIndex].source];
@@ -174,8 +185,9 @@ namespace zzcVulkanRenderEngine {
                         BindingType::IMAGE_SAMPLER,
                         ShaderStage::FRAG,
                         0,
-                        0
+                        bindPoint
                     });
+                bindPoint++;
             }
             if (emissiveIndex >= 0) {
                 newMesh.material.emissive = textureHandles[model.textures[emissiveIndex].source];
@@ -183,8 +195,9 @@ namespace zzcVulkanRenderEngine {
                         BindingType::IMAGE_SAMPLER,
                         ShaderStage::FRAG,
                         0,
-                        0
+                        bindPoint
                     });
+                bindPoint++;
             }
 
             // descriptor set for pbr materials

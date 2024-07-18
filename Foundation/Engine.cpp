@@ -16,6 +16,26 @@ namespace zzcVulkanRenderEngine {
 		ASSERT(renderGraph != nullptr, "RenderGraph is NULL!");
 		ASSERT(scene != nullptr, "Scene is NULL!");
 
+		// create the window
+		ASSERT(
+			glfwInit(),
+			"Assertion failed: glfw initialization failed!"
+		);
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+		window = glfwCreateWindow(scr_width, scr_height, "Vulkan", nullptr, nullptr);
+		ASSERT(
+			window,
+			"Assertion failed: failed to create the window!"
+		);
+
+		// share the window with device
+		device->setWindow(window);
+		device->init();
+
+		// init the scene
+		scene->setDevice(device);
+
 		// init sync objects
 		fencesFrame.resize(frameInFlight);
 		semaphoresImageAvailable.resize(frameInFlight);
@@ -43,17 +63,13 @@ namespace zzcVulkanRenderEngine {
 			);
 		}
 
-		// create the window
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-		window = glfwCreateWindow(scr_width, scr_width, "Vulkan", nullptr, nullptr);
-
 		// compile the render graph
+		renderGraph->setDevice(device);
 		renderGraph->compile();
 	}
 
 	void Engine::run() {
-		init();
+		//init();
 		mainLoop();
 	}
 

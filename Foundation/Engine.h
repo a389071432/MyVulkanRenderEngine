@@ -12,6 +12,7 @@ namespace zzcVulkanRenderEngine {
 		Engine();
 		~Engine();
 
+		void init();
 		void run();
 		void setDevice(GPUDevice* device);
 		void setRenderGraph(RenderGraph* graph);
@@ -37,7 +38,6 @@ namespace zzcVulkanRenderEngine {
 		std::vector<VkSemaphore> semaphoresImageAvailable;
 		std::vector<VkSemaphore> semaphoresRenderDone;
 
-		void init();
 		void mainLoop();
 
 		// used for final presentation of the resulting image

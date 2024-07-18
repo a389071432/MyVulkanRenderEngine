@@ -6,12 +6,14 @@
 
 using namespace zzcVulkanRenderEngine;
 
+// TODO: a better way to handle the initialization of device, scene and engine
 int main() {
 	GPUDeviceCreation gpuCI{};
 	GPUDevice device(gpuCI);
 	Engine engine;
 	RenderGraph graph;
 	SimpleScene scene;
+	ExampleRender render;
 
 	//define the render graph
 	GraphNode node;
@@ -66,7 +68,8 @@ int main() {
 				   .enableDepth = false
                 }
 			}
-		);
+			)
+			.register_render(&render);
 
 	graph.addNode(
 		&node
@@ -74,5 +77,8 @@ int main() {
 	engine.setDevice(&device);
 	engine.setRenderGraph(&graph);
 	engine.setScene(&scene);
+	engine.init();
+	scene.add_model("");
 	engine.run();
+
 }
