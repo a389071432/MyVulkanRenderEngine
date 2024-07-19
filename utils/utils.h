@@ -11,13 +11,15 @@ namespace zzcVulkanRenderEngine {
 		case GraphResourceAccessType::READ_TEXTURE:
 			return VK_ACCESS_SHADER_READ_BIT;
 		case GraphResourceAccessType::WRITE_ATTACHMENT:
-			return VK_ACCESS_SHADER_WRITE_BIT;
+			return VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 		case GraphResourceAccessType::WRITE_DEPTH:
 			return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 		case GraphResourceAccessType::COPY_SRC:
 			return VK_ACCESS_TRANSFER_READ_BIT;
 		case GraphResourceAccessType::COPY_DST:
 			return VK_ACCESS_TRANSFER_WRITE_BIT;
+		case GraphResourceAccessType::WRITE_STORAGE:
+			return VK_ACCESS_SHADER_WRITE_BIT;
 		case GraphResourceAccessType::UNDEFINED:
 			return VK_ACCESS_NONE;
 		default:

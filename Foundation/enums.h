@@ -38,6 +38,7 @@ namespace zzcVulkanRenderEngine {
 		COPY_SRC,
 		COPY_DST,
 		PRESENT,
+		WRITE_STORAGE, 
 		UNDEFINED
 	};
 
