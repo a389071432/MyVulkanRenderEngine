@@ -77,7 +77,7 @@ namespace zzcVulkanRenderEngine {
 		case GraphResourceAccessType::COPY_DST:
 			return VK_PIPELINE_STAGE_TRANSFER_BIT;
 		case GraphResourceAccessType::UNDEFINED:
-			return VK_PIPELINE_STAGE_NONE;;
+			return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 		default:
 			ASSERT(false, "Assertion failed: invalid Enum GraphResourceAccessType!");
 			break;
