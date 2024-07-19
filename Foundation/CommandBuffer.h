@@ -15,6 +15,7 @@ namespace zzcVulkanRenderEngine {
 		VkCommandBuffer& getCmdBuffer();
 		void begin();
 		void end();
+		void reset();
 		void cmdBeginRenderPass(VkRenderPassBeginInfo beginInfo);
 		void cmdEndRenderPass();
 		void cmdCopyBuffer(VkBuffer& src, VkBuffer& dst, u32 copySize);

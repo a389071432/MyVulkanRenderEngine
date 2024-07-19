@@ -93,12 +93,14 @@ namespace zzcVulkanRenderEngine {
 				"Assertion failed: Acquire image from swapchain failed!"
 			);
 
+			_cmdBuffer.reset();
+			_cmdBuffer.begin();
 			// Execture the renderGraph (involves recording commands)
 			renderGraph->execute(&_cmdBuffer, device, scene);
 
-
-			// TODO: a dedicated renderpass (fullQuad) to write the resulting image from renderGraph to the final swapchain image for presentation
+			// Copy the final output of renderGraph to the swapchain for presentation
 			presentFinalImage(imageIndex);
+			_cmdBuffer.end();
 
 			// Submit to queue
 			device->submitCmds(
@@ -131,7 +133,7 @@ namespace zzcVulkanRenderEngine {
 	void Engine::presentFinalImage(u32 imageIndex) {
 		TextureHandle finalTex = renderGraph->getTextureByKey("final");
 		TextureHandle presentTex = device->getSwapChainImageByIndex(imageIndex);
-		device->transferImageInDevice(finalTex, presentTex,device->getSwapChainExtent());
+		device->transferImageInDevice(device->getCommandBuffer(currentFrame),finalTex, presentTex,device->getSwapChainExtent());
 
 	}
 

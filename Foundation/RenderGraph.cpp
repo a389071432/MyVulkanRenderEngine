@@ -346,7 +346,6 @@ namespace zzcVulkanRenderEngine {
 	}
 
 	void RenderGraph::execute(CommandBuffer* cmdBuffer, GPUDevice* device, Scene* scene) {
-		cmdBuffer->begin();
 		for (u32 i = 0; i < topologyOrder.size(); i++) {
 			u32 index = topologyOrder.at(i);
 			GraphNode* node = nodes.at(index);
@@ -383,7 +382,6 @@ namespace zzcVulkanRenderEngine {
 			//End the render pass
 			cmdBuffer->cmdEndRenderPass();
 		}
-		cmdBuffer->end();
 	}
 
 	void RenderGraph::insert_barriers(CommandBuffer& cmdBuffer, GraphNode& node) {

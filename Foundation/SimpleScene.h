@@ -4,7 +4,13 @@
 namespace zzcVulkanRenderEngine {
 	class SimpleScene : public Scene {
 	public:
-		SimpleScene() {}
+		
+		SimpleScene() {
+			// specify the vertex input info
+			vertexInfo.setBindingDesc({ 0,6 * sizeof(float),VertexInputRate::VERTEX })
+				.addVertexAttribute({ 0,0,0,DataFormat::FLOAT3 })
+				.addVertexAttribute({ 0,1,3 * sizeof(float),DataFormat::FLOAT3 });
+		}
 		~SimpleScene() {}
 		void add_model(const std::string& filename) override {
 			std::vector<float> vertexData{
@@ -22,10 +28,10 @@ namespace zzcVulkanRenderEngine {
 
 			mesh.material.descriptorSets = INVALID_DESCRIPTORSETS_HANDLE;
 
-			// specify the vertex input info
-			vertexInfo.setBindingDesc({ 0,6 * sizeof(float),VertexInputRate::VERTEX })
-				.addVertexAttribute({ 0,0,0,DataFormat::FLOAT3 })
-				.addVertexAttribute({ 0,1,3 * sizeof(float),DataFormat::FLOAT3 });
+			//// specify the vertex input info
+			//vertexInfo.setBindingDesc({ 0,6 * sizeof(float),VertexInputRate::VERTEX })
+			//	.addVertexAttribute({ 0,0,0,DataFormat::FLOAT3 })
+			//	.addVertexAttribute({ 0,1,3 * sizeof(float),DataFormat::FLOAT3 });
 		}
 	};
 }

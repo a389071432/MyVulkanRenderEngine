@@ -190,6 +190,7 @@ namespace zzcVulkanRenderEngine {
 		// TODO: multithreads
 		// TODO: secondary command buffer
 		// TODO: (study this for details: https://github.com/ARM-software/vulkan_best_practice_for_mobile_developers/blob/master/samples/performance/command_buffer_usage/command_buffer_usage_tutorial.md)
+		// TODO: create the vkCommandBuffer in the constructor of CommandBuffer
 		cmdBuffers.resize(frameInFlight);
 		for (u32 i = 0; i < cmdBuffers.size(); i++) {
 			VkCommandBufferAllocateInfo cmdAllocInfo{};
@@ -197,7 +198,7 @@ namespace zzcVulkanRenderEngine {
 			cmdAllocInfo.commandBufferCount = 1;
 			cmdAllocInfo.commandPool = commandPool;
 			cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-			VkCommandBuffer cb = cmdBuffers.at(i).getCmdBuffer();
+			VkCommandBuffer& cb = cmdBuffers.at(i).getCmdBuffer();
 			ASSERT(
 				vkAllocateCommandBuffers(device, &cmdAllocInfo, &cb) == VK_SUCCESS,
 				"Assertion failed: AllocateCommandBuffers failed!"
@@ -1077,21 +1078,14 @@ namespace zzcVulkanRenderEngine {
 	//	submitCmds(mainQueue, auxiCmdBuffer.getCmdBuffer());
 	//}
 
-	void GPUDevice::transferBufferInDevice(BufferHandle srcBuffer, BufferHandle dstBuffer, VkDeviceSize copySize) {
+	void GPUDevice::transferBufferInDevice(CommandBuffer& cmdBuffer, BufferHandle srcBuffer, BufferHandle dstBuffer, VkDeviceSize copySize) {
 		Buffer& src = getBuffer(srcBuffer);
 		Buffer& dst = getBuffer(dstBuffer);
-		auxiCmdBuffer.begin();
-		auxiCmdBuffer.cmdCopyBuffer(src.buffer, dst.buffer, copySize);
-		auxiCmdBuffer.end();
-
-		// submit to queue
-		submitCmds(mainQueue, auxiCmdBuffer.getCmdBuffer());
+		cmdBuffer.cmdCopyBuffer(src.buffer, dst.buffer, copySize);
 	}
 
 	// NOTE: this function operates on only the first mip level of both images
-	void GPUDevice::transferImageInDevice(TextureHandle src, TextureHandle dst, VkExtent2D copyExtent) {
-		auxiCmdBuffer.begin();
-
+	void GPUDevice::transferImageInDevice(CommandBuffer& cmdBuffer, TextureHandle src, TextureHandle dst, VkExtent2D copyExtent) {
 		// get the textures 
 		Texture& srcImage = getTexture(src);
 		Texture& dstImage = getTexture(dst);
@@ -1099,58 +1093,38 @@ namespace zzcVulkanRenderEngine {
 		GraphResourceAccessType dstAccess = dstImage.access[0];
 
 		// layout transition before copy 
-		imageLayoutTransition(src, GraphResourceAccessType::COPY_SRC, 0, 1);
-		imageLayoutTransition(dst, GraphResourceAccessType::COPY_DST, 0, 1);
+		helper_imageLayoutTransition(cmdBuffer, src, GraphResourceAccessType::COPY_SRC, 0, 1);
+		helper_imageLayoutTransition(cmdBuffer, dst, GraphResourceAccessType::COPY_DST, 0, 1);
 
 		// copy
-		auxiCmdBuffer.cmdCopyImage(srcImage, dstImage, copyExtent);
-
-		auxiCmdBuffer.end();
-
-		// submit to queue
-		submitCmds(mainQueue, auxiCmdBuffer.getCmdBuffer());
-
+		cmdBuffer.cmdCopyImage(srcImage, dstImage, copyExtent);
 	}
 
 	// NOTE: this func only transfer buffer data to the first mip level of texture
-	void GPUDevice::transferBufferToImage2DInDevice(BufferHandle bHnd, TextureHandle texHnd, u32 width, u32 height) {
-		auxiCmdBuffer.begin();
+	void GPUDevice::transferBufferToImage2DInDevice(CommandBuffer& cmdBuffer, BufferHandle bHnd, TextureHandle texHnd, u32 width, u32 height) {
 		Buffer& buffer = getBuffer(bHnd);
 		Texture& image = getTexture(texHnd);
 
 		// layout transition before transferring
 		//auxiCmdBuffer.cmdInsertImageBarrier(image, GraphResourceAccessType::COPY_DST, 0, 1);
-		imageLayoutTransition(texHnd, GraphResourceAccessType::COPY_DST, 0, 1);
+		helper_imageLayoutTransition(cmdBuffer, texHnd, GraphResourceAccessType::COPY_DST, 0, 1);
 		
 		// transfer data
-		auxiCmdBuffer.cmdCopyBufferToImage(buffer, image, width, height, 1);
-
-		auxiCmdBuffer.end();
-
-		// submit to queue
-		submitCmds(mainQueue, auxiCmdBuffer.getCmdBuffer());
+		cmdBuffer.cmdCopyBufferToImage(buffer, image, width, height, 1);
 
 	}
 
 	// transition the image layout
 	// tex determines the the oldLayout
 	// targetAccess determines the newLayout
-	void GPUDevice::imageLayoutTransition(TextureHandle texHandle, GraphResourceAccessType targetAccess, u16 baseMip, u16 nMips) {
-		auxiCmdBuffer.begin();
-
+	void GPUDevice::helper_imageLayoutTransition(CommandBuffer& cmdBuffer, TextureHandle texHandle, GraphResourceAccessType targetAccess, u16 baseMip, u16 nMips) {
 		Texture& tex = getTexture(texHandle);
 		// insert barrier for each mip level separately 
 		// also update the texture state for tracking
 		for (u16 i = baseMip; i < baseMip + nMips; i++) {
-			auxiCmdBuffer.cmdInsertImageBarrier(tex, targetAccess, baseMip);
+			cmdBuffer.cmdInsertImageBarrier(tex, targetAccess, baseMip);
 			tex.access[i] = targetAccess;
 		}
-
-		auxiCmdBuffer.end();
-
-		// submit to queue
-		submitCmds(mainQueue, auxiCmdBuffer.getCmdBuffer());
-
 	}
 
 	// TODO: this should be a member function of class Queue, wrapping the VkQueue
@@ -1445,7 +1419,7 @@ namespace zzcVulkanRenderEngine {
 		throw std::runtime_error("failed to find a suitable memory type!");
 	}
 
-	void GPUDevice::helper_generateMipMaps(TextureHandle texHandle, u16 nMips) {
+	void GPUDevice::helper_generateMipMaps(CommandBuffer& cmdBuffer, TextureHandle texHandle, u16 nMips) {
 		Texture& tex = getTexture(texHandle);
 		u16 mipWidth = tex.width;
 		u16 mipHeight = tex.height;
@@ -1453,12 +1427,12 @@ namespace zzcVulkanRenderEngine {
 		for (u16 i = 1; i < nMips; i++) {
 			// transit the previous miplevel layout for copy
 			//auxiCmdBuffer.cmdInsertImageBarrier(tex, GraphResourceAccessType::COPY_SRC, i - 1, 1);
-			imageLayoutTransition(texHandle, GraphResourceAccessType::COPY_SRC, i - 1, 1);
+			helper_imageLayoutTransition(cmdBuffer,texHandle, GraphResourceAccessType::COPY_SRC, i - 1, 1);
 			
 			// copy data from mip level i-1 to i
 			VkOffset3D srcRegion = { mipWidth,mipHeight,1 };
 			VkOffset3D dstRegion = { mipWidth>1? mipWidth/2:1, mipHeight > 1 ? mipHeight / 2 : 1,1 };
-			auxiCmdBuffer.cmdBlitImage(tex, tex, i - 1, i, srcRegion, dstRegion);
+			cmdBuffer.cmdBlitImage(tex, tex, i - 1, i, srcRegion, dstRegion);
 		}
 	}
 

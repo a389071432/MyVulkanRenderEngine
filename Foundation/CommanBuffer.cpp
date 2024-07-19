@@ -18,16 +18,25 @@ namespace zzcVulkanRenderEngine {
 	void CommandBuffer::begin() {
 		VkCommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.flags = 0; // Optional
+		beginInfo.pInheritanceInfo = nullptr; // Optional
 		ASSERT(
-			vkBeginCommandBuffer(cmdBuffer, &beginInfo),
+			vkBeginCommandBuffer(cmdBuffer, &beginInfo) == VK_SUCCESS,
 			"Failed to begin the command buffer!"
 		);
 	}
 
 	void CommandBuffer::end() {
 		ASSERT(
-			vkEndCommandBuffer(cmdBuffer),
+			vkEndCommandBuffer(cmdBuffer) == VK_SUCCESS,
 			"Failed to end the command buffer!"
+		);
+	}
+
+	void CommandBuffer::reset() {
+		ASSERT(
+			vkResetCommandBuffer(cmdBuffer, 0) == VK_SUCCESS,
+			"Failed to reset the command buffer!"
 		);
 	}
 
@@ -133,7 +142,7 @@ namespace zzcVulkanRenderEngine {
 
 	// Insert an image barrier
 	// AccessMask, layout and pipelineStage are all determined by the accessType
-	// Note that this func only insert a barrier for a single mip level 
+	// Note that this func insert barrier for a single mip level 
 	void CommandBuffer::cmdInsertImageBarrier(Texture& texture, GraphResourceAccessType newAccessType, u16 baseMipLevel) {
 		VkImageMemoryBarrier barrier{};
 		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
