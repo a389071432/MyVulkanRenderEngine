@@ -27,7 +27,6 @@ namespace zzcVulkanRenderEngine {
 	const PipelineLayoutHandle INVALID_PIPELINELAYOUT_HANDLE = -1;
 	const RenderPassHandle INVALID_RENDERPASS_HANDLE = -1;
 	const FramebufferHandle INVALID_FRAMEBUFFER_HANDLE = -1;
-	typedef u32 FramebufferHandle;
 
 	// TODO: wrap the enumerations?
 	struct SamplerCreation {

@@ -24,7 +24,7 @@ namespace zzcVulkanRenderEngine {
     // NOTE: since each mesh may associate with a separate pipeline, it is supposed that each mesh associates with a separate vertex input
     // for now, we simply assume that all meshes share the same vertex input
     // and let the user specify the vertex input explicitly
-    void gltfScene::add_model(const std::string& filename) {
+    void gltfScene::add_mesh(const std::string& filename) {
         // load from gltf
         ::tinygltf::Model model;
         ::tinygltf::TinyGLTF loader;
@@ -132,8 +132,8 @@ namespace zzcVulkanRenderEngine {
                 }
             }
 
-            newMesh.vertex_buffer = device->createBufferFromData(vertexData);
-            newMesh.index_buffer = device->createBufferFromData(indexData);
+            newMesh.vertex_buffer = device->createBufferFromData(vertexData, BufferUsage::VERTEX);
+            newMesh.index_buffer = device->createBufferFromData(indexData, BufferUsage::INDEX);
             newMesh.index_count = indexData.size();
 
             // associate the pbr material
@@ -281,7 +281,6 @@ namespace zzcVulkanRenderEngine {
             offset += 2 * sizeof(float);
         }
         vertexInfo.setBindingDesc({ 0, vertexSize, VertexInputRate::VERTEX });
-        models.push_back(meshes);
 
         // TODO: a unified way to manage all models, enabling efficient addition and removal of models
 

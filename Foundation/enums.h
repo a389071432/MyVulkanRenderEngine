@@ -109,4 +109,11 @@ namespace zzcVulkanRenderEngine {
 		COMPUTE,
 		RAY_TRACING
 	};
+
+	enum class BufferUsage {
+		VERTEX,
+		INDEX,
+		UNIFORM,
+		STORAGE,
+	};
 }

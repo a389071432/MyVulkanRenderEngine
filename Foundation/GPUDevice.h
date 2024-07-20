@@ -5,6 +5,8 @@
 #include<unordered_map>
 #define GLFW_INCLUDE_VULKAN
 #include<GLFW/glfw3.h>
+#include"utils/utils.h"
+
 
 namespace zzcVulkanRenderEngine {
 	// Default configs
@@ -94,14 +96,14 @@ namespace zzcVulkanRenderEngine {
 
 		//helper functions for application-level requests
 		template<typename T>
-		BufferHandle& createBufferFromData(const std::vector<T>& data) {
+		BufferHandle& createBufferFromData(const std::vector<T>& data, BufferUsage usage) {
 
 			VkDeviceSize bufferSize = VkDeviceSize(sizeof(T) * data.size());
 
 			//create vertex buffer (inaccessable by host, exclusive by GPU)
 			BufferCreation mainCI{};
 			mainCI.setSize(bufferSize)
-				.setUsage(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT)
+				.setUsage(util_getBufferUsage(usage) | VK_BUFFER_USAGE_TRANSFER_DST_BIT)
 				.setProp(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
 				.setShareMode(ResourceSharingMode::EXCLUSIVE);
 			BufferHandle main = createBuffer(mainCI);

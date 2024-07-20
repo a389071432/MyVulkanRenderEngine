@@ -53,16 +53,12 @@ namespace zzcVulkanRenderEngine {
     class Scene {
     public:
         void setDevice(GPUDevice* device);
-        virtual void add_model(const std::string& filename) = 0;
-        void remove_model(u32 index);
-        int getModelCount();
-        std::vector<Mesh>& getModel(int index);
+        virtual void add_mesh(const std::string& filename) = 0;
         GraphicsPipelineCreation::VertexInput vertexInfo;
+        std::vector<Mesh> meshes;
         /*virtual void prepare() = 0;*/
     protected:
         GPUDevice* device;
-        std::vector<Mesh> meshes;
-        std::vector<std::vector<Mesh>> models; // a model is defined as a set of meshes
 
         //// only store the handle of resources on device
         //std::vector<BufferHandle> buffers;

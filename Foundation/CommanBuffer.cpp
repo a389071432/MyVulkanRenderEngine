@@ -187,8 +187,8 @@ namespace zzcVulkanRenderEngine {
 
 	void CommandBuffer::cmdSetViewport(float width, float height) {
 		VkViewport viewport{};
-		viewport.height = height;
 		viewport.width = width;
+		viewport.height = height;
 		viewport.minDepth = (float)0.0f;
 		viewport.maxDepth = (float)1.0f;
 		vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);

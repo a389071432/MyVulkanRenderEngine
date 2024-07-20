@@ -78,7 +78,7 @@ int main() {
 	engine.setRenderGraph(&graph);
 	engine.setScene(&scene);
 	engine.init();
-	scene.add_model("");
+	scene.add_mesh("");
 	engine.run();
 
 }

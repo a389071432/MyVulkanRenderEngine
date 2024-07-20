@@ -32,10 +32,10 @@ namespace zzcVulkanRenderEngine {
 
 		void execute(CommandBuffer* cmdBuffer, GPUDevice* device, Scene* scene, GraphNode* node) override {
 			// Update dynamic viewport state
-			cmdBuffer->cmdSetViewport((float)device->getSwapChainExtent().height, (float)device->getSwapChainExtent().width);
+			cmdBuffer->cmdSetViewport((float)device->getSwapChainExtent().width, (float)device->getSwapChainExtent().height);
 
 			// Update dynamic scissor state
-			cmdBuffer->cmdSetScissor(device->getSwapChainExtent().height, (float)device->getSwapChainExtent().width, 0, 0);
+			cmdBuffer->cmdSetScissor(device->getSwapChainExtent().width, (float)device->getSwapChainExtent().height, 0, 0);
 
 			// Bind the pipeline
 			cmdBuffer->cmdBindGraphicsPipeline(device->getGraphicsPipeline(node->pipeline.graphicPipeline.pipelineHandle));
@@ -44,11 +44,9 @@ namespace zzcVulkanRenderEngine {
 			//std::vector<VkDescriptorSet> setsToBind;
 			//setsToBind.resize(2);
 			//setsToBind[0] = device->getDescriptorSets(node->descriptorSets)[0];
-			for (u32 i = 0; i < scene->getModelCount(); i++) {
-				std::vector<Mesh>& model = scene->getModel(i);
-				for (Mesh& mesh : model) {
-					cmdBuffer->cmdBindVertex(device->getBuffer(mesh.vertex_buffer));
-					cmdBuffer->cmdBindIndexBuffer(device->getBuffer(mesh.index_buffer));
+			for (auto& mesh:scene->meshes) {
+				cmdBuffer->cmdBindVertex(device->getBuffer(mesh.vertex_buffer));
+				cmdBuffer->cmdBindIndexBuffer(device->getBuffer(mesh.index_buffer));
 					//if (mesh.material.descriptorSets != INVALID_DESCRIPTORSETS_HANDLE) {
 					//	setsToBind[1] = device->getDescriptorSets(mesh.material.descriptorSets)[0];
 					//	cmdBuffer->cmdBindDescriptorSets(
@@ -57,8 +55,7 @@ namespace zzcVulkanRenderEngine {
 					//		setsToBind
 					//	);
 					//}
-					cmdBuffer->cmdDrawIndexed(mesh.index_count, 1);
-				}
+				cmdBuffer->cmdDrawIndexed(mesh.index_count, 1);
 			}
 		}
 	};

@@ -1265,11 +1265,11 @@ namespace zzcVulkanRenderEngine {
 	}
 
 	VkSurfaceFormatKHR GPUDevice::helper_selectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
-		//for (const auto& availableFormat : availableFormats) {
-		//	if (availableFormat.format == VK_FORMAT_R8G8B8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-		//		return availableFormat;
-		//	}
-		//}
+		for (const auto& availableFormat : availableFormats) {
+			if (availableFormat.format == VK_FORMAT_R8G8B8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+				return availableFormat;
+			}
+		}
 		return availableFormats[0];
 	}
 
@@ -1283,10 +1283,7 @@ namespace zzcVulkanRenderEngine {
 	}
 
 	VkExtent2D GPUDevice::helper_selectSwapExtent(const VkSurfaceCapabilitiesKHR capabilities) {
-		//if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
-		//	return capabilities.currentExtent;
-		//}
-		if (capabilities.currentExtent.width != 3) {
+		if (capabilities.currentExtent.width != (std::numeric_limits<uint32_t>::max)()) {
 			return capabilities.currentExtent;
 		}
 		else {

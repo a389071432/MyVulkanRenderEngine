@@ -345,6 +345,25 @@ namespace zzcVulkanRenderEngine {
 			break;
 		}
 	}
+
+	inline VkBufferUsageFlagBits util_getBufferUsage(BufferUsage usage) {
+		switch (usage) {
+		case zzcVulkanRenderEngine::BufferUsage::VERTEX :
+			return VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+			break;
+		case zzcVulkanRenderEngine::BufferUsage::INDEX:
+			return VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+			break;
+		case zzcVulkanRenderEngine::BufferUsage::STORAGE:
+			return VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+			break;
+		case zzcVulkanRenderEngine::BufferUsage::UNIFORM:
+			return VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+			break;
+		default:
+			break;
+		}
+	}
 }
 
 
