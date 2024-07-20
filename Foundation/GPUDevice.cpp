@@ -817,15 +817,18 @@ namespace zzcVulkanRenderEngine {
 
 		// FOR VERTEX INPUT
 		auto vertexInput = createInfo.vertexInput;
-		VkVertexInputBindingDescription bindingDesc{};
-		bindingDesc.binding = static_cast<uint32_t>(vertexInput.bindingDesc.binding);
-		bindingDesc.stride = static_cast<uint32_t>(vertexInput.bindingDesc.stride);
-		bindingDesc.inputRate = util_getVertexInputRate(vertexInput.bindingDesc.inputRate);
+		std::vector<VkVertexInputBindingDescription> bindingDesc;
+		bindingDesc.resize(vertexInput.attributes.size());
+		for (u32 i = 0; i < bindingDesc.size(); i++) {
+			bindingDesc[i].binding = static_cast<uint32_t>(vertexInput.bindingDesc[i].binding);
+			bindingDesc[i].stride = static_cast<uint32_t>(vertexInput.bindingDesc[i].stride);
+			bindingDesc[i].inputRate = util_getVertexInputRate(vertexInput.bindingDesc[i].inputRate);
+		}
 
 		std::vector<VkVertexInputAttributeDescription> attributes;
 		attributes.resize(vertexInput.attributes.size());
 		for (u32 i = 0; i < attributes.size(); i++) {
-			VkVertexInputAttributeDescription& attr = attributes.at(i);
+			auto& attr = attributes.at(i);
 			auto desc = vertexInput.attributes.at(i);
 			attr.binding = static_cast<uint32_t>(desc.binding);
 			attr.location = static_cast<uint32_t>(desc.location);
@@ -834,10 +837,10 @@ namespace zzcVulkanRenderEngine {
 		}
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputInfo.vertexBindingDescriptionCount = 1;
-		vertexInputInfo.pVertexBindingDescriptions = &bindingDesc;
+		vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDesc.size());
+		vertexInputInfo.pVertexBindingDescriptions = bindingDesc.size()>0 ? bindingDesc.data() : nullptr;
 		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributes.size());
-		vertexInputInfo.pVertexAttributeDescriptions = attributes.data();
+		vertexInputInfo.pVertexAttributeDescriptions = attributes.size()>0 ? attributes.data() : nullptr;
 
 		// FOR INPUT ASSEMBLY
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
@@ -1063,7 +1066,9 @@ namespace zzcVulkanRenderEngine {
 	//	if (nMips > 1) {
 	//		// set layout transition for all mip levels
 	//		// so that the i-th mip level will be transitioned to the layout COPY_DST when performing the copy from i-1 to i
-	//		imageLayoutTransition(texHandle, GraphResourceAccessType::COPY_DST, 0, nMips);
+	//		imageLayoutTransition(texHandle, GraphResource
+	// 
+	// pe::COPY_DST, 0, nMips);
 	//		auxiCmdBuffer.begin();
 	//		helper_generateMipMaps(texHandle, nMips);
 	//		auxiCmdBuffer.end();

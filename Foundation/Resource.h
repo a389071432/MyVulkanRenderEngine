@@ -191,10 +191,10 @@ namespace zzcVulkanRenderEngine {
 		} shaders;
 
 		struct VertexInput {
-			VertexBindingDesc bindingDesc;
+			std::vector<VertexBindingDesc> bindingDesc;
 			std::vector<VertexAttribute> attributes;
 			
-			VertexInput& setBindingDesc(VertexBindingDesc _bindingDesc) { bindingDesc = _bindingDesc; return *this; };
+			VertexInput& addBindingDesc(VertexBindingDesc _bindingDesc) { bindingDesc.push_back(_bindingDesc); return *this; };
 			VertexInput& addVertexAttribute(VertexAttribute attribute) { attributes.push_back(attribute); return *this; };
 		}vertexInput;
 
