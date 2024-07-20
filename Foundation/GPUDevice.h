@@ -49,7 +49,7 @@ namespace zzcVulkanRenderEngine {
 
 		// methods for picking or setting member variables, used by Engine
 		VkDevice getDevice();
-		VkSwapchainKHR getSwapChain();
+		VkSwapchainKHR& getSwapChain();
 		CommandBuffer& getCommandBuffer(u32 index);
 		VkQueue getMainQueue();
 		VkQueue getPresentQueue();

@@ -125,6 +125,10 @@ namespace zzcVulkanRenderEngine {
 		// TODO: enable a set of extensions (study Raptor for details)
 		queueFamilyInfos = helper_selectQueueFamilies(physicalDevice, enabledQueueFamlies);
 		std::vector<VkDeviceQueueCreateInfo> queueCIs = helper_getQueueCreateInfos(queueFamilyInfos, enabledQueueFamlies);
+		float prior = 0.5f;
+		for (auto& ci : queueCIs) {
+			ci.pQueuePriorities = &prior;
+		}
 
 		VkDeviceCreateInfo deviceCI{};
 		deviceCI.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -288,7 +292,7 @@ namespace zzcVulkanRenderEngine {
 		return device;
 	}
 
-	VkSwapchainKHR GPUDevice::getSwapChain() {
+	VkSwapchainKHR& GPUDevice::getSwapChain() {
 		return swapChain;
 	}
 
@@ -1261,11 +1265,11 @@ namespace zzcVulkanRenderEngine {
 	}
 
 	VkSurfaceFormatKHR GPUDevice::helper_selectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
-		for (const auto& availableFormat : availableFormats) {
-			if (availableFormat.format == VK_FORMAT_R8G8B8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-				return availableFormat;
-			}
-		}
+		//for (const auto& availableFormat : availableFormats) {
+		//	if (availableFormat.format == VK_FORMAT_R8G8B8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+		//		return availableFormat;
+		//	}
+		//}
 		return availableFormats[0];
 	}
 
@@ -1380,13 +1384,11 @@ namespace zzcVulkanRenderEngine {
 			unique_indices.insert(queueInfos.transferQueue.familyIndex);
 		}
 
-		VkDeviceQueueCreateInfo CI{};
-		CI.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-		CI.queueCount = 1;
-		float prior = 1.0;
-		CI.pQueuePriorities = &prior;
 
 		for (uint32_t family : unique_indices) {
+			VkDeviceQueueCreateInfo CI{};
+			CI.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+			CI.queueCount = 1;
 			CI.queueFamilyIndex = family;
 			CIs.push_back(CI);
 		}

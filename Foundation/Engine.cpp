@@ -77,9 +77,11 @@ namespace zzcVulkanRenderEngine {
 	// all operations move to GPUDevice
 	void Engine::mainLoop() {
 		while (!glfwWindowShouldClose(window)) {
+			glfwPollEvents();
+
 			// Temp varaibles
 			VkDevice _device = device->getDevice();
-			VkSwapchainKHR _swapChain = device->getSwapChain();
+			VkSwapchainKHR& _swapChain = device->getSwapChain();
 			CommandBuffer& _cmdBuffer = device->getCommandBuffer(currentFrame);
 
 			// Synchronization of the same frame
