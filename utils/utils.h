@@ -20,6 +20,8 @@ namespace zzcVulkanRenderEngine {
 			return VK_ACCESS_TRANSFER_WRITE_BIT;
 		case GraphResourceAccessType::WRITE_STORAGE:
 			return VK_ACCESS_SHADER_WRITE_BIT;
+		case GraphResourceAccessType::PRESENT:
+			return VK_ACCESS_MEMORY_READ_BIT;
 		case GraphResourceAccessType::UNDEFINED:
 			return VK_ACCESS_NONE;
 		default:
@@ -78,6 +80,8 @@ namespace zzcVulkanRenderEngine {
 			return VK_PIPELINE_STAGE_TRANSFER_BIT;
 		case GraphResourceAccessType::COPY_DST:
 			return VK_PIPELINE_STAGE_TRANSFER_BIT;
+		case GraphResourceAccessType::PRESENT:
+			return VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
 		case GraphResourceAccessType::UNDEFINED:
 			return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 		default:

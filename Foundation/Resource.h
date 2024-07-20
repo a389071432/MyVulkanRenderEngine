@@ -94,6 +94,7 @@ namespace zzcVulkanRenderEngine {
 		DataFormat format = DataFormat::FLOAT3;
 		TextureType  type = TextureType::Texture2D;
 		TextureHandle aliasTexture = INVALID_TEXTURE_HANDLE;
+		bool isFinalOutput = false;
 
 		TextureCreation& setSize(u16 width, u16 height, u16 depth);
 		TextureCreation& setMipLevels(u16 nMipLevels);
@@ -101,6 +102,7 @@ namespace zzcVulkanRenderEngine {
 		TextureCreation& setFormat(DataFormat format);
 		TextureCreation& setType(TextureType type);
 		TextureCreation& setAliasTexture(TextureHandle aliasTex);
+		TextureCreation& setIsFinal(bool isFinal);
 	};
 
 	// TODO: fill in this

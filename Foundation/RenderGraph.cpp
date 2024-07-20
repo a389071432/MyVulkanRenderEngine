@@ -180,7 +180,8 @@ namespace zzcVulkanRenderEngine {
 				TextureCreation texCI;
 				texCI.setType(info.texture.textureType)
 					.setFormat(info.texture.format)
-					.setSize(info.texture.width, info.texture.height, info.texture.depth);
+					.setSize(info.texture.width, info.texture.height, info.texture.depth)
+					.setIsFinal(r.key == "final" ? true : false);
 
 				if (!texFreelist.empty()) {      // meomry aliasing if applicable
 					TextureHandle aliasTex = texFreelist.front();

@@ -131,10 +131,12 @@ namespace zzcVulkanRenderEngine {
 	}
 
 	void Engine::presentFinalImage(u32 imageIndex) {
+		CommandBuffer& cmdBuffer = device->getCommandBuffer(currentFrame);
 		TextureHandle finalTex = renderGraph->getTextureByKey("final");
 		TextureHandle presentTex = device->getSwapChainImageByIndex(imageIndex);
-		device->transferImageInDevice(device->getCommandBuffer(currentFrame),finalTex, presentTex,device->getSwapChainExtent());
-
+		device->transferImageInDevice(cmdBuffer,finalTex, presentTex,device->getSwapChainExtent());
+		// layout transition for presentation
+		device->imageLayoutTransition(cmdBuffer, presentTex, GraphResourceAccessType::PRESENT, 0, 1);
 	}
 
 	void Engine::setDevice(GPUDevice* _device) {

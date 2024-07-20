@@ -239,7 +239,7 @@ namespace zzcVulkanRenderEngine {
 		swapChainCI.imageColorSpace = surfaceFormat.colorSpace;
 		swapChainCI.imageExtent = extent;
 		swapChainCI.imageArrayLayers = 1;
-		swapChainCI.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		swapChainCI.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 		swapChainCI.preTransform = swapChainSupport.capabilities.currentTransform;
 		swapChainCI.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 		swapChainCI.presentMode = presentMode;
@@ -277,7 +277,7 @@ namespace zzcVulkanRenderEngine {
 			texture.format = surfaceFormat.format;
 			texture.sampler = VK_NULL_HANDLE;
 			texture.access.resize(1);
-			texture.access[0] = GraphResourceAccessType::PRESENT;
+			texture.access[0] = GraphResourceAccessType::UNDEFINED;
 			texture.image = swapChainImages[i];
 
 			index2handle_swapchain.insert({ i,handle });
@@ -460,10 +460,13 @@ namespace zzcVulkanRenderEngine {
 
 		// set image usage
 		imageCI.usage = 0;
-		imageCI.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;    // Default usage since we only create textures for output of render passes
+		imageCI.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;    // Default usage since we create textures only for output resources
 		imageCI.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;             // Default to be readable
 		if (createInfo.resourceType == GraphResourceType::DEPTH_MAP) {
 			imageCI.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		}
+		if (createInfo.isFinalOutput) {
+			imageCI.usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 		}
 
 		//// Allocate memory on device
@@ -1093,8 +1096,8 @@ namespace zzcVulkanRenderEngine {
 		GraphResourceAccessType dstAccess = dstImage.access[0];
 
 		// layout transition before copy 
-		helper_imageLayoutTransition(cmdBuffer, src, GraphResourceAccessType::COPY_SRC, 0, 1);
-		helper_imageLayoutTransition(cmdBuffer, dst, GraphResourceAccessType::COPY_DST, 0, 1);
+		imageLayoutTransition(cmdBuffer, src, GraphResourceAccessType::COPY_SRC, 0, 1);
+		imageLayoutTransition(cmdBuffer, dst, GraphResourceAccessType::COPY_DST, 0, 1);
 
 		// copy
 		cmdBuffer.cmdCopyImage(srcImage, dstImage, copyExtent);
@@ -1107,7 +1110,7 @@ namespace zzcVulkanRenderEngine {
 
 		// layout transition before transferring
 		//auxiCmdBuffer.cmdInsertImageBarrier(image, GraphResourceAccessType::COPY_DST, 0, 1);
-		helper_imageLayoutTransition(cmdBuffer, texHnd, GraphResourceAccessType::COPY_DST, 0, 1);
+		imageLayoutTransition(cmdBuffer, texHnd, GraphResourceAccessType::COPY_DST, 0, 1);
 		
 		// transfer data
 		cmdBuffer.cmdCopyBufferToImage(buffer, image, width, height, 1);
@@ -1117,7 +1120,7 @@ namespace zzcVulkanRenderEngine {
 	// transition the image layout
 	// tex determines the the oldLayout
 	// targetAccess determines the newLayout
-	void GPUDevice::helper_imageLayoutTransition(CommandBuffer& cmdBuffer, TextureHandle texHandle, GraphResourceAccessType targetAccess, u16 baseMip, u16 nMips) {
+	void GPUDevice::imageLayoutTransition(CommandBuffer& cmdBuffer, TextureHandle texHandle, GraphResourceAccessType targetAccess, u16 baseMip, u16 nMips) {
 		Texture& tex = getTexture(texHandle);
 		// insert barrier for each mip level separately 
 		// also update the texture state for tracking
@@ -1259,7 +1262,7 @@ namespace zzcVulkanRenderEngine {
 
 	VkSurfaceFormatKHR GPUDevice::helper_selectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
 		for (const auto& availableFormat : availableFormats) {
-			if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+			if (availableFormat.format == VK_FORMAT_R8G8B8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
 				return availableFormat;
 			}
 		}
@@ -1427,7 +1430,7 @@ namespace zzcVulkanRenderEngine {
 		for (u16 i = 1; i < nMips; i++) {
 			// transit the previous miplevel layout for copy
 			//auxiCmdBuffer.cmdInsertImageBarrier(tex, GraphResourceAccessType::COPY_SRC, i - 1, 1);
-			helper_imageLayoutTransition(cmdBuffer,texHandle, GraphResourceAccessType::COPY_SRC, i - 1, 1);
+			imageLayoutTransition(cmdBuffer,texHandle, GraphResourceAccessType::COPY_SRC, i - 1, 1);
 			
 			// copy data from mip level i-1 to i
 			VkOffset3D srcRegion = { mipWidth,mipHeight,1 };

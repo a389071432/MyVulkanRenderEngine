@@ -28,7 +28,7 @@ int main() {
 						600,                           // height
 						1,                             // depth
 						TextureType::Texture2D,
-						DataFormat::FLOAT4,
+						DataFormat::UNORM4,
 						VK_ATTACHMENT_LOAD_OP_CLEAR,   // Add loadOp
 						VK_ATTACHMENT_STORE_OP_STORE,  // Add storeOp
 						TextureHandle{}                // Add texHandle (initialize as needed)

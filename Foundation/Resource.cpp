@@ -36,6 +36,11 @@ namespace zzcVulkanRenderEngine {
 		return *this;
 	}
 
+	TextureCreation& TextureCreation::setIsFinal(bool isFinal) {
+		isFinalOutput = isFinal;
+		return *this;
+	}
+
 	//For buffer creation
 	BufferCreation& BufferCreation::setSize(u32 _size) {
 		size = _size;

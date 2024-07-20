@@ -177,12 +177,12 @@ namespace zzcVulkanRenderEngine {
 			if (nMips > 1) {
 				// set layout transition for all mip levels
 				// so that the i-th mip level will be transitioned to the layout COPY_DST when performing the copy from i-1 to i
-				helper_imageLayoutTransition(auxiCmdBuffer, texHandle, GraphResourceAccessType::COPY_DST, 0, nMips);
+				imageLayoutTransition(auxiCmdBuffer, texHandle, GraphResourceAccessType::COPY_DST, 0, nMips);
 				helper_generateMipMaps(auxiCmdBuffer, texHandle, nMips);
 			}
 			// since the texture will be read by shader during rendering
 			// insert barrier to transition it to appropriate layout to be ready for sampling
-			helper_imageLayoutTransition(auxiCmdBuffer, texHandle, GraphResourceAccessType::READ_TEXTURE, 0, nMips);
+			imageLayoutTransition(auxiCmdBuffer, texHandle, GraphResourceAccessType::READ_TEXTURE, 0, nMips);
 			auxiCmdBuffer.end();
 
 			// submit commands to queue
@@ -201,7 +201,7 @@ namespace zzcVulkanRenderEngine {
 		float queryMaxAnisotropy();
 		void submitCmds(VkQueue queue, std::vector<VkCommandBuffer> cmdBuffes, std::vector<VkSemaphore> waitSemas, std::vector<VkPipelineStageFlags> waitStages, std::vector<VkSemaphore> signalSemas, VkFence fence);
 		void submitCmds(VkQueue queue, VkCommandBuffer cmdBuffe);
-
+		void imageLayoutTransition(CommandBuffer& cmdBuffer, TextureHandle tex, GraphResourceAccessType targetAccess, u16 baseMip, u16 nMips);
 		//internal hepler functions
 		uint32_t helper_findSuitableMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
@@ -289,6 +289,5 @@ namespace zzcVulkanRenderEngine {
 		void helper_generateMipMaps(CommandBuffer& cmdBuffer, TextureHandle tex, u16 nMips);
 		bool helper_checkInstanceLayerSupport(const std::vector<const char*>& requiredLayers);
 		std::vector<const char*> helper_getRequiredInstanceExtensions(bool enableValidation);
-		void helper_imageLayoutTransition(CommandBuffer& cmdBuffer, TextureHandle tex, GraphResourceAccessType targetAccess, u16 baseMip, u16 nMips);
 	};
 }
