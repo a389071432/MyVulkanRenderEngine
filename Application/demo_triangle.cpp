@@ -2,6 +2,7 @@
 #include"Foundation/RenderGraph.h"
 #include"Foundation/Engine.h"
 #include"RenderGraphExamples/ExampleRender.h"
+#include"RenderGraphExamples/FullQuadRender.h"
 #include"Foundation/SimpleScene.h"
 
 using namespace zzcVulkanRenderEngine;
@@ -14,6 +15,7 @@ int main() {
 	RenderGraph graph;
 	SimpleScene scene;
 	ExampleRender render;
+	FullQuadRender fullQuadRender;
 
 	//define the render graph
 	GraphNode node;
@@ -47,8 +49,8 @@ int main() {
 				  .fragShaderPath = "Shaders/frag.spv"
                 },
 				.vertexInput = {
-			        .bindingDesc=scene.vertexInfo.bindingDesc,
-					.attributes=scene.vertexInfo.attributes
+			        .bindingDesc = scene.vertexInfo.bindingDesc,
+					.attributes = scene.vertexInfo.attributes
 			     },
 				.rasterInfo = {
 				   .cullMode = CullMode::BACK,
@@ -138,11 +140,10 @@ int main() {
 					}
 					}
 				)
-					.register_render(&render);
+					.register_render(&fullQuadRender);
 
-	graph.addNode(
-		&node
-	);
+	graph.addNode(&node);
+	graph.addNode(&node2);
 	engine.setDevice(&device);
 	engine.setRenderGraph(&graph);
 	engine.setScene(&scene);

@@ -280,7 +280,7 @@ namespace zzcVulkanRenderEngine {
             location++;
             offset += 2 * sizeof(float);
         }
-        vertexInfo.setBindingDesc({ 0, vertexSize, VertexInputRate::VERTEX });
+        vertexInfo.addBindingDesc({ 0, vertexSize, VertexInputRate::VERTEX });
 
         // TODO: a unified way to manage all models, enabling efficient addition and removal of models
 

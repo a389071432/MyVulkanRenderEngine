@@ -608,7 +608,7 @@ namespace zzcVulkanRenderEngine {
 				layoutBinding.descriptorCount = 1;
 				layoutBinding.stageFlags = util_getShaderStageFlags(desc.accessStage);
 				layoutBinding.descriptorType = util_getDescriptorType(desc.type);
-				bindings.push_back(layoutBinding);
+				bindings[i] = layoutBinding;
 			}
 			VkDescriptorSetLayoutCreateInfo layoutCI{};
 			layoutCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -654,8 +654,9 @@ namespace zzcVulkanRenderEngine {
 			VkWriteDescriptorSet& update = updates.at(i);
 			update.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			update.descriptorCount = 1;
-			update.dstBinding = write.dstBinding;
 			update.dstSet = sets.at(write.dstSetId);
+			update.dstBinding = write.dstBinding;
+			update.dstArrayElement = 0;
 			if (write.type == BindingType::IMAGE_SAMPLER) {
 				Texture& texture = getTexture(write.resource.texHandle);
 				VkDescriptorImageInfo imageInfo{};
@@ -663,6 +664,7 @@ namespace zzcVulkanRenderEngine {
 				imageInfo.sampler = texture.sampler;
 				imageInfo.imageView = texture.imageView;
 				update.pImageInfo = &imageInfo;
+				update.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			}
 			else {
 				Buffer& buffer = getBuffer(write.resource.bufferhandle);
@@ -671,6 +673,7 @@ namespace zzcVulkanRenderEngine {
 				bufferInfo.offset = 0;                           //¥Ê“…
 				bufferInfo.range = buffer.size;
 				update.pBufferInfo = &bufferInfo;
+				update.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			}
 		}
 		vkUpdateDescriptorSets(device, static_cast<uint32_t>(updates.size()), updates.data(), 0, nullptr);
@@ -778,7 +781,7 @@ namespace zzcVulkanRenderEngine {
 		layoutCI.pushConstantRangeCount = 0;                     // by default no push constants
 		layoutCI.pPushConstantRanges = VK_NULL_HANDLE;
 		layoutCI.setLayoutCount = static_cast<uint32_t>(combinedLayouts.size());
-		layoutCI.pSetLayouts = combinedLayouts.size()>0 ? nullptr : combinedLayouts.data();
+		layoutCI.pSetLayouts = combinedLayouts.size()>0 ? combinedLayouts.data() : nullptr;
 		
 		ASSERT(
 			vkCreatePipelineLayout(device, &layoutCI, nullptr, &pipelineLayout) == VK_SUCCESS,

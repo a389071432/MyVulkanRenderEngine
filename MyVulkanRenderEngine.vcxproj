@@ -170,6 +170,7 @@
     <ClInclude Include="Foundation\Scene.h" />
     <ClInclude Include="Foundation\SimpleScene.h" />
     <ClInclude Include="RenderGraphExamples\ExampleRender.h" />
+    <ClInclude Include="RenderGraphExamples\FullQuadRender.h" />
     <ClInclude Include="Third parties\tinygltf\json.hpp" />
     <ClInclude Include="Third parties\tinygltf\stb_image.h" />
     <ClInclude Include="Third parties\tinygltf\stb_image_write.h" />

@@ -232,4 +232,8 @@ namespace zzcVulkanRenderEngine {
 	void CommandBuffer::cmdDrawIndexed(u32 index_cnt, u32 instance_cnt) {
 		vkCmdDrawIndexed(cmdBuffer, index_cnt, instance_cnt, 0, 0, 1);
 	}
+
+	void CommandBuffer::cmdDrawFullQuad() {
+		vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
+	}
 }

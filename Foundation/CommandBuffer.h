@@ -30,6 +30,7 @@ namespace zzcVulkanRenderEngine {
 		void cmdBindIndexBuffer(Buffer& indexBuffer);
 		void cmdBindGraphicsPipeline(VkPipeline pipeline);
 		void cmdDrawIndexed(u32 index_cnt, u32 instance_cnt);
+		void cmdDrawFullQuad();
 	private:
 		VkCommandBuffer cmdBuffer;
 	};

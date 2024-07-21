@@ -56,7 +56,7 @@ namespace zzcVulkanRenderEngine {
 		} shaders;
 
 		struct VertexInput {
-			VertexBindingDesc bindingDesc;
+			std::vector<VertexBindingDesc> bindingDesc;
 			std::vector<VertexAttribute> attributes;
 
 			//VertexInput& setBindingDesc(VertexBindingDesc bindingDesc);

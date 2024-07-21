@@ -84,6 +84,9 @@
     <ClInclude Include="Third parties\tinygltf\tiny_gltf.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="RenderGraphExamples\FullQuadRender.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Foundation\RenderGraph.cpp">

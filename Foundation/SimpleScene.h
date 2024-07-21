@@ -7,7 +7,7 @@ namespace zzcVulkanRenderEngine {
 		
 		SimpleScene() {
 			// specify the vertex input info
-			vertexInfo.setBindingDesc({ 0,6 * sizeof(float),VertexInputRate::VERTEX })
+			vertexInfo.addBindingDesc({ 0,6 * sizeof(float),VertexInputRate::VERTEX })
 				.addVertexAttribute({ 0,0,0,DataFormat::FLOAT3 })
 				.addVertexAttribute({ 0,1,3 * sizeof(float),DataFormat::FLOAT3 });
 		}
