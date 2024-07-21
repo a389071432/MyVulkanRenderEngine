@@ -821,7 +821,7 @@ namespace zzcVulkanRenderEngine {
 		// FOR VERTEX INPUT
 		auto vertexInput = createInfo.vertexInput;
 		std::vector<VkVertexInputBindingDescription> bindingDesc;
-		bindingDesc.resize(vertexInput.attributes.size());
+		bindingDesc.resize(vertexInput.bindingDesc.size());
 		for (u32 i = 0; i < bindingDesc.size(); i++) {
 			bindingDesc[i].binding = static_cast<uint32_t>(vertexInput.bindingDesc[i].binding);
 			bindingDesc[i].stride = static_cast<uint32_t>(vertexInput.bindingDesc[i].stride);

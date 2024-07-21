@@ -222,7 +222,8 @@ namespace zzcVulkanRenderEngine {
 		GraphicsPipelineCreation& setRasterizerInfo(RasterizerInfo _rasterInfo) { rasterInfo = _rasterInfo; return *this; }
 		GraphicsPipelineCreation& setMSAAInfo(MSAAInfo _msaaInfo) { msaa = _msaaInfo; return *this; }
 		GraphicsPipelineCreation& setDepthStencilInfo(DepthStencilInfo depthStencilInfo) { depthStencil = depthStencilInfo; return *this; }
-		GraphicsPipelineCreation& setRenderPassInfo(RenderPassInfo passInfo) { renderPassInfo = passInfo; return *this; }
+		GraphicsPipelineCreation& setRenderPass(RenderPassHandle handle) { renderPassInfo.renderPassHandle = handle; return *this; }
+		GraphicsPipelineCreation& setPipelineLayout(PipelineLayoutHandle handle) { pipelineLayoutHandle = handle; return *this; }
 	};
 
 	struct RenderAttachmentInfo {

@@ -7,6 +7,6 @@ layout(location = 0) in vec2 UV;
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    vec3 color = texture(tex, UV).rgb + vec3(0.2,0,0);
+    vec3 color = texture(tex, UV).rgb + vec3(0.7,0,0);
     outColor = vec4(color,1.0);
 }

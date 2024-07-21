@@ -76,14 +76,11 @@ namespace zzcVulkanRenderEngine {
 			bool enableDepth;
 		}depthStencil;
 
-		PipelineLayoutHandle pipelineLayoutHandle;
-
 		GraphicsPipelineInfo& setShaderInfo(ShaderInfo shaderInfo) { shaders = shaderInfo; return *this; }
 		GraphicsPipelineInfo& setVertexInput(VertexInput _vertexInput) { vertexInput = _vertexInput; return *this;}
 		GraphicsPipelineInfo& setRasterizerInfo(RasterizerInfo _rasterInfo) { rasterInfo = _rasterInfo; return *this; }
 		GraphicsPipelineInfo& setMSAAInfo(MSAAInfo _msaaInfo) { msaa = _msaaInfo; return *this; }
 		GraphicsPipelineInfo& setDepthStencilInfo(DepthStencilInfo depthStencilInfo) { depthStencil = depthStencilInfo; return *this; }
-		GraphicsPipelineInfo& setPipelineLayout(PipelineLayoutHandle handle) { pipelineLayoutHandle = handle; return *this; }
 	};
 	
 	struct ComputePipelineInfo {

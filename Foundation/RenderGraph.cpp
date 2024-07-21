@@ -311,7 +311,7 @@ namespace zzcVulkanRenderEngine {
 			}
 			// descLayout for external resources
 			for (GraphResource& r : node->inputs) {
-				if (r.isExternal == true) {
+				if (r.isExternal) {
 					ASSERT(
 						r.externalDescLayouts != INVALID_DESCRIPTORSET_LAYOUTS_HANDLE,
 						"Assertion failed: descriptorSet layout is not defined for external resource!"
@@ -329,11 +329,13 @@ namespace zzcVulkanRenderEngine {
 				GraphicsPipelineCreation gPipelineCI{};
 				GraphicsPipelineCreation ci{};
 				GraphicsPipelineInfo* pipeInfo = node->pipeline.graphicPipeline.pipelineInfo;
-				ci.setShaderInfo({ pipeInfo->shaders.vertShaderPath, pipeInfo->shaders.fragShaderPath });
-				ci.setVertexInput({ pipeInfo->vertexInput.bindingDesc, pipeInfo->vertexInput.attributes });
-				ci.setRasterizerInfo({ pipeInfo->rasterInfo.cullMode, pipeInfo->rasterInfo.frontFace });
-				ci.setMSAAInfo({ pipeInfo->msaa.nSamplesPerPixel });
-				ci.setDepthStencilInfo({ pipeInfo->depthStencil.enableDepth });
+				ci.setShaderInfo({ pipeInfo->shaders.vertShaderPath, pipeInfo->shaders.fragShaderPath })
+					.setVertexInput({ pipeInfo->vertexInput.bindingDesc, pipeInfo->vertexInput.attributes })
+					.setRasterizerInfo({ pipeInfo->rasterInfo.cullMode, pipeInfo->rasterInfo.frontFace })
+					.setMSAAInfo({ pipeInfo->msaa.nSamplesPerPixel })
+					.setDepthStencilInfo({ pipeInfo->depthStencil.enableDepth })
+					.setRenderPass(node->renderPass)
+					.setPipelineLayout(node->pipelineLayout);
 				node->pipeline.graphicPipeline.pipelineHandle = device->createGraphicsPipeline(ci);
 			}
 		}
