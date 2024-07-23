@@ -1,0 +1,88 @@
+// Raygen shader 
+// This raytracing pipeline is dispatched for each probe-ray.
+// Output: a 2D texture of size [ray_per_probe, n_probes] 
+// with channel rgb storing the radiance per ray and channel a storing the distance from the closest hit point
+
+
+struct HitPayload
+{
+   vec3 radiance;
+   float distance;
+}
+
+layout(location = 0) rayPayloadEXT HitPayload payload;
+
+layout(set = 0, binding = 0, rgba32f) uniform image2D outImage; 
+layout(set = 1, binding = 0) uniform accelerationStructureEXT tlas;
+layout(push_constant) uniform PushConstants
+{
+int nX;  // number of probes in X-axis
+int nY;
+int nZ;
+float grid_size;
+int ray_per_probe;
+} pushConst;
+
+
+
+vec3 index2coord(const int probe_idx){
+int nXY = gridInfo.nX * pushConst.nY;
+int z = probe_idx/(nXY);
+int xy = probe_idx%nXY;
+int x = xy%pushConst.nX;
+int y = xy/pushConst.nY;
+
+x = clamp(x,0,pushConst.nX-1);
+y = clamp(y,0,pushConst.nY-1);
+z = clamp(z,0,pushConst.nZ-1);
+
+return pushConst.grid_size*vec3(x,y,z);
+}
+
+vec3 spherical_fibonacci(int i, int n)
+{
+float z = 1-(2*i+1)/n;
+float r = sqrt(1-z*z);
+float phi = PI*(sqrt(5)-1)*i;
+float x = r*cos(phi);
+float y = r*sin(phi);
+return vec3(x,y,z);
+}
+
+void main(){
+
+// get current ray_index and probe_index
+const ivec2 launch_id = ivec2(gl_LaunchIDEXT.xy);
+const int probe_idx = launch_id.y;
+const int ray_idx = launch_id.x;
+
+// get coordinate of the probe
+vec3 probe_pos = index2coord(probe_idx);
+
+// evenly sample rays to trace
+for(int i=0;i<pushConst.ray_per_probe;i++)
+{
+vec3 rayDir = spherical_fibonacci(i,pushConst.ray_per_probe);
+payload.radiance = vec3(0);
+payload.distance = 0;
+traceRay(
+tlas, 
+gl_RayFlagsOpaqueEXT,
+0xFF,
+0,
+0,
+0,
+probe_pos,
+0.0,
+rayDir,
+100.0,
+0
+);
+
+// store the radiance-depth recorded in payload in the output texture
+imageStore(outImage, launch_id, vec4(payload.radiance, payload.distance));
+
+}
+
+
+}

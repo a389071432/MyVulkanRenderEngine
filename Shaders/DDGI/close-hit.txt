@@ -1,0 +1,40 @@
+// closest hit shader
+// called when a detection ray hit a surface
+// fill in the payload, including radiance and distance
+
+struct Vertex
+{
+vec3 position;
+vec3 color;
+};
+
+layout(location = 0) rayPayloadInEXT HitPayload payload;
+
+layout(set = 1, binding = 1) buffer Vertices{Vertex v[];} vertex_buffer;
+layout(set = 1, binding = 2) buffer Indices{uint i[];} index_buffer;
+
+hitAttributeEXT vec2 barycentric;
+
+void main()
+{
+// get the vertex data (now we have only one geometry)
+// TODO: gltf/obj scene
+uint idx0 = index_buffer.i[3*gl_PrimitiveID];
+uint idx1 = index_buffer.i[3*gl_PrimitiveID + 1];
+uint idx2 = index_buffer.i[3*gl_PrimitiveID + 2];
+
+Vertex v0 = vertex_buffer.v[idx0];
+Vertex v1 = vertex_buffer.v[idx1];
+Vertex v2 = vertex_buffer.v[idx2];
+
+
+// calculate the radiance (now we simply take the albedo color)
+// TODO: apply lighting and multi-bounce 
+vec3 radiance = barycentric.x*v0.color + barycentric.y*v1.color + barycentric.z*v2.color;
+payload.radiance = radiance;
+
+// get the distance from the hit point to the origin of ray
+distance = gl_HitTEXT;
+
+
+}

@@ -1,0 +1,65 @@
+// Compute shader
+// Input: the probe-radiance texture produced by the raytracing pass
+// Output: the probe-direction texture with octahedron encoding
+// Output texture has the size [8*8*n_probes_z, 8*8*n_probes_x*n_probes_y]
+// Each texel stores the irradiance for a direction starting from the probe
+// this texture will be sampled from in the final pass to get the indirect lighting
+// in the final pass, the normal vector of fragment is mapped to this texture to aggregate irradiance of neighbouring texels
+
+layout(push_constant) uniform PushConstants
+{
+int n_dir;   // number of sampled directions per axis (total sample number = nDir*nDir)
+int n_probe_x;     
+int n_probe_y; 
+int n_probe_z; 
+float grid_size;
+int ray_per_probe;
+} pushConst;
+
+vec3 getProbePos(ivec2 coord){
+int z = coord.y/(pushConst.n_dir);
+int xy = coord.x/(pushConst.n_dir);
+int x = xy%(pushConst.n_probe_x);
+int y = xy/(pushConst.n_probe_x);
+
+x = clamp(x,0,pushConst.nX-1);
+y = clamp(y,0,pushConst.nY-1);
+z = clamp(z,0,pushConst.nZ-1);
+
+return pushConst.grid_size*vec3(x,y,z);
+}
+
+vec2 getDirectionTexelCoord(ivec2 coord){
+return vec2(coord.x%pushConst.nDir, coord.y%pushConst.nDir)/(pushConst.nDir);
+}
+
+vec3 oct_decode(ivec2 texel_coord){
+float x = 2*texel_coord.x - 1;
+float y = 2*texel_coord.y - 1;
+float z = 1-abs(x)-abs(y);
+// handle the folded regions
+if(z<0){
+x = sign(x)*(1-abs(y));
+y = sign(y)*(1-abs(x));
+}
+return normalize(vec3(x,y,z));
+}
+
+void main(){
+
+// get the probe coordinate in 3D space from invocationID
+ivec2 out_tex_coord = gl_GlobalInvocationID.xy;
+vec3 probe_pos = getProbePos(out_tex_coord);
+
+// get the texel coord of the currently sampled direction
+vec2 dir_texel_coord = getDirectionTexelCoord(out_tex_coord);
+
+// decode the texel coord to get the 3D direction vector
+vec3 sample_dir = oct_decode(dir_texel_coord);
+
+
+// traverse all rays to accumulate the irradiance for this direction
+
+// store the irradiance in output texture
+
+}
