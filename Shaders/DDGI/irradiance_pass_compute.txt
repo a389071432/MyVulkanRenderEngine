@@ -1,6 +1,7 @@
 // Compute shader
 // Input: the probe-radiance texture produced by the raytracing pass
-// Output: the probe-direction texture with octahedron encoding
+// Output: the probe-direction-irradiance texture with octahedron encoding (stored in RGB channels)
+// Output: the probe-direction-visibility texture with octahedron encoding (stored in A channel)
 // Output texture has the size [8*8*n_probes_z, 8*8*n_probes_x*n_probes_y]
 // Each texel stores the irradiance for a direction starting from the probe
 // this texture will be sampled from in the final pass to get the indirect lighting
@@ -16,7 +17,11 @@ float grid_size;
 int ray_per_probe;
 } pushConst;
 
-vec3 getProbePos(ivec2 coord){
+layout(set = 0, binding = 0) uniform image2D texRadiance;    // input
+layout(set = 0, binding = 1) uniform image2D texIrradiance;  // output
+layout(set = 0, binding = 2) uniform image2D texVisibility;  // output
+
+vec3 getProbeIndex(ivec2 coord){
 int z = coord.y/(pushConst.n_dir);
 int xy = coord.x/(pushConst.n_dir);
 int x = xy%(pushConst.n_probe_x);
@@ -26,7 +31,11 @@ x = clamp(x,0,pushConst.nX-1);
 y = clamp(y,0,pushConst.nY-1);
 z = clamp(z,0,pushConst.nZ-1);
 
-return pushConst.grid_size*vec3(x,y,z);
+return ivec3(x,y,z);
+}
+
+vec3 getProbePos(ivec3 index){
+return index*pushConst.grid_size;
 }
 
 vec2 getDirectionTexelCoord(ivec2 coord){
@@ -34,22 +43,33 @@ return vec2(coord.x%pushConst.nDir, coord.y%pushConst.nDir)/(pushConst.nDir);
 }
 
 vec3 oct_decode(ivec2 texel_coord){
-float x = 2*texel_coord.x - 1;
-float y = 2*texel_coord.y - 1;
+float x0 = 2*texel_coord.x - 1;
+float y0 = 2*texel_coord.y - 1;
 float z = 1-abs(x)-abs(y);
 // handle the folded regions
 if(z<0){
-x = sign(x)*(1-abs(y));
-y = sign(y)*(1-abs(x));
+x = sign(x0)*(1-abs(y0));
+y = sign(y0)*(1-abs(x0));
 }
 return normalize(vec3(x,y,z));
+}
+
+vec3 spherical_fibonacci(int i, int n)
+{
+float z = 1-(2*i+1)/n;
+float r = sqrt(1-z*z);
+float phi = PI*(sqrt(5)-1)*i;
+float x = r*cos(phi);
+float y = r*sin(phi);
+return vec3(x,y,z);
 }
 
 void main(){
 
 // get the probe coordinate in 3D space from invocationID
 ivec2 out_tex_coord = gl_GlobalInvocationID.xy;
-vec3 probe_pos = getProbePos(out_tex_coord);
+ivec3 probe_idx = getProbeIndex(out_tex_coord);
+vec3 probe_pos = getProbePos(probe_idx);
 
 // get the texel coord of the currently sampled direction
 vec2 dir_texel_coord = getDirectionTexelCoord(out_tex_coord);
@@ -57,9 +77,25 @@ vec2 dir_texel_coord = getDirectionTexelCoord(out_tex_coord);
 // decode the texel coord to get the 3D direction vector
 vec3 sample_dir = oct_decode(dir_texel_coord);
 
-
 // traverse all rays to accumulate the irradiance for this direction
+// also store the average and the variance of distance for this direction
+vec4 irradiance(0);
+vec4 visibility(0);
+for(int ray_idx=0;ray_idx<pushConst.ray_per_probe;ray_idx++){
+vec3 rayDir = spherical_fibonacci(i,pushConst.ray_per_probe);
+float weight = max(0.0, dot(rayDir, sample_dir));
+vec3 radiance = texelFetch(texRadiance,vec2(probe_idx,ray_idx),0).rgb;
+irradiance += vec4(weight*radiance, weight);
 
-// store the irradiance in output texture
+float dis = texelFetch(texRadiance,vec2(probe_idx,ray_idx),0).w;
+float dis_sqr = dis*dis;
+visibility += vec4(weight*dis, weight*dis_sqr, 0, weight);
+}
+irradiance /= irradiance.w;
+visibility /= visibility.w;
+
+// store the result in the output texture
+imageStore(texIrradiance, out_tex_coord, irradiance);
+imageStore(texVisibility, out_tex_coord, visibility);
 
 }

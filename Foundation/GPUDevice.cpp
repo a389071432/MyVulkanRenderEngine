@@ -432,7 +432,9 @@ namespace zzcVulkanRenderEngine {
 		vkGetPhysicalDeviceProperties(physicalDevice, &properties);
 		return properties.limits.maxSamplerAnisotropy;
 	}
+	
 
+	// NOTE: by default we use the normalized coordinates to sample from the texture
 	TextureHandle GPUDevice::createTexture(const TextureCreation createInfo) {
 		// Require a resource first
 		TextureHandle handle = requireTexture();
