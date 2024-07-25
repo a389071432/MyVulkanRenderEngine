@@ -20,8 +20,18 @@ namespace zzcVulkanRenderEngine {
 	// TODO: fill in this 
 	struct GPUDeviceCreation {
 		u32 requireQueueFamlies = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT;
-		std::vector<const char*> requiredExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 		std::vector<const char*> requiredLayers = { "VK_LAYER_KHRONOS_validation" };
+#ifdef ENABLE_RAYTRACING
+		std::vector<const char*> requiredExtensions = { 
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+			VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
+			VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
+			VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME
+	};
+#else
+		std::vector<const char*> requiredExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+#endif // ENABLE_RAYTRACING
+
 	};
 
 	struct QueueInfo {
@@ -66,6 +76,7 @@ namespace zzcVulkanRenderEngine {
 		RenderPassHandle createRenderPass(const RenderPassCreation createInfo);
 		PipelineLayoutHandle createPipelineLayout(const PipelineLayoutCreation createInfo);
 		GraphicsPipelineHandle createGraphicsPipeline(const GraphicsPipelineCreation createInfo);
+		RayTracingPipelineHandle createRayTracingPipeline(const RayTracingPipelineCreation createInfo);
 		FramebufferHandle createFramebuffer(const FramebufferCreation createInfo);
 		VkSampler createSampler(SamplerCreation createInfo);
 
@@ -78,6 +89,7 @@ namespace zzcVulkanRenderEngine {
 		FramebufferHandle requireFramebuffer();
 		PipelineLayoutHandle requirePipelineLayout();
 		GraphicsPipelineHandle requireGraphicsPipeline();
+		RayTracingPipelineHandle requireRayTracingPipeline();
 		Texture& getTexture(TextureHandle handle);
 		Buffer& getBuffer(BufferHandle handle);
 		std::vector<VkDescriptorSetLayout>& getDescriptorSetLayouts(DescriptorSetLayoutsHandle handle);
@@ -86,6 +98,7 @@ namespace zzcVulkanRenderEngine {
 		VkFramebuffer& getFramebuffer(FramebufferHandle handle);
 		VkPipelineLayout& getPipelineLayout(PipelineLayoutHandle handle);
 		VkPipeline& getGraphicsPipeline(GraphicsPipelineHandle handle);
+		VkPipeline& getRayTracingPipeline(RayTracingPipelineHandle handle);
 
 		// Resource removal
 		void removeBuffer(BufferHandle handle);
@@ -266,6 +279,12 @@ namespace zzcVulkanRenderEngine {
 		u32 maxSamplerDescritors = MAX_IMAGE_SAMPLER_DESCRIPTORS;
 		u32 maxSets = MAX_SETS;
 
+		// Function pointers for extensions
+#ifdef ENABLE_RAYTRACING
+		PFN_vkCreateRayTracingPipelinesKHR vkCreateRayTracingPipelinesKHR;
+#endif // ENABLE_RAYTRACING
+
+
 		// Resource management
 		ResourcePool<Texture, TextureHandle> texturePool;
 		ResourcePool<Buffer, BufferHandle> bufferPool;
@@ -276,7 +295,7 @@ namespace zzcVulkanRenderEngine {
 		ResourcePool<VkPipelineLayout, PipelineLayoutHandle> pipelineLayoutPool;
 		ResourcePool<VkPipeline, GraphicsPipelineHandle> graphicsPipelinePool;
 		ResourcePool<VkPipeline, ComputePipelineHandle> computePipelinePool;
-
+		ResourcePool<VkPipeline, RayTracingPipelineHandle> rayTracingPipelinePool;
 
 		// helpers (invisible to application-level programmers)
 		bool helper_checkQueueSatisfication(VkPhysicalDevice phyDevice,u32 requiredQueues);

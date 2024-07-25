@@ -154,11 +154,53 @@ namespace zzcVulkanRenderEngine {
 		case ShaderStage::RANDOM:
 			return VK_SHADER_STAGE_ALL_GRAPHICS;
 			break;
+		case ShaderStage::RAYGEN:
+			return VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+		case ShaderStage::MISS:
+			return VK_SHADER_STAGE_MISS_BIT_KHR;
+		case ShaderStage::HIT:
+			return VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
 		case ShaderStage::DONT_CARE:
 			return 0;
 			break;
 		default:
 			ASSERT(false, "Assertion failed: invalid Enum ShaderStage!");
+			break;
+		}
+	}
+
+	inline VkShaderStageFlagBits util_getRayTracingShaderStage(RayTracingShaderType type) {
+		switch (type)
+		{
+		case RayTracingShaderType::RAY_GEN:
+			return VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+			break;
+		case RayTracingShaderType::MISS:
+			return VK_SHADER_STAGE_MISS_BIT_KHR;
+			break;
+		case RayTracingShaderType::HIT:
+			return VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+			break;
+		default:
+			ASSERT(false, "Assertion failed: invalid Enum RayTracingShaderType!");
+			break;
+		}
+	}
+
+	inline VkRayTracingShaderGroupTypeKHR util_getRayTracingShaderGroupType(RayTracingShaderType type) {
+		switch (type)
+		{
+		case RayTracingShaderType::RAY_GEN:
+			return VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
+			break;
+		case RayTracingShaderType::MISS:
+			return VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR;
+			break;
+		case RayTracingShaderType::HIT:
+			return VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR;
+			break;
+		default:
+			ASSERT(false, "Assertion failed: invalid Enum RayTracingShaderType!");
 			break;
 		}
 	}

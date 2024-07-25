@@ -265,7 +265,7 @@ namespace zzcVulkanRenderEngine {
 			}
 		}
 
-       // TODO: STEP 3 (create render pass for the node)
+       // TODO: STEP 3 (create render pass for graphic nodes)
 		for (u32 i = 0; i < nodes.size(); i++) {
 			GraphNode* node = nodes.at(i);
 			RenderPassCreation creation{};
@@ -275,11 +275,11 @@ namespace zzcVulkanRenderEngine {
 						creation.addAttachInfo({ r.info.texture.format,r.type });
 					}
 				}
-				node->renderPass = device->createRenderPass(creation);
+				node->typeData->graphics.renderPass = device->createRenderPass(creation);
 			}
 		}
 
-       // TODO: STEP 4 (create framebuffer for the node)
+       // TODO: STEP 4 (create framebuffer for graphics nodes)
 		for (u32 i = 0; i < nodes.size(); i++) {
 			GraphNode* node = nodes.at(i);
 			FramebufferCreation creation{};
@@ -294,9 +294,9 @@ namespace zzcVulkanRenderEngine {
 					}
 				}
 				creation.setLayers(1);
-				creation.setRenderPass(node->renderPass);
+				creation.setRenderPass(node->typeData->graphics.renderPass);
 				creation.setSize(width,height);
-				node->framebuffer = device->createFramebuffer(creation);
+				node->typeData->graphics.framebuffer = device->createFramebuffer(creation);
 			}
 		}
 
@@ -328,15 +328,15 @@ namespace zzcVulkanRenderEngine {
 			if (node->type == GraphNodeType::GRAPHICS) {
 				GraphicsPipelineCreation gPipelineCI{};
 				GraphicsPipelineCreation ci{};
-				GraphicsPipelineInfo* pipeInfo = node->pipeline.graphicPipeline.pipelineInfo;
+				GraphicsPipelineInfo* pipeInfo = node->typeData->graphics.pipelineInfo;
 				ci.setShaderInfo({ pipeInfo->shaders.vertShaderPath, pipeInfo->shaders.fragShaderPath })
 					.setVertexInput({ pipeInfo->vertexInput.bindingDesc, pipeInfo->vertexInput.attributes })
 					.setRasterizerInfo({ pipeInfo->rasterInfo.cullMode, pipeInfo->rasterInfo.frontFace })
 					.setMSAAInfo({ pipeInfo->msaa.nSamplesPerPixel })
 					.setDepthStencilInfo({ pipeInfo->depthStencil.enableDepth })
-					.setRenderPass(node->renderPass)
+					.setRenderPass(node->typeData->graphics.renderPass)
 					.setPipelineLayout(node->pipelineLayout);
-				node->pipeline.graphicPipeline.pipelineHandle = device->createGraphicsPipeline(ci);
+				node->typeData->graphics.pipelineHandle = device->createGraphicsPipeline(ci);
 			}
 		}
 
@@ -371,8 +371,8 @@ namespace zzcVulkanRenderEngine {
 
 			VkRenderPassBeginInfo beginInfo{};
 			beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			beginInfo.renderPass = device->getRenderPass(node->renderPass);
-			beginInfo.framebuffer = device->getFramebuffer(node->framebuffer);
+			beginInfo.renderPass = device->getRenderPass(node->typeData->graphics.renderPass);
+			beginInfo.framebuffer = device->getFramebuffer(node->typeData->graphics.framebuffer);
 			beginInfo.renderArea.extent.width = node->outputs[0].info.texture.width;
 			beginInfo.renderArea.extent.height = node->outputs[0].info.texture.height;
 			beginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());

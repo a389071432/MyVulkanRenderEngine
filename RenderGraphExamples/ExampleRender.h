@@ -38,7 +38,7 @@ namespace zzcVulkanRenderEngine {
 			cmdBuffer->cmdSetScissor(device->getSwapChainExtent().width, (float)device->getSwapChainExtent().height, 0, 0);
 
 			// Bind the pipeline
-			cmdBuffer->cmdBindGraphicsPipeline(device->getGraphicsPipeline(node->pipeline.graphicPipeline.pipelineHandle));
+			cmdBuffer->cmdBindGraphicsPipeline(device->getGraphicsPipeline(node->typeData->graphics.pipelineHandle));
 
 			// Bind the vertex and textures for each model and mesh
 			//std::vector<VkDescriptorSet> setsToBind;

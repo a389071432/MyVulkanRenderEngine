@@ -19,12 +19,12 @@ namespace zzcVulkanRenderEngine {
 			cmdBuffer->cmdSetScissor(device->getSwapChainExtent().width, (float)device->getSwapChainExtent().height, 0, 0);
 
 			// Bind the pipeline
-			cmdBuffer->cmdBindGraphicsPipeline(device->getGraphicsPipeline(node->pipeline.graphicPipeline.pipelineHandle));
+			cmdBuffer->cmdBindGraphicsPipeline(device->getGraphicsPipeline(node->typeData->graphics.pipelineHandle));
 
 			// Bind the descriptor set for texture sampling
 			cmdBuffer->cmdBindDescriptorSets(
 				PipelineBindPoint::GRAPHICS,
-				device->getPipelineLayout(node->pipeline.graphicPipeline.pipelineHandle),
+				device->getPipelineLayout(node->typeData->graphics.pipelineHandle),
 				device->getDescriptorSets(node->descriptorSets)
 			);
 

@@ -18,6 +18,7 @@ namespace zzcVulkanRenderEngine {
 	    ,descriptorSetsPool(poolSize)
 	    ,graphicsPipelinePool(poolSize)
 	    ,computePipelinePool(poolSize)
+		,rayTracingPipelinePool(poolSize)
 	    ,descriptorSetLayoutsPool(poolSize)
 	    ,renderPassPool(poolSize)
 	    ,framebufferPool(poolSize)
@@ -118,7 +119,7 @@ namespace zzcVulkanRenderEngine {
 			physicalDevice = integrateGPU;
 		}
 		else {
-			ASSERT(false, "Assertion failed: no GPU detected!");
+			ASSERT(false, "Assertion failed: no GPU detected that supports all required extensions!");
 		}
 
 		// CREATE LOGICAL DEVICE (study details before doing this)
@@ -136,6 +137,23 @@ namespace zzcVulkanRenderEngine {
 		deviceCI.pQueueCreateInfos = queueCIs.data();
 		deviceCI.enabledExtensionCount = static_cast<uint32_t>(enabledExtensions.size());
 		deviceCI.ppEnabledExtensionNames = enabledExtensions.data();
+#ifdef ENABLE_RAYTRACING
+		VkPhysicalDeviceFeatures2 deviceFeatures2 = {};
+		deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+
+		VkPhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingFeatures = {};
+		rayTracingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR;
+		rayTracingFeatures.rayTracingPipeline = VK_TRUE;
+
+		VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructureFeatures = {};
+		accelerationStructureFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR;
+		accelerationStructureFeatures.accelerationStructure = VK_TRUE;
+
+		deviceFeatures2.pNext = &rayTracingFeatures;
+		rayTracingFeatures.pNext = &accelerationStructureFeatures;
+		
+		deviceCI.pNext = &deviceFeatures2;
+#endif // ENABLE_RAYTRACING
 
 		ASSERT(
 			vkCreateDevice(physicalDevice, &deviceCI, nullptr, &device) == VK_SUCCESS,
@@ -149,6 +167,11 @@ namespace zzcVulkanRenderEngine {
 			vkGetDeviceQueue(device, queueFamilyInfos.computeQueue.familyIndex, queueFamilyInfos.computeQueue.queueIndex, &computeQueue);
 		if (enabledQueueFamlies & VK_QUEUE_TRANSFER_BIT)
 			vkGetDeviceQueue(device, queueFamilyInfos.transferQueue.familyIndex, queueFamilyInfos.transferQueue.queueIndex, &transferQueue);
+
+		// Manually load function pointers for extensions
+#ifdef ENABLE_RAYTRACING
+		vkCreateRayTracingPipelinesKHR = reinterpret_cast<PFN_vkCreateRayTracingPipelinesKHR>(vkGetDeviceProcAddr(device, "vkCreateRayTracingPipelinesKHR"));
+#endif // ENABLE_RAYTRACING
 
 
 		//// Create VMA allocator
@@ -351,6 +374,10 @@ namespace zzcVulkanRenderEngine {
 		return graphicsPipelinePool.require_resource();
 	}
 
+	RayTracingPipelineHandle GPUDevice::requireRayTracingPipeline() {
+		return rayTracingPipelinePool.require_resource();
+	}
+
 	DescriptorSetsHandle GPUDevice::requireDescriptorSets() {
 		return descriptorSetsPool.require_resource();
 	}
@@ -381,6 +408,10 @@ namespace zzcVulkanRenderEngine {
 
 	VkPipeline& GPUDevice::getGraphicsPipeline(GraphicsPipelineHandle handle) {
 		return graphicsPipelinePool.get_resource(handle);
+	}
+
+	VkPipeline& GPUDevice::getRayTracingPipeline(RayTracingPipelineHandle handle) {
+		return rayTracingPipelinePool.get_resource(handle);
 	}
 
 	std::vector<VkDescriptorSet>& GPUDevice::getDescriptorSets(DescriptorSetsHandle handle) {
@@ -967,6 +998,72 @@ namespace zzcVulkanRenderEngine {
 		return handle;
 	}
 
+	RayTracingPipelineHandle GPUDevice::createRayTracingPipeline(const RayTracingPipelineCreation createInfo) {
+		// requrie resource
+		RayTracingPipelineHandle handle = requireRayTracingPipeline();
+		VkPipeline& pipeline = getRayTracingPipeline(handle);
+
+		// shader modules
+		std::vector<VkPipelineShaderStageCreateInfo> shaders;
+		u32 shader_cnt = createInfo.shaders.size();
+		shaders.resize(shader_cnt);
+		int max_group = 0;
+		for (u32 i = 0; i < shader_cnt; i++) {
+			shaders[i].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			shaders[i].pName = "main";
+			shaders[i].stage = util_getRayTracingShaderStage(createInfo.shaders[i].shaderType);
+			auto shaderCode = fileHandler.read(createInfo.shaders[i].filePath);
+			shaders[i].module = helper_createShaderModule(shaderCode);
+			max_group = (std::max)(max_group, createInfo.shaders[i].groupId);
+		}
+
+		// shader groups
+		std::vector<VkRayTracingShaderGroupCreateInfoKHR> groups;
+		groups.resize(max_group);
+		std::vector<bool> hasValue(max_group);
+		std::vector<RayTracingShaderType> group_shader_type(max_group);
+		for (u32 i = 0; i < shader_cnt; i++) {
+			u32 gID = createInfo.shaders[i].groupId;
+			RayTracingShaderType type = createInfo.shaders[i].shaderType;
+			if (!hasValue[gID]) {
+				group_shader_type[gID] = type;
+				hasValue[gID] = true;
+			}
+			else {
+				ASSERT(
+					group_shader_type[gID] == type,
+					"Assertion failed: raytracing shaders in the same group should be of the same type!"
+				);
+			}
+			groups[gID].sType = VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR;
+			groups[gID].type = util_getRayTracingShaderGroupType(type);
+			groups[gID].generalShader = VK_SHADER_UNUSED_KHR;
+			groups[gID].closestHitShader= VK_SHADER_UNUSED_KHR;
+			groups[gID].anyHitShader= VK_SHADER_UNUSED_KHR;
+			groups[gID].intersectionShader = VK_SHADER_UNUSED_KHR;
+			if (type == RayTracingShaderType::RAY_GEN || type == RayTracingShaderType::MISS) {
+				groups[gID].generalShader = i;
+			}
+			else if (type == RayTracingShaderType::HIT) {
+				groups[gID].closestHitShader = i;
+			}
+		}
+
+		// create the pipeline
+		VkRayTracingPipelineCreateInfoKHR pipeCI{};
+		pipeCI.sType = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR;
+		pipeCI.stageCount = static_cast<uint32_t>(shaders.size());
+		pipeCI.pStages = shaders.data();
+		pipeCI.groupCount = static_cast<uint32_t>(groups.size());
+		pipeCI.pGroups = groups.data();
+		pipeCI.layout = getPipelineLayout(createInfo.pipelineLayoutHandle);
+		pipeCI.maxPipelineRayRecursionDepth = createInfo.recur_depth;
+		ASSERT(
+			vkCreateRayTracingPipelinesKHR(device, {}, {}, 1, &pipeCI, nullptr, &pipeline)==VK_SUCCESS,
+			"Assertion failed: failed to create the raytracing pipeline!"
+		);
+	}
+
 	FramebufferHandle GPUDevice::createFramebuffer(const FramebufferCreation createInfo) {
 		FramebufferHandle handle = requireFramebuffer();
 		VkFramebuffer& framebuffer = getFramebuffer(handle);
@@ -1179,7 +1276,7 @@ namespace zzcVulkanRenderEngine {
 		);
 	}
 
-	// helper: check whether the physical device support all required types of queues
+	// helper: check whether the physical device supports all required types of queues
 	// return true if all required types of queues satisfied and that the device supports presentation
 	// TODO: more types of queue support
 	bool GPUDevice::helper_checkQueueSatisfication(VkPhysicalDevice phyDevice, u32 requiredQueues) {
@@ -1191,11 +1288,14 @@ namespace zzcVulkanRenderEngine {
 		bool graphics = false;
 		bool compute = false;
 		bool transfer = false;
+		bool surface = false;
 		VkBool32 supportSurface = false;
 		for (u32 i = 0; i < propertyCnt; i++) {
 			auto& prop = properties.at(i);
 			if (prop.queueCount>0) {
 				vkGetPhysicalDeviceSurfaceSupportKHR(phyDevice, i, windowSurface, &supportSurface);
+				if (supportSurface)
+					surface = true;
 			}
 			if ((prop.queueCount > 0) && (prop.queueFlags & VK_QUEUE_GRAPHICS_BIT))
 				graphics = true;
@@ -1211,7 +1311,7 @@ namespace zzcVulkanRenderEngine {
 			return false;
 		if ((requiredQueues & VK_QUEUE_TRANSFER_BIT) && (!transfer))
 			return false;
-		if (!supportSurface)
+		if (!surface)
 			return false;
 
 		return true;
@@ -1226,7 +1326,7 @@ namespace zzcVulkanRenderEngine {
 		for (const char* extension : requiredExtensions) {
 			bool found = false;
 			for (const auto& availableExtension : availableExtensions) {
-				if (strcmp(extension, availableExtension.extensionName)) {
+				if (strcmp(extension, availableExtension.extensionName) == 0) {
 					found = true;
 					break;
 				}
@@ -1246,7 +1346,7 @@ namespace zzcVulkanRenderEngine {
 		for (const char* layer : requiredLayers) {
 			bool found = false;
 			for (const auto& availableLayer : availableLayers) {
-				if (strcmp(layer, availableLayer.layerName)) {
+				if (strcmp(layer, availableLayer.layerName) == 0) {
 					found = true;
 					break;
 				}

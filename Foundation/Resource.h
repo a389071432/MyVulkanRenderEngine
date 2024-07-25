@@ -18,6 +18,7 @@ namespace zzcVulkanRenderEngine {
 	typedef u32 PipelineLayoutHandle;
 	typedef u32 GraphicsPipelineHandle;
 	typedef u32 ComputePipelineHandle;
+	typedef u32 RayTracingPipelineHandle;
 
 
 	const TextureHandle INVALID_TEXTURE_HANDLE = -1;
@@ -224,6 +225,22 @@ namespace zzcVulkanRenderEngine {
 		GraphicsPipelineCreation& setDepthStencilInfo(DepthStencilInfo depthStencilInfo) { depthStencil = depthStencilInfo; return *this; }
 		GraphicsPipelineCreation& setRenderPass(RenderPassHandle handle) { renderPassInfo.renderPassHandle = handle; return *this; }
 		GraphicsPipelineCreation& setPipelineLayout(PipelineLayoutHandle handle) { pipelineLayoutHandle = handle; return *this; }
+	};
+
+	struct RayTracingShaderDesc {
+		int groupId;
+		std::string filePath;
+		RayTracingShaderType shaderType;
+	};
+
+	struct RayTracingPipelineCreation {
+		std::vector<RayTracingShaderDesc> shaders;
+		PipelineLayoutHandle pipelineLayoutHandle = INVALID_PIPELINELAYOUT_HANDLE;
+		int recur_depth = 1;
+
+		RayTracingPipelineCreation& addShader(RayTracingShaderDesc shader) { shaders.push_back(shader); return *this; }
+		RayTracingPipelineCreation& setPipelineLayout(PipelineLayoutHandle layoutHandle) { pipelineLayoutHandle = layoutHandle; return *this; }
+		RayTracingPipelineCreation& setResursionDepth(int depth) { recur_depth = depth; return *this; }
 	};
 
 	struct RenderAttachmentInfo {

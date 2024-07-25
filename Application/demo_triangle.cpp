@@ -45,8 +45,8 @@ int main() {
 		.setGraphicsPipelineInfo(
 			new GraphicsPipelineInfo{
 				.shaders = {
-				  .vertShaderPath = "Shaders/vert.spv",
-				  .fragShaderPath = "Shaders/frag.spv"
+				  .vertShaderPath = "Shaders/triangle/vert.spv",
+				  .fragShaderPath = "Shaders/triangle/frag.spv"
                 },
 				.vertexInput = {
 			        .bindingDesc = scene.vertexInfo.bindingDesc,
@@ -117,8 +117,8 @@ int main() {
 				.setGraphicsPipelineInfo(
 					new GraphicsPipelineInfo{
 						.shaders = {
-						  .vertShaderPath = "Shaders/post_vert.spv",
-						  .fragShaderPath = "Shaders/post_frag.spv"
+						  .vertShaderPath = "Shaders/triangle/post_vert.spv",
+						  .fragShaderPath = "Shaders/triangle/post_frag.spv"
 						},
 					//.vertexInput = {
 					//   .bindingDesc={0,sizeof(ExampleNode::Vertex),VertexInputRate::VERTEX},

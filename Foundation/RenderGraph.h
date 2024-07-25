@@ -87,6 +87,16 @@ namespace zzcVulkanRenderEngine {
 
 	};
 
+
+
+	struct RayTracingPipelineInfo {
+		std::vector<RayTracingShaderDesc> shaders;
+		int recur_depth = 1;
+
+		RayTracingPipelineInfo& addShader(RayTracingShaderDesc shader) { shaders.push_back(shader); return *this; }
+		RayTracingPipelineInfo& setResursionDepth(int depth) { recur_depth = depth; return *this; }
+	};
+
 	// TODO: add raytracing pipeline
 	struct GraphNode;
 	struct NodeRender {
@@ -99,14 +109,40 @@ namespace zzcVulkanRenderEngine {
 		virtual void execute(CommandBuffer* cmdBuffer, GPUDevice* device, Scene* scene, GraphNode* node) = 0;
 	};
 
+	struct NodeTypeSpecificData {
+		union {
+			struct {
+				GraphicsPipelineInfo* pipelineInfo;
+				GraphicsPipelineHandle pipelineHandle;
+				RenderPassHandle renderPass = INVALID_RENDERPASS_HANDLE;
+				FramebufferHandle framebuffer = INVALID_FRAMEBUFFER_HANDLE;
+			}graphics;
+
+			struct {
+				ComputePipelineInfo* pipelineInfo;
+				ComputePipelineHandle pipelineHandle;
+			}compute;
+
+			struct {
+				RayTracingPipelineInfo* pipelineInfo;
+				RayTracingPipelineHandle pipelineHandle;
+				BufferHandle sbt;                                      // shader binding table
+				VkStridedDeviceAddressRegionKHR rgenShaderRegion{};    // region of shader groups in the sbt
+				VkStridedDeviceAddressRegionKHR missShaderRegion{};
+				VkStridedDeviceAddressRegionKHR hitShaderRegion{};
+			}raytracing;
+		};
+	};
 
 	//Base class
 	struct GraphNode {
 	public:
 		GraphNode() {
+			typeData = new NodeTypeSpecificData{};
+		}
+		~GraphNode() {
 
 		}
-		~GraphNode() {}
 		// specified by the user
 		GraphNodeType type = GraphNodeType::GRAPHICS;
 		std::vector<GraphResource> inputs;
@@ -115,23 +151,12 @@ namespace zzcVulkanRenderEngine {
 
 		// automatically generated
         // TODO: following resources should be considered as Resource managed by GPUDevice
-		RenderPassHandle renderPass = INVALID_RENDERPASS_HANDLE;
-		FramebufferHandle framebuffer = INVALID_FRAMEBUFFER_HANDLE;
 		DescriptorSetLayoutsHandle descriptorSetLayouts = INVALID_DESCRIPTORSET_LAYOUTS_HANDLE;
 		DescriptorSetsHandle descriptorSets = INVALID_DESCRIPTORSETS_HANDLE;
 		PipelineLayoutHandle pipelineLayout = INVALID_PIPELINELAYOUT_HANDLE;
 
-		union {
-			struct {
-				GraphicsPipelineInfo* pipelineInfo;
-				GraphicsPipelineHandle pipelineHandle;
-			}graphicPipeline;
-
-			struct {
-				ComputePipelineInfo* pipelineInfo;
-				ComputePipelineHandle pipelineHandle;
-			}computePipeline;
-		}pipeline;
+		// type-specific data 
+		NodeTypeSpecificData* typeData;
 
 		// building helpers
 		GraphNode& setType(GraphNodeType _type) {
@@ -150,12 +175,17 @@ namespace zzcVulkanRenderEngine {
 		}
 
 		GraphNode& setGraphicsPipelineInfo(GraphicsPipelineInfo* pipelineInfo) {
-			pipeline.graphicPipeline.pipelineInfo = pipelineInfo;
+			typeData->graphics.pipelineInfo = pipelineInfo;
 			return *this;
 		}
 
 		GraphNode& setComputePipelineInfo(ComputePipelineInfo* pipelineInfo) {
-			pipeline.computePipeline.pipelineInfo = pipelineInfo;
+			typeData->compute.pipelineInfo = pipelineInfo;
+			return *this;
+		}
+
+		GraphNode& setRayTracingPipelineInfo(RayTracingPipelineInfo* pipelineInfo) {
+			typeData->raytracing.pipelineInfo = pipelineInfo;
 			return *this;
 		}
 

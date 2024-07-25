@@ -48,6 +48,9 @@ namespace zzcVulkanRenderEngine {
 		FRAG,
 		ALL,
 		RANDOM,
+		RAYGEN,
+		MISS,
+		HIT,
 		DONT_CARE
 	};
 
@@ -115,5 +118,11 @@ namespace zzcVulkanRenderEngine {
 		INDEX,
 		UNIFORM,
 		STORAGE,
+	};
+
+	enum class RayTracingShaderType {
+		RAY_GEN,
+		HIT,
+		MISS
 	};
 }
