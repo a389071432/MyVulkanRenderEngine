@@ -126,9 +126,17 @@ namespace zzcVulkanRenderEngine {
 		// TODO: enable a set of extensions (study Raptor for details)
 		queueFamilyInfos = helper_selectQueueFamilies(physicalDevice, enabledQueueFamlies);
 		std::vector<VkDeviceQueueCreateInfo> queueCIs = helper_getQueueCreateInfos(queueFamilyInfos, enabledQueueFamlies);
-		float prior = 0.5f;
-		for (auto& ci : queueCIs) {
-			ci.pQueuePriorities = &prior;
+		std::vector<std::vector<float>> priors(queueCIs.size());
+		for (int q = 0; q < priors.size(); q++)
+			priors[q].resize(queueCIs[q].queueCount);
+		for (int q = 0; q < priors.size(); q++) {
+			for (int k = 0; k < priors[q].size(); k++) {
+				priors[q][k] = 1.0f;
+			}
+		}
+
+		for (int q = 0; q < queueCIs.size();q++) {
+			queueCIs[q].pQueuePriorities = priors[q].data();
 		}
 
 		VkDeviceCreateInfo deviceCI{};
@@ -1482,8 +1490,8 @@ namespace zzcVulkanRenderEngine {
 		std::vector<VkDeviceQueueCreateInfo> CIs;
 		if (requiredQueues & VK_QUEUE_GRAPHICS_BIT) {
 			unique_indices.insert(queueInfos.mainQueue.familyIndex);
+			
 		}
-
 		if (requiredQueues & VK_QUEUE_COMPUTE_BIT) {
 			unique_indices.insert(queueInfos.computeQueue.familyIndex);
 		}
@@ -1491,12 +1499,26 @@ namespace zzcVulkanRenderEngine {
 			unique_indices.insert(queueInfos.transferQueue.familyIndex);
 		}
 
+		std::vector<uint32_t>max_queue_index(unique_indices.size());
+		if (requiredQueues & VK_QUEUE_GRAPHICS_BIT) {
+			if (queueInfos.mainQueue.queueIndex > max_queue_index[queueInfos.mainQueue.familyIndex])
+				max_queue_index[queueInfos.mainQueue.familyIndex] = queueInfos.mainQueue.queueIndex;
+		}
+		if (requiredQueues & VK_QUEUE_COMPUTE_BIT) {
+			if (queueInfos.computeQueue.queueIndex > max_queue_index[queueInfos.computeQueue.familyIndex])
+				max_queue_index[queueInfos.computeQueue.familyIndex] = queueInfos.computeQueue.queueIndex;
+		}
+		if (requiredQueues & VK_QUEUE_TRANSFER_BIT) {
+			if (queueInfos.transferQueue.queueIndex > max_queue_index[queueInfos.transferQueue.familyIndex])
+				max_queue_index[queueInfos.transferQueue.familyIndex] = queueInfos.transferQueue.queueIndex;
+		}
+
 
 		for (uint32_t family : unique_indices) {
 			VkDeviceQueueCreateInfo CI{};
 			CI.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-			CI.queueCount = 1;
 			CI.queueFamilyIndex = family;
+			CI.queueCount = max_queue_index[family] + 1;
 			CIs.push_back(CI);
 		}
 
