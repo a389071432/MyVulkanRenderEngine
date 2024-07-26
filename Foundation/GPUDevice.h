@@ -207,6 +207,13 @@ namespace zzcVulkanRenderEngine {
 			return texHandle;
 		}
 
+		BufferHandle createRayTracingShaderBindingTable(
+			RayTracingShaderBindingTableCreation sbtCI,
+			VkStridedDeviceAddressRegionKHR* rgenShaderRegion,
+		    VkStridedDeviceAddressRegionKHR* missShaderRegion,
+		    VkStridedDeviceAddressRegionKHR* hitShaderRegion
+			);
+
 		//void transferBufferInDevice(VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDeviceSize copySize);
 
 		// need to specify which cmdBuffer to use 
@@ -310,5 +317,6 @@ namespace zzcVulkanRenderEngine {
 		void helper_generateMipMaps(CommandBuffer& cmdBuffer, TextureHandle tex, u16 nMips);
 		bool helper_checkInstanceLayerSupport(const std::vector<const char*>& requiredLayers);
 		std::vector<const char*> helper_getRequiredInstanceExtensions(bool enableValidation);
+		VkPhysicalDeviceRayTracingPipelinePropertiesKHR helper_getPhyDeviceRayTracingProperties(VkPhysicalDevice& phyDevice);
 	};
 }

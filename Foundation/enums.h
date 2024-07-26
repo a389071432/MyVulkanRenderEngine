@@ -118,6 +118,7 @@ namespace zzcVulkanRenderEngine {
 		INDEX,
 		UNIFORM,
 		STORAGE,
+		SBT      // Shader Binding Table
 	};
 
 	enum class RayTracingShaderType {

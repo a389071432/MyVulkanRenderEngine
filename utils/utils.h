@@ -388,7 +388,7 @@ namespace zzcVulkanRenderEngine {
 		}
 	}
 
-	inline VkBufferUsageFlagBits util_getBufferUsage(BufferUsage usage) {
+	inline VkBufferUsageFlags util_getBufferUsage(BufferUsage usage) {
 		switch (usage) {
 		case zzcVulkanRenderEngine::BufferUsage::VERTEX :
 			return VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
@@ -402,9 +402,17 @@ namespace zzcVulkanRenderEngine {
 		case zzcVulkanRenderEngine::BufferUsage::UNIFORM:
 			return VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 			break;
+		case zzcVulkanRenderEngine::BufferUsage::SBT:
+			return VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+			break;
 		default:
 			break;
 		}
+	}
+
+	// round up size to the nearest multiple of align
+	inline u32 util_sizeAlignment(u32 size, u32 align) {
+		return (size + align - 1) & ~(align - 1);
 	}
 }
 

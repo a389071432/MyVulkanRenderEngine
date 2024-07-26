@@ -1101,6 +1101,81 @@ namespace zzcVulkanRenderEngine {
 		return handle;
 	}
 
+	// create the SBT
+	// also fill in the region data for SBT
+	BufferHandle GPUDevice::createRayTracingShaderBindingTable(
+		RayTracingShaderBindingTableCreation sbtCI,
+		VkStridedDeviceAddressRegionKHR* rgenShaderRegion,
+		VkStridedDeviceAddressRegionKHR* missShaderRegion,
+		VkStridedDeviceAddressRegionKHR* hitShaderRegion
+		) {
+
+		// get required parameters
+		int missCnt = sbtCI.missCnt;
+		int hitCnt = sbtCI.hitCnt;
+		int groupCnt = 1 + missCnt + hitCnt;   // only one raygen group always
+	
+		VkPhysicalDeviceRayTracingPipelinePropertiesKHR rtProps = helper_getPhyDeviceRayTracingProperties(physicalDevice);
+		u32 groupHandleSize = rtProps.shaderGroupHandleSize;
+		u32 groupBaseAlign = rtProps.shaderGroupBaseAlignment;
+		u32 groupHandleAlign = rtProps.shaderGroupHandleAlignment;
+
+		// get group handles from pipeline
+		u32 handleDataSize = groupHandleSize * (1 + missCnt + hitCnt);
+		VkPipeline& pipeline = getRayTracingPipeline(sbtCI.pipeline);
+		std::vector<uint8_t>handleData(handleDataSize);              
+		ASSERT(
+			vkGetRayTracingShaderGroupHandlesKHR(device, pipeline, 0, groupCnt, handleDataSize, handleData.data()) == VK_SUCCESS,
+			"Assertion failed: failed to query the shader group handles!"
+		);
+
+		// group handles in SBT must satisfy alignment requirement
+		rgenShaderRegion->size = util_sizeAlignment(groupHandleAlign, groupBaseAlign);
+		rgenShaderRegion->stride = rgenShaderRegion->size;
+		missShaderRegion->size = util_sizeAlignment(groupHandleAlign * missCnt, groupBaseAlign);
+		missShaderRegion->stride = groupHandleAlign;
+		hitShaderRegion->size = util_sizeAlignment(groupHandleAlign * hitCnt, groupBaseAlign);
+		hitShaderRegion->stride = groupHandleAlign;
+		
+		// fill in group handles 
+		u32 sbtSize = rgenShaderRegion->size + missShaderRegion->size + hitShaderRegion->size;
+		std::vector<uint8_t> handleDataAligned(sbtSize);
+		uint8_t* pDst = handleDataAligned.data();
+		uint8_t* pSrc = handleData.data();
+		// rgen group handle
+		memcpy(pDst, pSrc, groupHandleSize);
+		pDst = handleDataAligned.data() + rgenShaderRegion->size;
+		pSrc += groupHandleSize;
+		// miss group handles
+		for (int i = 0; i < missCnt; i++) {
+			memcpy(pDst, pSrc, groupHandleSize);
+			pDst += groupHandleAlign;
+			pSrc += groupHandleSize;
+		}
+		pDst = handleDataAligned.data() + rgenShaderRegion->size + missShaderRegion->size;
+		// hit group handles
+		for (int i = 0; i < hitCnt; i++) {
+			memcpy(pDst, pSrc, groupHandleSize);
+			pDst += groupHandleAlign;
+			pSrc += groupHandleSize;
+		}
+
+		// create buffer for SBT, from the temp data
+		BufferHandle sbtHandle = createBufferFromData(handleDataAligned, BufferUsage::SBT);
+
+		// get device address for shader group handles (in SBT)
+		VkBufferDeviceAddressInfo addrInfo{};
+		addrInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
+		addrInfo.buffer = getBuffer(sbtHandle).buffer;
+		VkDeviceAddress sbtAddr = vkGetBufferDeviceAddress(device, &addrInfo);
+		rgenShaderRegion->deviceAddress = sbtAddr;
+		missShaderRegion->deviceAddress = sbtAddr + rgenShaderRegion->size;
+		hitShaderRegion->deviceAddress = sbtAddr + rgenShaderRegion->size + missShaderRegion->size;
+
+		return sbtHandle;
+		
+	}
+
 	//template<typename T>
 	//BufferHandle& GPUDevice::createBufferFromData(const std::vector<T>& data) {
 
@@ -1582,5 +1657,18 @@ namespace zzcVulkanRenderEngine {
 		}
 
 		return extensions;
+	}
+
+	VkPhysicalDeviceRayTracingPipelinePropertiesKHR GPUDevice::helper_getPhyDeviceRayTracingProperties(VkPhysicalDevice& phyDevice) {
+		VkPhysicalDeviceRayTracingPipelinePropertiesKHR rtProps{};
+		rtProps.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR;
+
+		VkPhysicalDeviceProperties2 props2{};
+		props2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+		props2.pNext = &rtProps;
+
+		vkGetPhysicalDeviceProperties2(phyDevice, &props2);
+		
+		return rtProps;
 	}
  }

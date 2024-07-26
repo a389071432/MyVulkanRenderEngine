@@ -243,6 +243,12 @@ namespace zzcVulkanRenderEngine {
 		RayTracingPipelineCreation& setResursionDepth(int depth) { recur_depth = depth; return *this; }
 	};
 
+	struct RayTracingShaderBindingTableCreation {
+		RayTracingPipelineHandle pipeline;
+		int missCnt;
+		int hitCnt;
+	};
+
 	struct RenderAttachmentInfo {
 		DataFormat format;
 		GraphResourceType resourceType;
