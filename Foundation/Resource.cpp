@@ -69,6 +69,10 @@ namespace zzcVulkanRenderEngine {
 		}
 	}
 
+	void Texture::setNowQueueFamily(u32 queueFamilyIndex) {
+		nowQueueFamily = queueFamilyIndex;
+	}
+
 	//// For ResourcePool
 	//template<class T, class ResourceHandle>
 	//ResourcePool<T,ResourceHandle>::ResourcePool(u32 poolSize) {

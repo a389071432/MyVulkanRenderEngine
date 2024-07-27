@@ -28,6 +28,7 @@ namespace zzcVulkanRenderEngine {
 	const PipelineLayoutHandle INVALID_PIPELINELAYOUT_HANDLE = -1;
 	const RenderPassHandle INVALID_RENDERPASS_HANDLE = -1;
 	const FramebufferHandle INVALID_FRAMEBUFFER_HANDLE = -1;
+	const u32 INVALID_QUEUE_FAMILY_INDEX = -1;
 
 	// TODO: wrap the enumerations?
 	struct SamplerCreation {
@@ -68,19 +69,24 @@ namespace zzcVulkanRenderEngine {
 	};
 
 	// TODO: add params for sampler settings
+	// Move the state tracking variables (access, nowQueueFamily) to GraphResource?
 	struct Texture {
 		VkImage image;
 		VkImageView imageView;
 		VkDeviceMemory mem;
 		VkFormat format;
 		VkSampler sampler;
-		std::vector<GraphResourceAccessType> access;   // defined separately for each mip level of the texture (NOT SURE, NEED CONFIRMATION)
 		u16 width, height, depth;
 		u16 nMips;
+
+		// state tracking variables
+		std::vector<GraphResourceAccessType> access;       // defined separately for each mip level of the texture (NOT SURE, NEED CONFIRMATION)
+		u32 nowQueueFamily = INVALID_QUEUE_FAMILY_INDEX;   // track that which queue family is currently owning the texture
 
 		//VmaAllocation vmaAlloc;    // record allocation info on device, useful for aliasing memory allocation
 
 		void setAccessType(GraphResourceAccessType access, u16 baseMip, u16 nMips);
+		void setNowQueueFamily(u32 queueFamilyIndex);
 	};
 
 	struct TextureCreation {
@@ -238,7 +244,7 @@ namespace zzcVulkanRenderEngine {
 		PipelineLayoutHandle pipelineLayoutHandle = INVALID_PIPELINELAYOUT_HANDLE;
 		int recur_depth = 1;
 
-		RayTracingPipelineCreation& addShader(RayTracingShaderDesc shader) { shaders.push_back(shader); return *this; }
+		RayTracingPipelineCreation& setShaders(std::vector<RayTracingShaderDesc>& _shaders) { shaders=_shaders; return *this; }
 		RayTracingPipelineCreation& setPipelineLayout(PipelineLayoutHandle layoutHandle) { pipelineLayoutHandle = layoutHandle; return *this; }
 		RayTracingPipelineCreation& setResursionDepth(int depth) { recur_depth = depth; return *this; }
 	};
@@ -247,6 +253,9 @@ namespace zzcVulkanRenderEngine {
 		RayTracingPipelineHandle pipeline;
 		int missCnt;
 		int hitCnt;
+
+		RayTracingShaderBindingTableCreation& setPipeline(RayTracingPipelineHandle _pipeline) { pipeline = _pipeline; return *this; }
+		RayTracingShaderBindingTableCreation& setShaderCounts(int _missCount, int _hitCount) { missCnt = _missCount; hitCnt = _hitCount; return *this; }
 	};
 
 	struct RenderAttachmentInfo {

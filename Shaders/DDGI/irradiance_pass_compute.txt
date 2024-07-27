@@ -17,7 +17,7 @@ float grid_size;
 int ray_per_probe;
 } pushConst;
 
-layout(set = 0, binding = 0) uniform image2D texRadiance;    // input
+layout(set = 0, binding = 0) uniform readonly image2D texRadiance;    // input
 layout(set = 0, binding = 1) uniform image2D texIrradiance;  // output
 layout(set = 0, binding = 2) uniform image2D texVisibility;  // output
 

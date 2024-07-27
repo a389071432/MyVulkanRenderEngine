@@ -90,11 +90,15 @@ namespace zzcVulkanRenderEngine {
 
 
 	struct RayTracingPipelineInfo {
+		// specified by user
 		std::vector<RayTracingShaderDesc> shaders;
 		int recur_depth = 1;
+		int missCnt;
+		int hitCnt;
 
 		RayTracingPipelineInfo& addShader(RayTracingShaderDesc shader) { shaders.push_back(shader); return *this; }
 		RayTracingPipelineInfo& setResursionDepth(int depth) { recur_depth = depth; return *this; }
+		RayTracingPipelineInfo& setShaderCount(int _missCnt, int _hitCnt) { missCnt = _missCnt; hitCnt = _hitCnt; return *this; }
 	};
 
 	// TODO: add raytracing pipeline

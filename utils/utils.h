@@ -18,8 +18,14 @@ namespace zzcVulkanRenderEngine {
 			return VK_ACCESS_TRANSFER_READ_BIT;
 		case GraphResourceAccessType::COPY_DST:
 			return VK_ACCESS_TRANSFER_WRITE_BIT;
-		case GraphResourceAccessType::WRITE_STORAGE:
-			return VK_ACCESS_SHADER_WRITE_BIT;
+		case GraphResourceAccessType::COMPUTE_READ_STORAGE_IMAGE:
+			return VK_ACCESS_SHADER_READ_BIT;
+		case GraphResourceAccessType::COMPUTE_READ_WRITE_STORAGE_IMAGE:
+			return VK_ACCESS_SHADER_READ_BIT|VK_ACCESS_SHADER_WRITE_BIT;
+		case GraphResourceAccessType::RAYTRACING_READ_STORAGE_IMAGE:
+			return VK_ACCESS_SHADER_READ_BIT;
+		case GraphResourceAccessType::RAYTRACING_READ_WRITE_STORAGE_IMAGE:
+			return VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
 		case GraphResourceAccessType::PRESENT:
 			return VK_ACCESS_MEMORY_READ_BIT;
 		case GraphResourceAccessType::UNDEFINED:
@@ -80,6 +86,14 @@ namespace zzcVulkanRenderEngine {
 			return VK_PIPELINE_STAGE_TRANSFER_BIT;
 		case GraphResourceAccessType::COPY_DST:
 			return VK_PIPELINE_STAGE_TRANSFER_BIT;
+		case GraphResourceAccessType::COMPUTE_READ_STORAGE_IMAGE:
+			return VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+		case GraphResourceAccessType::COMPUTE_READ_WRITE_STORAGE_IMAGE:
+			return VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+		case GraphResourceAccessType::RAYTRACING_READ_STORAGE_IMAGE:
+			return VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
+		case GraphResourceAccessType::RAYTRACING_READ_WRITE_STORAGE_IMAGE:
+			return VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
 		case GraphResourceAccessType::PRESENT:
 			return VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
 		case GraphResourceAccessType::UNDEFINED:

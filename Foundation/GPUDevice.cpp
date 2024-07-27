@@ -1542,17 +1542,26 @@ namespace zzcVulkanRenderEngine {
 				if ((prop.queueCount > 0) && (prop.queueFlags & VK_QUEUE_COMPUTE_BIT)) {
 					familyInfos.computeQueue.familyIndex = i;
 					familyInfos.computeQueue.queueIndex = 0;
+#ifdef ENABLE_RAYTRACING
+					familyInfos.raytracingQueue.familyIndex = i;
+					familyInfos.raytracingQueue.queueIndex = 0;
+#endif // ENABLE_RAYTRACING
+
 					break;
 				}
 			}
 		} 
-
+		
 		// try to merge graphics and compute in a single family
 		if (requiredQueues & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)) {
 			auto& graphicsProp = properties.at(familyInfos.mainQueue.familyIndex);
 			if (graphicsProp.queueFlags & VK_QUEUE_COMPUTE_BIT) {
 				familyInfos.computeQueue.familyIndex = familyInfos.mainQueue.familyIndex;
 				familyInfos.computeQueue.queueIndex = graphicsProp.queueCount > 1 ? 1 : 0;
+#ifdef ENABLE_RAYTRACING
+				familyInfos.raytracingQueue.familyIndex = familyInfos.mainQueue.familyIndex;
+				familyInfos.raytracingQueue.queueIndex = graphicsProp.queueCount > 1 ? 1 : 0;
+#endif // ENABLE_RAYTRACING
 			}
 		}
 		return familyInfos;

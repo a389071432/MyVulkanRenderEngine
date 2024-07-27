@@ -40,9 +40,11 @@ namespace zzcVulkanRenderEngine {
 	};
 
 	// TODO: add more types
+	// is it necessary to add a separate queue for raytracing? given that it is performed by compute queue
 	struct QueueFamilyInfos {
 		QueueInfo mainQueue;
 		QueueInfo computeQueue;
+		QueueInfo raytracingQueue;
 		QueueInfo transferQueue;
 		QueueInfo presentQueue;
 	};
@@ -274,6 +276,10 @@ namespace zzcVulkanRenderEngine {
 		VkQueue computeQueue;
 		VkQueue transferQueue;
 		VkQueue presentQueue;
+#ifdef ENABLE_RAYTRACING
+		VkQueue raytracingQueue;
+#endif // ENABLE_RAYTRACING
+
 
 		// Command buffer related
 		VkCommandPool commandPool;

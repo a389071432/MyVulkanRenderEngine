@@ -322,7 +322,7 @@ namespace zzcVulkanRenderEngine {
 			node->pipelineLayout = device->createPipelineLayout(layoutCI);
 		}
 
-	    // TODO: STEP 2 (create pipeline for the node)
+	    // create pipeline for the node
 		for (u32 i = 0; i < nodes.size(); i++) {
 			GraphNode* node = nodes.at(i);
 			if (node->type == GraphNodeType::GRAPHICS) {
@@ -337,6 +337,30 @@ namespace zzcVulkanRenderEngine {
 					.setRenderPass(node->typeData->graphics.renderPass)
 					.setPipelineLayout(node->pipelineLayout);
 				node->typeData->graphics.pipelineHandle = device->createGraphicsPipeline(ci);
+			}
+			else if (node->type == GraphNodeType::RAYTRACING) {
+				RayTracingPipelineCreation rtPipelineCI{};
+				RayTracingPipelineInfo* pipeInfo = node->typeData->raytracing.pipelineInfo;
+				rtPipelineCI.setShaders(pipeInfo->shaders)
+					.setResursionDepth(pipeInfo->recur_depth)
+					.setPipelineLayout(node->pipelineLayout);
+				node->typeData->raytracing.pipelineHandle = device->createRayTracingPipeline(rtPipelineCI);
+			}
+		}
+
+		// create shader binding table for raytracing node
+		for (u32 i = 0; i < nodes.size(); i++) {
+			GraphNode* node = nodes.at(i);
+			if (node->type == GraphNodeType::RAYTRACING) {
+				RayTracingShaderBindingTableCreation sbtCI{};
+				sbtCI.setPipeline(node->typeData->raytracing.pipelineHandle)
+					.setShaderCounts(node->typeData->raytracing.pipelineInfo->missCnt, node->typeData->raytracing.pipelineInfo->hitCnt);
+				node->typeData->raytracing.sbt = device->createRayTracingShaderBindingTable(
+					sbtCI,
+					&node->typeData->raytracing.rgenShaderRegion,
+					&node->typeData->raytracing.missShaderRegion,
+					&node->typeData->raytracing.hitShaderRegion
+				);
 			}
 		}
 
@@ -418,7 +442,54 @@ namespace zzcVulkanRenderEngine {
 			}
 		}
 		else if (node.type == GraphNodeType::COMPUTE) {
-			// TODO: add barriers for a compute node
+			// add barrier for input resources
+			for (GraphResource& r : node.inputs) {
+				Texture& texture = device->getTexture(r.info.texture.texHandle);
+				if (r.type == GraphResourceType::TEXTURE) {
+					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::COMPUTE_READ_STORAGE_IMAGE, 0);
+					texture.setAccessType(GraphResourceAccessType::COMPUTE_READ_STORAGE_IMAGE, 0, 1);    // necessary to track the state of texture to determine initialLayout
+				}
+				else if (r.type == GraphResourceType::BUFFER) {
+
+				}
+			}
+
+			// add barrier for output resources
+			for (GraphResource& r : node.outputs) {
+				Texture& texture = device->getTexture(r.info.texture.texHandle);
+				if (r.type == GraphResourceType::TEXTURE) {
+					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::COMPUTE_READ_WRITE_STORAGE_IMAGE, 0);
+					texture.setAccessType(GraphResourceAccessType::COMPUTE_READ_WRITE_STORAGE_IMAGE, 0, 1);
+				}
+				else if (r.type == GraphResourceType::BUFFER) {
+
+				}
+			}
+
+		}else if (node.type == GraphNodeType::RAYTRACING) {
+			// add barrier for input resources
+			for (GraphResource& r : node.inputs) {
+				Texture& texture = device->getTexture(r.info.texture.texHandle);
+				if (r.type == GraphResourceType::TEXTURE) {
+					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::RAYTRACING_READ_STORAGE_IMAGE, 0);
+					texture.setAccessType(GraphResourceAccessType::RAYTRACING_READ_STORAGE_IMAGE, 0, 1);    // necessary to track the state of texture to determine initialLayout
+				}
+				else if (r.type == GraphResourceType::BUFFER) {
+
+				}
+			}
+
+			// add barrier for output resources
+			for (GraphResource& r : node.outputs) {
+				Texture& texture = device->getTexture(r.info.texture.texHandle);
+				if (r.type == GraphResourceType::TEXTURE) {
+					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::RAYTRACING_READ_WRITE_STORAGE_IMAGE, 0);
+					texture.setAccessType(GraphResourceAccessType::RAYTRACING_READ_WRITE_STORAGE_IMAGE, 0, 1);
+				}
+				else if (r.type == GraphResourceType::BUFFER) {
+
+				}
+			}
 
 		}
 	}

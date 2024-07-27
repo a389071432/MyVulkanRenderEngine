@@ -28,7 +28,8 @@ namespace zzcVulkanRenderEngine {
 
 	enum class GraphNodeType {
 		GRAPHICS,
-		COMPUTE
+		COMPUTE,
+		RAYTRACING
 	};
 
 	enum class GraphResourceAccessType {
@@ -38,7 +39,10 @@ namespace zzcVulkanRenderEngine {
 		COPY_SRC,
 		COPY_DST,
 		PRESENT,
-		WRITE_STORAGE, 
+		COMPUTE_READ_STORAGE_IMAGE,
+		COMPUTE_READ_WRITE_STORAGE_IMAGE, 
+		RAYTRACING_READ_STORAGE_IMAGE,
+		RAYTRACING_READ_WRITE_STORAGE_IMAGE,
 		UNDEFINED
 	};
 

@@ -143,12 +143,10 @@ namespace zzcVulkanRenderEngine {
 	// Insert an image barrier
 	// AccessMask, layout and pipelineStage are all determined by the accessType
 	// Note that this func insert barrier for a single mip level 
-	void CommandBuffer::cmdInsertImageBarrier(Texture& texture, GraphResourceAccessType newAccessType, u16 baseMipLevel) {
+	void CommandBuffer::cmdInsertImageBarrier(Texture& texture, GraphResourceAccessType newAccessType, u16 baseMipLevel, u32 newQueueFamily) {
 		VkImageMemoryBarrier barrier{};
 		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 		barrier.image = texture.image;
-		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 		barrier.srcAccessMask = util_getAccessFlags(texture.access[baseMipLevel]);
 		barrier.oldLayout = util_getImageLayout(texture.access[baseMipLevel]);
 		barrier.dstAccessMask = util_getAccessFlags(newAccessType);
@@ -158,6 +156,14 @@ namespace zzcVulkanRenderEngine {
 		barrier.subresourceRange.layerCount = 1;
 		barrier.subresourceRange.baseMipLevel = baseMipLevel;
 		barrier.subresourceRange.levelCount = 1;
+		if (texture.nowQueueFamily == newQueueFamily || texture.nowQueueFamily == INVALID_QUEUE_FAMILY_INDEX) {
+			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		}
+		else {
+			barrier.srcQueueFamilyIndex = texture.nowQueueFamily;
+			barrier.dstQueueFamilyIndex = newQueueFamily;
+		}
 
 		VkPipelineStageFlags srcStage = util_getPipelineStageFlags(texture.access[baseMipLevel]);
 		VkPipelineStageFlags dstStage = util_getPipelineStageFlags(newAccessType);
