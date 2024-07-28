@@ -59,6 +59,8 @@ namespace zzcVulkanRenderEngine {
 
 		// check that the resolution of the final output matches the window
 
+		// check that input/output resources match specific GraphResourceUsage
+
 		// check compability of GraphResourceType and GraphResourceUsage
 
 		// for each node, check whether the required external input resources exists
