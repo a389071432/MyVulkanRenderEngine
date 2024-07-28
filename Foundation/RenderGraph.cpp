@@ -59,6 +59,8 @@ namespace zzcVulkanRenderEngine {
 
 		// check that the resolution of the final output matches the window
 
+		// check compability of GraphResourceType and GraphResourceUsage
+
 		// for each node, check whether the required external input resources exists
 		// if exist, register the handle for that resource
 		for (u32 i = 0; i < nodes.size(); i++) {
@@ -70,7 +72,7 @@ namespace zzcVulkanRenderEngine {
 						ASSERT(it != key2BufferMap.end(), "Invalid external input resource (buffer)", r.key);
 						r.info.buffer.bufferHandle = it->second;
 					}
-					else if (r.type == GraphResourceType::TEXTURE || r.type == GraphResourceType::DEPTH_MAP) {
+					else if (r.type == GraphResourceType::IMAGE) {
 						auto it = key2TexMap.find(r.key);
 						ASSERT(it != key2TexMap.end(), "Invalid external input resource (texture)", r.key);
 						r.info.texture.texHandle = it->second;
@@ -168,7 +170,66 @@ namespace zzcVulkanRenderEngine {
 			}
 		}
 
-		// allocate memory on device for resources, using technique of memory aliasing to efficiently reuse memory 
+		// Allocate memory on device for resources, using technique of memory aliasing to efficiently reuse memory 
+		// first we need to gather all usage bits for resources
+		// TODO: for buffer usage
+		std::unordered_map<std::string, VkImageUsageFlags> imageUsages;
+		std::unordered_map<std::string, VkBufferUsageFlags> bufferUsages;
+		for (u32 i = 0; i < topologyOrder.size(); i++) {
+			u32 index = topologyOrder.at(i);
+			GraphNode* node = nodes.at(index);
+			for (GraphResource& r : node->inputs) {
+				VkImageUsageFlags texUsage = 0;
+				VkBufferUsageFlags bufferUsage = 0;
+				if (r.type == GraphResourceType::IMAGE) {
+					texUsage |= util_getImageUsage(r.usage);
+				}
+				else if (r.type == GraphResourceType::BUFFER) {
+					bufferUsage |= util_getBufferUsage(r.usage);
+				}
+				auto it = imageUsages.find(r.key);
+				if (it != imageUsages.end()) {
+					imageUsages[r.key] |= texUsage;
+				}
+				else {
+					imageUsages.insert({ r.key,texUsage });
+				}
+				auto it = bufferUsages.find(r.key);
+				if (it != bufferUsages.end()) {
+					bufferUsages[r.key] |= bufferUsage;
+				}
+				else {
+					bufferUsages.insert({ r.key,bufferUsage });
+				}
+			}
+
+			for (GraphResource& r : node->outputs) {
+				VkImageUsageFlags texUsage = 0;
+				VkBufferUsageFlags bufferUsage = 0;
+				if (r.type == GraphResourceType::IMAGE) {
+					texUsage |= util_getImageUsage(r.usage);
+				}
+				else if (r.type == GraphResourceType::BUFFER) {
+					bufferUsage |= util_getBufferUsage(r.usage);
+				}
+				auto it = imageUsages.find(r.key);
+				if (it != imageUsages.end()) {
+					imageUsages[r.key] |= texUsage;
+				}
+				else {
+					imageUsages.insert({ r.key,texUsage });
+				}
+				auto it = bufferUsages.find(r.key);
+				if (it != bufferUsages.end()) {
+					bufferUsages[r.key] |= bufferUsage;
+				}
+				else {
+					bufferUsages.insert({ r.key,bufferUsage });
+				}
+			}
+		}
+
+		// then we create textures for output resources in the graph
 		std::queue<TextureHandle> texFreelist;
 		for (u32 i = 0; i < topologyOrder.size(); i++) {
 			u32 index = topologyOrder.at(i);
@@ -181,6 +242,7 @@ namespace zzcVulkanRenderEngine {
 				texCI.setType(info.texture.textureType)
 					.setFormat(info.texture.format)
 					.setSize(info.texture.width, info.texture.height, info.texture.depth)
+					.setUsage(imageUsages[r.key])
 					.setIsFinal(r.key == "final" ? true : false);
 
 				if (!texFreelist.empty()) {      // meomry aliasing if applicable
@@ -210,32 +272,37 @@ namespace zzcVulkanRenderEngine {
 	   // TODO: STEP 2 (create descriptorSetLayouts for the node)
 		for (u32 i = 0; i < nodes.size(); i++) {
 			GraphNode* node = nodes.at(i);
-			if (!(node->inputs.size() > 0))
-				continue;
 			DescriptorSetLayoutsCreation layoutsCI{};
 			layoutsCI.setNodeType(node->type);
-			if (node->type == GraphNodeType::GRAPHICS) {
-				for (GraphResource& r : node->inputs) {
-					if (r.isExternal == false) {
-						layoutsCI.addBinding({
-	                          util_getBindingType(r.type,true),
-	                          r.accessStage,
-	                          r.groupId,
-	                          r.binding
-							});
-					}
+			for (GraphResource& r : node->inputs) {
+				if (r.isExternal == false) {
+					layoutsCI.addBinding({
+						  util_getBindingType(r.usage),
+						  r.accessStage,
+						  r.groupId,
+						  r.binding
+						});
 				}
-				node->descriptorSetLayouts = device->createDescriptorSetLayouts(layoutsCI);
 			}
-			else {
-				// TODO: repeat for Compute node
+			for (GraphResource& r : node->outputs) {      // for output resources like storage buffer and image, also need to bind a descriptor
+				if (r.usage == GraphResourceUsage::STORAGE_BUFFER || r.usage == GraphResourceUsage::STORAGE_IMAGE) {
+					layoutsCI.addBinding({
+		                   util_getBindingType(r.usage),
+		                   r.accessStage,
+		                   r.groupId,
+		                   r.binding
+					 });
+				}
+
 			}
+			if(layoutsCI.bindings.size()>0)
+			  node->descriptorSetLayouts = device->createDescriptorSetLayouts(layoutsCI);
 		}
 
 	   // TODO: STEP 2 (allocate descriptorSets for the node)
 		for (u32 i = 0; i < nodes.size(); i++) {
 			GraphNode* node = nodes.at(i);
-			if (!(node->inputs.size() > 0))
+			if (node->descriptorSetLayouts == INVALID_DESCRIPTORSET_LAYOUTS_HANDLE)
 				continue;
 			DescriptorSetsAlloc setsAllocInfo{};
 			setsAllocInfo.layoutsHandle = node->descriptorSetLayouts;
@@ -246,22 +313,28 @@ namespace zzcVulkanRenderEngine {
 		for (u32 i = 0; i < nodes.size(); i++) {
 			GraphNode* node = nodes.at(i);
 			std::vector<DescriptorSetWrite> writes;
-			if (node->type == GraphNodeType::GRAPHICS) {
-				for (GraphResource& r : node->inputs) {
+			for (GraphResource& r : node->inputs) {
+				DescriptorSetWrite write{};
+				write.setType(util_getBindingType(r.usage))
+					.setDstSet(r.groupId)
+					.setDstBinding(r.binding)
+					.setBufferHandle(r.type == GraphResourceType::BUFFER ? r.info.buffer.bufferHandle : INVALID_BUFFER_HANDLE)
+					.setTexHandle(r.type == GraphResourceType::IMAGE ? r.info.texture.texHandle : INVALID_TEXTURE_HANDLE);
+				writes.push_back(write);
+			}
+			for (GraphResource& r : node->outputs) {
+				if (r.usage == GraphResourceUsage::STORAGE_BUFFER || r.usage == GraphResourceUsage::STORAGE_IMAGE) {
 					DescriptorSetWrite write{};
-					write.setType(util_getBindingType(r.type, true))
+					write.setType(util_getBindingType(r.usage))
 						.setDstSet(r.groupId)
 						.setDstBinding(r.binding)
 						.setBufferHandle(r.type == GraphResourceType::BUFFER ? r.info.buffer.bufferHandle : INVALID_BUFFER_HANDLE)
-						.setTexHandle(r.type == GraphResourceType::TEXTURE ? r.info.texture.texHandle : INVALID_TEXTURE_HANDLE);
+						.setTexHandle(r.type == GraphResourceType::IMAGE ? r.info.texture.texHandle : INVALID_TEXTURE_HANDLE);
 					writes.push_back(write);
 				}
-				if (node->inputs.size() > 0) {
-					device->writeDescriptorSets(writes, node->descriptorSets);
-				}
 			}
-			else {
-				// TODO: repeat for Compute node
+			if (node->descriptorSets != INVALID_DESCRIPTORSETS_HANDLE) {
+				device->writeDescriptorSets(writes, node->descriptorSets);
 			}
 		}
 
@@ -271,7 +344,7 @@ namespace zzcVulkanRenderEngine {
 			RenderPassCreation creation{};
 			if (node->type == GraphNodeType::GRAPHICS) {
 				for (GraphResource& r : node->outputs) {
-					if (r.type == GraphResourceType::TEXTURE || r.type == GraphResourceType::DEPTH_MAP) {
+					if (r.type == GraphResourceType::IMAGE) {
 						creation.addAttachInfo({ r.info.texture.format,r.type });
 					}
 				}
@@ -287,7 +360,7 @@ namespace zzcVulkanRenderEngine {
 				u32 width = -1;
 				u32 height = -1;
 				for (GraphResource& r : node->outputs) {
-					if (r.type == GraphResourceType::TEXTURE || r.type == GraphResourceType::DEPTH_MAP) {
+					if (r.type == GraphResourceType::IMAGE) {
 						creation.addAttachment({ r.info.texture.texHandle });
 						width = r.info.texture.width;
 						height = r.info.texture.height;
@@ -385,10 +458,10 @@ namespace zzcVulkanRenderEngine {
 			clearValues.resize(node->outputs.size());
 			for (int i = 0; i < node->outputs.size();i++) {
 				GraphResource& r = node->outputs[i];
-				if (r.type == GraphResourceType::TEXTURE) {
+				if (r.usage == GraphResourceUsage::COLOR_OUTPUT) {
 					clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
 				}
-				else if (r.type == GraphResourceType::DEPTH_MAP) {
+				else if (r.usage == GraphResourceUsage::DEPTH_MAP) {
 					clearValues[3].depthStencil = { 1.0f, 0 };
 				}
 			}
@@ -414,40 +487,43 @@ namespace zzcVulkanRenderEngine {
 	void RenderGraph::insert_barriers(CommandBuffer& cmdBuffer, GraphNode& node) {
 		if (node.type == GraphNodeType::GRAPHICS) {
 			// add barrier for input resources
+			u32 newQueueFamily = device->getGraphicsQueueFamilyIndex();
 			for (GraphResource& r : node.inputs) {
 				Texture& texture = device->getTexture(r.info.texture.texHandle);
-				if (r.type == GraphResourceType::TEXTURE) {
-					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::READ_TEXTURE, 0);
+				if (r.type == GraphResourceType::IMAGE) {
+					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::READ_TEXTURE, 0, newQueueFamily);
 					texture.setAccessType(GraphResourceAccessType::READ_TEXTURE,0,1);    // necessary to track the state of texture to determine initialLayout
+					texture.setNowQueueFamily(newQueueFamily);
 				}
 				else if (r.type == GraphResourceType::BUFFER) {
 					
 				}
 			}
 
-			// add barrier for output resources
+			// add barrier for output resources (images only)
 			for (GraphResource& r : node.outputs) {
 				Texture& texture = device->getTexture(r.info.texture.texHandle);
-				if (r.type == GraphResourceType::TEXTURE) {
-					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::WRITE_ATTACHMENT, 0);
+				if (r.usage == GraphResourceUsage::COLOR_OUTPUT) {
+					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::WRITE_ATTACHMENT, 0, newQueueFamily);
 					texture.setAccessType(GraphResourceAccessType::WRITE_ATTACHMENT,0,1);
+					texture.setNowQueueFamily(newQueueFamily);
 				}
-				else if (r.type == GraphResourceType::DEPTH_MAP) {
-					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::WRITE_DEPTH, 0);
+				else if (r.usage == GraphResourceUsage::DEPTH_MAP) {
+					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::WRITE_DEPTH, 0, newQueueFamily);
 					texture.setAccessType(GraphResourceAccessType::WRITE_DEPTH, 0,1);
-				}
-				else if (r.type == GraphResourceType::BUFFER) {
-
+					texture.setNowQueueFamily(newQueueFamily);
 				}
 			}
 		}
 		else if (node.type == GraphNodeType::COMPUTE) {
 			// add barrier for input resources
+			u32 newQueueFamily = device->getComputeQueueFamilyIndex();
 			for (GraphResource& r : node.inputs) {
 				Texture& texture = device->getTexture(r.info.texture.texHandle);
-				if (r.type == GraphResourceType::TEXTURE) {
-					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::COMPUTE_READ_STORAGE_IMAGE, 0);
+				if (r.type == GraphResourceType::IMAGE) {
+					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::COMPUTE_READ_STORAGE_IMAGE, 0, newQueueFamily);
 					texture.setAccessType(GraphResourceAccessType::COMPUTE_READ_STORAGE_IMAGE, 0, 1);    // necessary to track the state of texture to determine initialLayout
+					texture.setNowQueueFamily(newQueueFamily);
 				}
 				else if (r.type == GraphResourceType::BUFFER) {
 
@@ -457,9 +533,10 @@ namespace zzcVulkanRenderEngine {
 			// add barrier for output resources
 			for (GraphResource& r : node.outputs) {
 				Texture& texture = device->getTexture(r.info.texture.texHandle);
-				if (r.type == GraphResourceType::TEXTURE) {
-					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::COMPUTE_READ_WRITE_STORAGE_IMAGE, 0);
+				if (r.type == GraphResourceType::IMAGE) {
+					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::COMPUTE_READ_WRITE_STORAGE_IMAGE, 0, newQueueFamily);
 					texture.setAccessType(GraphResourceAccessType::COMPUTE_READ_WRITE_STORAGE_IMAGE, 0, 1);
+					texture.setNowQueueFamily(newQueueFamily);
 				}
 				else if (r.type == GraphResourceType::BUFFER) {
 
@@ -468,11 +545,13 @@ namespace zzcVulkanRenderEngine {
 
 		}else if (node.type == GraphNodeType::RAYTRACING) {
 			// add barrier for input resources
+			u32 newQueueFamily = device->getRaytracingQueueFamilyIndex();
 			for (GraphResource& r : node.inputs) {
 				Texture& texture = device->getTexture(r.info.texture.texHandle);
-				if (r.type == GraphResourceType::TEXTURE) {
-					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::RAYTRACING_READ_STORAGE_IMAGE, 0);
+				if (r.type == GraphResourceType::IMAGE) {
+					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::RAYTRACING_READ_STORAGE_IMAGE, 0, newQueueFamily);
 					texture.setAccessType(GraphResourceAccessType::RAYTRACING_READ_STORAGE_IMAGE, 0, 1);    // necessary to track the state of texture to determine initialLayout
+					texture.setNowQueueFamily(newQueueFamily);
 				}
 				else if (r.type == GraphResourceType::BUFFER) {
 
@@ -482,9 +561,10 @@ namespace zzcVulkanRenderEngine {
 			// add barrier for output resources
 			for (GraphResource& r : node.outputs) {
 				Texture& texture = device->getTexture(r.info.texture.texHandle);
-				if (r.type == GraphResourceType::TEXTURE) {
-					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::RAYTRACING_READ_WRITE_STORAGE_IMAGE, 0);
+				if (r.type == GraphResourceType::IMAGE) {
+					cmdBuffer.cmdInsertImageBarrier(texture, GraphResourceAccessType::RAYTRACING_READ_WRITE_STORAGE_IMAGE, 0, newQueueFamily);
 					texture.setAccessType(GraphResourceAccessType::RAYTRACING_READ_WRITE_STORAGE_IMAGE, 0, 1);
+					texture.setNowQueueFamily(newQueueFamily);
 				}
 				else if (r.type == GraphResourceType::BUFFER) {
 

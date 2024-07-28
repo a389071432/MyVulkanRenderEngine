@@ -41,6 +41,7 @@ namespace zzcVulkanRenderEngine {
 		DescriptorSetLayoutsHandle externalDescLayouts;   // mandatory if isExternal=True, used to created the pipelinelayout for node
 
 		GraphResourceType type;   
+		GraphResourceUsage usage;
 		ResourceInfo info;
 		std::string key;           // used to uniquely identify a resource, note that 'final' represent the final output to display
 		u16 groupId;               // specify which group the resource belongs to, typically determined by frequency of updating 

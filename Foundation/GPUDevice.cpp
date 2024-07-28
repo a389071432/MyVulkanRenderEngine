@@ -503,13 +503,14 @@ namespace zzcVulkanRenderEngine {
 		imageCI.imageType = util_getImageType(createInfo.type);
 		imageCI.flags = createInfo.flags;
 
-		// set image usage
-		imageCI.usage = 0;
-		imageCI.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;    // Default usage since we create textures only for output resources
-		imageCI.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;             // Default to be readable
-		if (createInfo.resourceType == GraphResourceType::DEPTH_MAP) {
-			imageCI.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-		}
+		//// set image usage
+		//imageCI.usage = 0;
+		//imageCI.usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;    // Default usage since we create textures only for output resources
+		//imageCI.usage |= VK_IMAGE_USAGE_SAMPLED_BIT;             // Default to be readable
+		//if (createInfo.resourceType == GraphResourceType::DEPTH_MAP) {
+		//	imageCI.usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		//}
+		imageCI.usage = createInfo.usage;
 		if (createInfo.isFinalOutput) {
 			imageCI.usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 		}
@@ -563,7 +564,8 @@ namespace zzcVulkanRenderEngine {
 		viewCI.subresourceRange.baseArrayLayer = 0;
 		viewCI.subresourceRange.baseMipLevel = createInfo.baseMipLevel;
 		viewCI.subresourceRange.levelCount = createInfo.nMipLevels;
-		viewCI.subresourceRange.aspectMask = createInfo.resourceType == (GraphResourceType::DEPTH_MAP) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+		//viewCI.subresourceRange.aspectMask = createInfo.resourceType == (GraphResourceType::DEPTH_MAP) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+		viewCI.subresourceRange.aspectMask = (createInfo.usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
 		viewCI.viewType = util_getImageViewType(createInfo.type);
 		ASSERT(
 			vkCreateImageView(device, &viewCI, nullptr, &texture.imageView) == VK_SUCCESS,
@@ -1176,6 +1178,22 @@ namespace zzcVulkanRenderEngine {
 		
 	}
 
+	inline u32 GPUDevice::getGraphicsQueueFamilyIndex() {
+		return queueFamilyInfos.mainQueue.familyIndex;
+	}
+
+	inline u32 GPUDevice::getComputeQueueFamilyIndex() {
+		return queueFamilyInfos.computeQueue.familyIndex;
+	}
+
+	inline u32 GPUDevice::getRaytracingQueueFamilyIndex() {
+		return queueFamilyInfos.raytracingQueue.familyIndex;
+	}
+
+	inline u32 GPUDevice::getPresentQueueFamilyIndex() {
+		return queueFamilyInfos.presentQueue.familyIndex;
+	}
+
 	//template<typename T>
 	//BufferHandle& GPUDevice::createBufferFromData(const std::vector<T>& data) {
 
@@ -1319,7 +1337,7 @@ namespace zzcVulkanRenderEngine {
 		// insert barrier for each mip level separately 
 		// also update the texture state for tracking
 		for (u16 i = baseMip; i < baseMip + nMips; i++) {
-			cmdBuffer.cmdInsertImageBarrier(tex, targetAccess, baseMip);
+			cmdBuffer.cmdInsertImageBarrier(tex, targetAccess, baseMip,tex.nowQueueFamily);
 			tex.access[i] = targetAccess;
 		}
 	}

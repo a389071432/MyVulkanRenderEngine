@@ -109,6 +109,12 @@ namespace zzcVulkanRenderEngine {
 		TextureHandle getSwapChainImageByIndex(u32 index);
 		VkExtent2D getSwapChainExtent();
 
+		// queue family index access
+		u32 getGraphicsQueueFamilyIndex();
+		u32 getComputeQueueFamilyIndex();
+		u32 getRaytracingQueueFamilyIndex();
+		u32 getPresentQueueFamilyIndex();
+
 		//helper functions for application-level requests
 		template<typename T>
 		BufferHandle& createBufferFromData(const std::vector<T>& data, BufferUsage usage) {
@@ -176,6 +182,7 @@ namespace zzcVulkanRenderEngine {
 			// create the image
 			TextureCreation texCI{};
 			texCI.setType(TextureType::Texture2D)
+				.setUsage(VK_IMAGE_USAGE_SAMPLED_BIT)    // typically, texture created from data is used to sample from
 				.setFormat(format)
 				.setSize(width, height, 1)
 				.setMipLevels(nMips);

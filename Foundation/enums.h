@@ -8,6 +8,12 @@ namespace zzcVulkanRenderEngine {
 		Texture3D
 	};
 
+	enum class ImageUsage {
+	    COLOR_OUTPUT,
+		DEPTH_MAP,
+		STORAGE
+	};
+
 	enum class ResourceSharingMode {
 		EXCLUSIVE,
 		CONCURRENT
@@ -17,13 +23,22 @@ namespace zzcVulkanRenderEngine {
 	enum class BindingType {
 		UNIFORM_BUFFER,
 		IMAGE_SAMPLER,
-		STORAGE_BUFFER
+		STORAGE_BUFFER,
+		STORAGE_IMAGE
 	};
 
 	enum class GraphResourceType {
-		TEXTURE,
-		DEPTH_MAP,
+		IMAGE,
 		BUFFER
+	};
+
+	enum class GraphResourceUsage {
+		COLOR_OUTPUT,
+		DEPTH_MAP,
+		TEXTURE_TO_SAMPLE,
+		STORAGE_IMAGE,
+		UNIFORM_BUFFER,
+		STORAGE_BUFFER
 	};
 
 	enum class GraphNodeType {
@@ -55,6 +70,7 @@ namespace zzcVulkanRenderEngine {
 		RAYGEN,
 		MISS,
 		HIT,
+		COMPUTE,
 		DONT_CARE
 	};
 

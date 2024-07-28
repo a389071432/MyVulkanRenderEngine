@@ -31,6 +31,10 @@ namespace zzcVulkanRenderEngine {
 		return *this;
 	}
 
+	TextureCreation& TextureCreation::setUsage(VkImageUsageFlags _usage) {
+		usage = _usage;
+	}
+
 	TextureCreation& TextureCreation::setAliasTexture(TextureHandle _aliasTex) {
 		aliasTexture = _aliasTex;
 		return *this;
@@ -47,7 +51,7 @@ namespace zzcVulkanRenderEngine {
 		return *this;
 	}
 
-	BufferCreation& BufferCreation::setUsage(u32 _usage) {
+	BufferCreation& BufferCreation::setUsage(VkBufferUsageFlags _usage) {
 		usage = _usage;
 		return *this;
 	}

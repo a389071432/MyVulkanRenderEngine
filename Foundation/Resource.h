@@ -96,9 +96,10 @@ namespace zzcVulkanRenderEngine {
 		u16 baseMipLevel = 0;
 		u16 nMipLevels = 1;
 		u16 flags = 0 ;    // by default to 0
-		GraphResourceType resourceType;
+		//GraphResourceType resourceType;
 		DataFormat format = DataFormat::FLOAT3;
 		TextureType  type = TextureType::Texture2D;
+		VkImageUsageFlags usage;
 		TextureHandle aliasTexture = INVALID_TEXTURE_HANDLE;
 		bool isFinalOutput = false;
 
@@ -107,6 +108,7 @@ namespace zzcVulkanRenderEngine {
 		TextureCreation& setFlags(u16 flags);
 		TextureCreation& setFormat(DataFormat format);
 		TextureCreation& setType(TextureType type);
+		TextureCreation& setUsage(VkImageUsageFlags usage);
 		TextureCreation& setAliasTexture(TextureHandle aliasTex);
 		TextureCreation& setIsFinal(bool isFinal);
 	};
@@ -114,12 +116,12 @@ namespace zzcVulkanRenderEngine {
 	// TODO: fill in this
 	struct BufferCreation {
 		u32 size;
-		u16 usage;
+		VkBufferUsageFlags usage;
 		u16 prop;  // property: device local or ...
 		ResourceSharingMode shareMode = ResourceSharingMode::EXCLUSIVE;
 		
 		BufferCreation& setSize(u32 size);
-		BufferCreation& setUsage(u32 usage);
+		BufferCreation& setUsage(VkBufferUsageFlags usage);
 		BufferCreation& setProp(u32 prop);
 		BufferCreation& setShareMode(ResourceSharingMode shareMode);
 	};

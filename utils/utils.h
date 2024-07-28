@@ -62,6 +62,14 @@ namespace zzcVulkanRenderEngine {
 			return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 		case GraphResourceAccessType::COPY_DST:
 			return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		case GraphResourceAccessType::COMPUTE_READ_STORAGE_IMAGE:
+			return VK_IMAGE_LAYOUT_GENERAL;
+		case GraphResourceAccessType::COMPUTE_READ_WRITE_STORAGE_IMAGE:
+			return VK_IMAGE_LAYOUT_GENERAL;
+		case GraphResourceAccessType::RAYTRACING_READ_STORAGE_IMAGE:
+			return VK_IMAGE_LAYOUT_GENERAL;
+		case GraphResourceAccessType::RAYTRACING_READ_WRITE_STORAGE_IMAGE:
+			return VK_IMAGE_LAYOUT_GENERAL;
 		case GraphResourceAccessType::PRESENT:
 			return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 		case GraphResourceAccessType::UNDEFINED:
@@ -174,6 +182,8 @@ namespace zzcVulkanRenderEngine {
 			return VK_SHADER_STAGE_MISS_BIT_KHR;
 		case ShaderStage::HIT:
 			return VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+		case ShaderStage::COMPUTE:
+			return VK_SHADER_STAGE_COMPUTE_BIT;
 		case ShaderStage::DONT_CARE:
 			return 0;
 			break;
@@ -219,6 +229,40 @@ namespace zzcVulkanRenderEngine {
 		}
 	}
 
+	inline VkImageUsageFlagBits util_getImageUsage(GraphResourceUsage usage) {
+		switch (usage) {
+		case GraphResourceUsage::COLOR_OUTPUT:
+			return VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+			break;
+		case GraphResourceUsage::DEPTH_MAP:
+			return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+			break;
+		case GraphResourceUsage::TEXTURE_TO_SAMPLE:
+			return VK_IMAGE_USAGE_SAMPLED_BIT;
+			break;
+		case GraphResourceUsage::STORAGE_IMAGE:
+			return VK_IMAGE_USAGE_STORAGE_BIT;
+			break;
+		default:
+			ASSERT(false, "Assertion failed: invalid Enum GraphResourceUsage for getting image usage!");
+			break;
+		}
+	}
+
+	inline VkBufferUsageFlagBits util_getBufferUsage(GraphResourceUsage usage) {
+		switch (usage) {
+		case GraphResourceUsage::UNIFORM_BUFFER:
+			return VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+			break;
+		case GraphResourceUsage::STORAGE_BUFFER:
+			return VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+			break;
+		default:
+			ASSERT(false, "Assertion failed: invalid Enum GraphResourceUsage for getting buffer usage!");
+			break;
+		}
+	}
+
 	inline VkDescriptorType util_getDescriptorType(BindingType bindingType) {
 		// TODO: more types
 		switch (bindingType)
@@ -227,6 +271,10 @@ namespace zzcVulkanRenderEngine {
 			return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 		case BindingType::UNIFORM_BUFFER:
 			return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		case BindingType::STORAGE_BUFFER:
+			return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		case BindingType::STORAGE_IMAGE:
+			return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 		default:
 			ASSERT(false, "Assertion failed: invalid Enum BindingType!");
 			break;
@@ -234,17 +282,19 @@ namespace zzcVulkanRenderEngine {
 	}
 
 	// TODO: modify this method with isRead considered
-	inline BindingType util_getBindingType(GraphResourceType rType,bool isRead) {
-		switch (rType)
+	inline BindingType util_getBindingType(GraphResourceUsage usage) {
+		switch (usage)
 		{
-		case GraphResourceType::TEXTURE:
+		case GraphResourceUsage::TEXTURE_TO_SAMPLE:
 			return BindingType::IMAGE_SAMPLER;
-		case GraphResourceType::DEPTH_MAP:
-			return BindingType::IMAGE_SAMPLER;
-		case GraphResourceType::BUFFER:
+		case GraphResourceUsage::STORAGE_IMAGE:
+			return BindingType::STORAGE_IMAGE;
+		case GraphResourceUsage::STORAGE_BUFFER:
+			return BindingType::STORAGE_BUFFER;
+		case GraphResourceUsage::UNIFORM_BUFFER:
 			return BindingType::UNIFORM_BUFFER;
 		default:
-			ASSERT(false, "Assertion failed: invalid Enum GraphResourceType!");
+			ASSERT(false, "Assertion failed: invalid Enum GraphResourceType for BindingType!");
 			break;
 		}
 	}
