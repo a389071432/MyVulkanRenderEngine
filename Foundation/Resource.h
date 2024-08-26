@@ -263,6 +263,7 @@ namespace zzcVulkanRenderEngine {
 	struct RenderAttachmentInfo {
 		DataFormat format;
 		GraphResourceType resourceType;
+		GraphResourceUsage usage;
 	};
 
 	struct RenderPassCreation {

@@ -23,7 +23,8 @@ int main() {
 		.setOutputs(std::vector<GraphResource>{
 			GraphResource{
 				.isExternal = false,                                 
-				.type = GraphResourceType::TEXTURE,            
+				.type = GraphResourceType::IMAGE,         
+				.usage=GraphResourceUsage::COLOR_OUTPUT,
 				.info = ResourceInfo{                          
 					.texture = {                       
 						800,                           // width
@@ -72,7 +73,8 @@ int main() {
 				std::vector<GraphResource>{
 				GraphResource{
 					.isExternal = false,
-					.type = GraphResourceType::TEXTURE,
+					.type = GraphResourceType::IMAGE,
+					.usage=GraphResourceUsage::TEXTURE_TO_SAMPLE,
 					.info = ResourceInfo{
 						.texture = {
 							800,                           // width
@@ -95,7 +97,8 @@ int main() {
 				.setOutputs(std::vector<GraphResource>{
 				GraphResource{
 					.isExternal = false,
-					.type = GraphResourceType::TEXTURE,
+					.type = GraphResourceType::IMAGE,
+					.usage=GraphResourceUsage::COLOR_OUTPUT,
 					.info = ResourceInfo{
 						.texture = {
 							800,                           // width

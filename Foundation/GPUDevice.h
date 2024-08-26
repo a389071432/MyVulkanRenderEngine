@@ -302,6 +302,7 @@ namespace zzcVulkanRenderEngine {
 		// Function pointers for extensions
 #ifdef ENABLE_RAYTRACING
 		PFN_vkCreateRayTracingPipelinesKHR vkCreateRayTracingPipelinesKHR;
+		PFN_vkGetRayTracingShaderGroupHandlesKHR vkGetRayTracingShaderGroupHandlesKHR;
 #endif // ENABLE_RAYTRACING
 
 

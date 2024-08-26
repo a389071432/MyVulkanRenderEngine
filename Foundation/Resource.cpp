@@ -33,6 +33,7 @@ namespace zzcVulkanRenderEngine {
 
 	TextureCreation& TextureCreation::setUsage(VkImageUsageFlags _usage) {
 		usage = _usage;
+		return *this;
 	}
 
 	TextureCreation& TextureCreation::setAliasTexture(TextureHandle _aliasTex) {

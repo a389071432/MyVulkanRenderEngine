@@ -189,15 +189,15 @@ namespace zzcVulkanRenderEngine {
 				else if (r.type == GraphResourceType::BUFFER) {
 					bufferUsage |= util_getBufferUsage(r.usage);
 				}
-				auto it = imageUsages.find(r.key);
-				if (it != imageUsages.end()) {
+				auto it_img = imageUsages.find(r.key);
+				if (it_img != imageUsages.end()) {
 					imageUsages[r.key] |= texUsage;
 				}
 				else {
 					imageUsages.insert({ r.key,texUsage });
 				}
-				auto it = bufferUsages.find(r.key);
-				if (it != bufferUsages.end()) {
+				auto it_buf = bufferUsages.find(r.key);
+				if (it_buf != bufferUsages.end()) {
 					bufferUsages[r.key] |= bufferUsage;
 				}
 				else {
@@ -214,15 +214,15 @@ namespace zzcVulkanRenderEngine {
 				else if (r.type == GraphResourceType::BUFFER) {
 					bufferUsage |= util_getBufferUsage(r.usage);
 				}
-				auto it = imageUsages.find(r.key);
-				if (it != imageUsages.end()) {
+				auto it_img = imageUsages.find(r.key);
+				if (it_img != imageUsages.end()) {
 					imageUsages[r.key] |= texUsage;
 				}
 				else {
 					imageUsages.insert({ r.key,texUsage });
 				}
-				auto it = bufferUsages.find(r.key);
-				if (it != bufferUsages.end()) {
+				auto it_buf = bufferUsages.find(r.key);
+				if (it_buf != bufferUsages.end()) {
 					bufferUsages[r.key] |= bufferUsage;
 				}
 				else {
@@ -347,7 +347,7 @@ namespace zzcVulkanRenderEngine {
 			if (node->type == GraphNodeType::GRAPHICS) {
 				for (GraphResource& r : node->outputs) {
 					if (r.type == GraphResourceType::IMAGE) {
-						creation.addAttachInfo({ r.info.texture.format,r.type });
+						creation.addAttachInfo({ r.info.texture.format,r.type, r.usage });
 					}
 				}
 				node->typeData->graphics.renderPass = device->createRenderPass(creation);

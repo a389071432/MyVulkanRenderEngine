@@ -179,6 +179,7 @@ namespace zzcVulkanRenderEngine {
 		// Manually load function pointers for extensions
 #ifdef ENABLE_RAYTRACING
 		vkCreateRayTracingPipelinesKHR = reinterpret_cast<PFN_vkCreateRayTracingPipelinesKHR>(vkGetDeviceProcAddr(device, "vkCreateRayTracingPipelinesKHR"));
+		vkGetRayTracingShaderGroupHandlesKHR = reinterpret_cast<PFN_vkGetRayTracingShaderGroupHandlesKHR>(vkGetDeviceProcAddr(device, "vkGetRayTracingShaderGroupHandlesKHR"));
 #endif // ENABLE_RAYTRACING
 
 
@@ -742,7 +743,7 @@ namespace zzcVulkanRenderEngine {
 
 			desc.format = util_getFormat(attachInfo.format);
 			desc.samples = VK_SAMPLE_COUNT_1_BIT;
-			if (attachInfo.resourceType == GraphResourceType::TEXTURE) {
+			if (attachInfo.resourceType == GraphResourceType::IMAGE && attachInfo.usage==GraphResourceUsage::COLOR_OUTPUT) {
 				desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 				desc.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 				desc.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -753,7 +754,7 @@ namespace zzcVulkanRenderEngine {
 				colorRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 				colorAttachRefs.push_back(colorRef);
 			}
-			else if (attachInfo.resourceType == GraphResourceType::DEPTH_MAP) {
+			else if (attachInfo.resourceType == GraphResourceType::IMAGE&&attachInfo.usage==GraphResourceUsage::DEPTH_MAP) {
 				desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 				desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL;;
 				desc.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -1178,19 +1179,19 @@ namespace zzcVulkanRenderEngine {
 		
 	}
 
-	inline u32 GPUDevice::getGraphicsQueueFamilyIndex() {
+	u32 GPUDevice::getGraphicsQueueFamilyIndex() {
 		return queueFamilyInfos.mainQueue.familyIndex;
 	}
 
-	inline u32 GPUDevice::getComputeQueueFamilyIndex() {
+	u32 GPUDevice::getComputeQueueFamilyIndex() {
 		return queueFamilyInfos.computeQueue.familyIndex;
 	}
 
-	inline u32 GPUDevice::getRaytracingQueueFamilyIndex() {
+	u32 GPUDevice::getRaytracingQueueFamilyIndex() {
 		return queueFamilyInfos.raytracingQueue.familyIndex;
 	}
 
-	inline u32 GPUDevice::getPresentQueueFamilyIndex() {
+	u32 GPUDevice::getPresentQueueFamilyIndex() {
 		return queueFamilyInfos.presentQueue.familyIndex;
 	}
 
