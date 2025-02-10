@@ -66,6 +66,11 @@ namespace zzcVulkanRenderEngine {
 		// compile the render graph
 		renderGraph->setDevice(device);
 		renderGraph->compile();
+
+		ASSERT(
+			maxThreadPerFrame > renderGraph->getGraphNodeCount(),
+			"Assertion failed: number of command buffers per frame must be greater than number of render nodes"
+		);
 	}
 
 	void Engine::run() {
@@ -82,7 +87,8 @@ namespace zzcVulkanRenderEngine {
 			// Temp varaibles
 			VkDevice _device = device->getDevice();
 			VkSwapchainKHR& _swapChain = device->getSwapChain();
-			CommandBuffer& _cmdBuffer = device->getCommandBuffer(currentFrame);
+			std::vector<CommandBuffer>& frameCmdBuffers = device->getFrameCommandBuffers(currentFrame);
+			u32 nodeCount = renderGraph->getGraphNodeCount();
 
 			// Synchronization of the same frame
 			vkWaitForFences(_device, 1, &fencesFrame[currentFrame], VK_TRUE, UINT64_MAX);
@@ -95,19 +101,26 @@ namespace zzcVulkanRenderEngine {
 				"Assertion failed: Acquire image from swapchain failed!"
 			);
 
-			_cmdBuffer.reset();
-			_cmdBuffer.begin();
+			// the (nodeCount)-th command buffer is used for the built-in present pass
+			for (u32 i = 0; i < nodeCount+1; i++) {
+				frameCmdBuffers[i].reset();
+				frameCmdBuffers[i].begin();
+			}
 			// Execture the renderGraph (involves recording commands)
-			renderGraph->execute(&_cmdBuffer, device, scene);
+			renderGraph->execute(frameCmdBuffers, device, scene);
 
 			// Copy the final output of renderGraph to the swapchain for presentation
 			presentFinalImage(imageIndex);
-			_cmdBuffer.end();
+			
+			for (u32 i = 0; i < nodeCount+1; i++) {
+				frameCmdBuffers[i].end();
+			}
 
 			// Submit to queue
 			device->submitCmds(
 				device->getMainQueue(), 
-				{ _cmdBuffer.getCmdBuffer() }, 
+				frameCmdBuffers,
+				nodeCount+1,
 				{ semaphoresImageAvailable[currentFrame]},
 				{ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT },
 				{ semaphoresRenderDone[currentFrame] },
@@ -133,7 +146,7 @@ namespace zzcVulkanRenderEngine {
 	}
 
 	void Engine::presentFinalImage(u32 imageIndex) {
-		CommandBuffer& cmdBuffer = device->getCommandBuffer(currentFrame);
+		CommandBuffer& cmdBuffer = device->getCommandBuffer(currentFrame,renderGraph->getGraphNodeCount());
 		TextureHandle finalTex = renderGraph->getTextureByKey("final");
 		TextureHandle presentTex = device->getSwapChainImageByIndex(imageIndex);
 		device->transferImageInDevice(cmdBuffer,finalTex, presentTex,device->getSwapChainExtent());

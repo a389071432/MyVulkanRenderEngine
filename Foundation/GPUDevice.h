@@ -15,6 +15,7 @@ namespace zzcVulkanRenderEngine {
 	const u32 MAX_IMAGE_SAMPLER_DESCRIPTORS = 100;
 	const u32 MAX_SETS = 50;
 	const u32 MAX_FRAME_IN_FLIGHT = 2;
+	const u32 MAX_THREAD_PER_FRAME = 20;
 	const u32 SWAPCHAIN_IMAGES = 3;
 
 	// TODO: fill in this 
@@ -64,7 +65,8 @@ namespace zzcVulkanRenderEngine {
 		// methods for picking or setting member variables, used by Engine
 		VkDevice getDevice();
 		VkSwapchainKHR& getSwapChain();
-		CommandBuffer& getCommandBuffer(u32 index);
+		CommandBuffer& getCommandBuffer(u32 frameIndex, u32 threadId);
+		std::vector<CommandBuffer>& getFrameCommandBuffers(u32 frameIndex);
 		VkQueue getMainQueue();
 		VkQueue getPresentQueue();
 		void setWindow(GLFWwindow* window);
@@ -230,7 +232,7 @@ namespace zzcVulkanRenderEngine {
 		void transferImageInDevice(CommandBuffer& cmdBuffer, TextureHandle src, TextureHandle dst, VkExtent2D copyExtent);
 		void transferBufferToImage2DInDevice(CommandBuffer& cmdBuffer, BufferHandle buffer, TextureHandle tex, u32 width, u32 height);
 		float queryMaxAnisotropy();
-		void submitCmds(VkQueue queue, std::vector<VkCommandBuffer> cmdBuffes, std::vector<VkSemaphore> waitSemas, std::vector<VkPipelineStageFlags> waitStages, std::vector<VkSemaphore> signalSemas, VkFence fence);
+		void submitCmds(VkQueue queue, std::vector<CommandBuffer>& cmdBuffes, u32 cmdBufferCount, std::vector<VkSemaphore> waitSemas, std::vector<VkPipelineStageFlags> waitStages, std::vector<VkSemaphore> signalSemas, VkFence fence);
 		void submitCmds(VkQueue queue, VkCommandBuffer cmdBuffe);
 		void imageLayoutTransition(CommandBuffer& cmdBuffer, TextureHandle tex, GraphResourceAccessType targetAccess, u16 baseMip, u16 nMips);
 		//internal hepler functions
@@ -243,6 +245,7 @@ namespace zzcVulkanRenderEngine {
 		const u32 poolSize = DEFAULT_POOL_SIZE;
 
 		const u32 frameInFlight = MAX_FRAME_IN_FLIGHT;
+		const u32 maxThreadPerFrame = MAX_THREAD_PER_FRAME;
 		const u32 nSwapChainImages = SWAPCHAIN_IMAGES;
 
 		// store the settings
@@ -289,8 +292,8 @@ namespace zzcVulkanRenderEngine {
 
 
 		// Command buffer related
-		VkCommandPool commandPool;
-		std::vector<CommandBuffer> cmdBuffers;
+		std::vector<VkCommandPool> commandPool;
+		std::vector<std::vector<CommandBuffer>> cmdBuffers;
 		CommandBuffer auxiCmdBuffer;  //auxiliary command buffer
 
 		// Descriptor pool

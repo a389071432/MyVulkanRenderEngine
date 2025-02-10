@@ -4,6 +4,7 @@
 #include"RenderGraph.h"
 #include"assert.h"
 #include"utils/utils.h"
+#include <thread>
 
 namespace zzcVulkanRenderEngine {
 	//// For the GraphicsPipelineInfo
@@ -447,42 +448,103 @@ namespace zzcVulkanRenderEngine {
 
 	}
 
-	void RenderGraph::execute(CommandBuffer* cmdBuffer, GPUDevice* device, Scene* scene) {
+	u32 RenderGraph::getGraphNodeCount() {
+		return nodes.size();
+	}
+
+	////DEBUG: no threads
+	//void RenderGraph::execute(std::vector<CommandBuffer>& frameCmdBuffers, GPUDevice* device, Scene* scene) {
+	//	for (u32 i = 0; i < topologyOrder.size(); i++) {
+	//		u32 index = topologyOrder.at(i);
+	//		GraphNode* node = nodes.at(index);
+	//		CommandBuffer* cmdBuffer = &frameCmdBuffers[0];
+
+	//		// Insert barriers for both input and output resources
+	//		insert_barriers(*cmdBuffer, *node);
+
+	//		// Begin the render pass
+	//		std::vector<VkClearValue> clearValues;
+	//		clearValues.resize(node->outputs.size());
+	//		for (int i = 0; i < node->outputs.size(); i++) {
+	//			GraphResource& r = node->outputs[i];
+	//			if (r.usage == GraphResourceUsage::COLOR_OUTPUT) {
+	//				clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
+	//			}
+	//			else if (r.usage == GraphResourceUsage::DEPTH_MAP) {
+	//				clearValues[3].depthStencil = { 1.0f, 0 };
+	//			}
+	//		}
+
+	//		VkRenderPassBeginInfo beginInfo{};
+	//		beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	//		beginInfo.renderPass = device->getRenderPass(node->typeData->graphics.renderPass);
+	//		beginInfo.framebuffer = device->getFramebuffer(node->typeData->graphics.framebuffer);
+	//		beginInfo.renderArea.extent.width = node->outputs[0].info.texture.width;
+	//		beginInfo.renderArea.extent.height = node->outputs[0].info.texture.height;
+	//		beginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+	//		beginInfo.pClearValues = clearValues.data();
+	//		cmdBuffer->cmdBeginRenderPass(beginInfo);
+
+	//		// Execute the node using user-defined method
+	//		node->render->execute(cmdBuffer, device, scene, node);
+
+	//		//End the render pass
+	//		cmdBuffer->cmdEndRenderPass();
+	//	}
+	//}
+
+	void RenderGraph::execute(std::vector<CommandBuffer>& frameCmdBuffers, GPUDevice* device, Scene* scene) {
+		std::vector<std::thread>threads(topologyOrder.size());
+
+		// sequentially record commands for inserting barriers
+		// note this cannot be done simultaneously
 		for (u32 i = 0; i < topologyOrder.size(); i++) {
+			CommandBuffer& threadCmdBuffer = frameCmdBuffers[i];
+			u32 index = topologyOrder.at(i);
+			GraphNode* node = nodes.at(index);
+			// Insert barriers for both input and output resources
+			insert_barriers(threadCmdBuffer, *node);
+		}
+
+		for (u32 i = 0; i < topologyOrder.size(); i++) {
+			CommandBuffer& threadCmdBuffer = frameCmdBuffers[i];
 			u32 index = topologyOrder.at(i);
 			GraphNode* node = nodes.at(index);
 
-			// Insert barriers for both input and output resources
-			insert_barriers(*cmdBuffer, *node);
-
-			// Begin the render pass
-			std::vector<VkClearValue> clearValues;
-			clearValues.resize(node->outputs.size());
-			for (int i = 0; i < node->outputs.size();i++) {
-				GraphResource& r = node->outputs[i];
-				if (r.usage == GraphResourceUsage::COLOR_OUTPUT) {
-					clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
+			threads[i] = std::thread([&threadCmdBuffer, node, device, scene]() {
+				// Begin the render pass
+				std::vector<VkClearValue> clearValues;
+				clearValues.resize(node->outputs.size());
+				for (int j = 0; j < node->outputs.size(); j++) {
+					GraphResource& r = node->outputs[j];
+					if (r.usage == GraphResourceUsage::COLOR_OUTPUT) {
+						clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
+					}
+					else if (r.usage == GraphResourceUsage::DEPTH_MAP) {
+						clearValues[3].depthStencil = { 1.0f, 0 };
+					}
 				}
-				else if (r.usage == GraphResourceUsage::DEPTH_MAP) {
-					clearValues[3].depthStencil = { 1.0f, 0 };
-				}
-			}
 
-			VkRenderPassBeginInfo beginInfo{};
-			beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			beginInfo.renderPass = device->getRenderPass(node->typeData->graphics.renderPass);
-			beginInfo.framebuffer = device->getFramebuffer(node->typeData->graphics.framebuffer);
-			beginInfo.renderArea.extent.width = node->outputs[0].info.texture.width;
-			beginInfo.renderArea.extent.height = node->outputs[0].info.texture.height;
-			beginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-			beginInfo.pClearValues = clearValues.data();
-			cmdBuffer->cmdBeginRenderPass(beginInfo);
+				VkRenderPassBeginInfo beginInfo{};
+				beginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+				beginInfo.renderPass = device->getRenderPass(node->typeData->graphics.renderPass);
+				beginInfo.framebuffer = device->getFramebuffer(node->typeData->graphics.framebuffer);
+				beginInfo.renderArea.extent.width = node->outputs[0].info.texture.width;
+				beginInfo.renderArea.extent.height = node->outputs[0].info.texture.height;
+				beginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+				beginInfo.pClearValues = clearValues.data();
+				threadCmdBuffer.cmdBeginRenderPass(beginInfo);
 
-			// Execute the node using user-defined method
-			node->render->execute(cmdBuffer,device,scene,node);
+				// Execute the node using user-defined method
+				node->render->execute(&threadCmdBuffer, device, scene, node);
 
-			//End the render pass
-			cmdBuffer->cmdEndRenderPass();
+				//End the render pass
+				threadCmdBuffer.cmdEndRenderPass();
+			});
+
+		}
+		for (auto& thread : threads) {
+			thread.join();
 		}
 	}
 

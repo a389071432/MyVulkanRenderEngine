@@ -211,7 +211,8 @@ namespace zzcVulkanRenderEngine {
 		void setDevice(GPUDevice* device);
 		void addNode(GraphNode* node);
 		void compile();
-		void execute(CommandBuffer* cmdBuffer, GPUDevice* device, Scene* scene);
+		void execute(std::vector<CommandBuffer>& cmdBuffer, GPUDevice* device, Scene* scene);
+		u32 getGraphNodeCount();
 		TextureHandle& getTextureByKey(std::string key);
 		BufferHandle& getBufferByKey(std::string key);
 	private:

@@ -24,7 +24,11 @@ namespace zzcVulkanRenderEngine {
 	    ,framebufferPool(poolSize)
 	    ,pipelineLayoutPool(poolSize)
 	{
+		commandPool.resize(maxThreadPerFrame);
 		cmdBuffers.resize(frameInFlight);
+		for (u32 i = 0; i < cmdBuffers.size(); i++) {
+			cmdBuffers[i].resize(maxThreadPerFrame);
+		}
 		enabledQueueFamlies = createInfo.requireQueueFamlies;
 		enabledLayers = createInfo.requiredLayers;
 		enabledExtensions = createInfo.requiredExtensions;
@@ -212,40 +216,44 @@ namespace zzcVulkanRenderEngine {
 			"Assertion failed: failed to create descriptor pool"
 		);
 
-		// CREATE COMMANDPOOL
-		VkCommandPoolCreateInfo cmdPoolCI{};
-		cmdPoolCI.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		cmdPoolCI.queueFamilyIndex = static_cast<uint32_t>(queueFamilyInfos.mainQueue.familyIndex);
-		cmdPoolCI.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-		ASSERT(
-			vkCreateCommandPool(device, &cmdPoolCI, nullptr, &commandPool) == VK_SUCCESS,
-			"Assertion failed: CreateCommandPool failed!"
-		);
+		// CREATE COMMANDPOOL (one per thread)
+		for (u32 i = 0; i < commandPool.size(); i++) {
+			VkCommandPoolCreateInfo cmdPoolCI{};
+			cmdPoolCI.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+			cmdPoolCI.queueFamilyIndex = static_cast<uint32_t>(queueFamilyInfos.mainQueue.familyIndex);
+			cmdPoolCI.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+			ASSERT(
+				vkCreateCommandPool(device, &cmdPoolCI, nullptr, &commandPool[i]) == VK_SUCCESS,
+				"Assertion failed: CreateCommandPool failed!"
+			);
+		}
+
 
 		// CREATE COMMAND BUFFERS
 		// TODO: multithreads
 		// TODO: secondary command buffer
 		// TODO: (study this for details: https://github.com/ARM-software/vulkan_best_practice_for_mobile_developers/blob/master/samples/performance/command_buffer_usage/command_buffer_usage_tutorial.md)
 		// TODO: create the vkCommandBuffer in the constructor of CommandBuffer
-		cmdBuffers.resize(frameInFlight);
 		for (u32 i = 0; i < cmdBuffers.size(); i++) {
-			VkCommandBufferAllocateInfo cmdAllocInfo{};
-			cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-			cmdAllocInfo.commandBufferCount = 1;
-			cmdAllocInfo.commandPool = commandPool;
-			cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-			VkCommandBuffer& cb = cmdBuffers.at(i).getCmdBuffer();
-			ASSERT(
-				vkAllocateCommandBuffers(device, &cmdAllocInfo, &cb) == VK_SUCCESS,
-				"Assertion failed: AllocateCommandBuffers failed!"
-			);
+			for (u32 j = 0; j < cmdBuffers[i].size(); j++) {
+				VkCommandBufferAllocateInfo cmdAllocInfo{};
+				cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+				cmdAllocInfo.commandBufferCount = 1;
+				cmdAllocInfo.commandPool = commandPool[j];
+				cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+				VkCommandBuffer& cb = cmdBuffers[i][j].getCmdBuffer();
+				ASSERT(
+					vkAllocateCommandBuffers(device, &cmdAllocInfo, &cb) == VK_SUCCESS,
+					"Assertion failed: AllocateCommandBuffers failed!"
+				);
+			}
 		}
 
 		// CREATE THE AUXILIARY COMMAND BUFFER
 		VkCommandBufferAllocateInfo cmdAllocInfo{};
 		cmdAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		cmdAllocInfo.commandBufferCount = 1;
-		cmdAllocInfo.commandPool = commandPool;
+		cmdAllocInfo.commandPool = commandPool[0];
 		cmdAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		VkCommandBuffer& cb = auxiCmdBuffer.getCmdBuffer();
 		ASSERT(
@@ -338,9 +346,21 @@ namespace zzcVulkanRenderEngine {
 		return swapChainExtent;
 	}
 
-	CommandBuffer& GPUDevice::getCommandBuffer(u32 index) {
-		ASSERT(index >= 0 && index < cmdBuffers.size(), "Invalid index for getting commandBuffer!");
-		return cmdBuffers.at(index);
+	CommandBuffer& GPUDevice::getCommandBuffer(u32 frameIndex, u32 threadId) {
+		ASSERT(
+			frameIndex < frameInFlight,
+			"Assertion failed: frameIndex out of valid range"
+		);
+		ASSERT(
+			threadId < maxThreadPerFrame,
+			"Assertion failed: threadId out of valid range"
+		);
+		return cmdBuffers[frameIndex][threadId];
+	}
+
+	std::vector<CommandBuffer>& GPUDevice::getFrameCommandBuffers(u32 frameIndex) {
+		ASSERT(frameIndex >= 0 && frameIndex < cmdBuffers.size(), "Invalid index for getting commandBuffer!");
+		return cmdBuffers.at(frameIndex);
 	}
 
 	VkQueue GPUDevice::getMainQueue() {
@@ -1344,7 +1364,12 @@ namespace zzcVulkanRenderEngine {
 	}
 
 	// TODO: this should be a member function of class Queue, wrapping the VkQueue
-	void GPUDevice::submitCmds(VkQueue queue, std::vector<VkCommandBuffer> cmdBuffesToSubmit, std::vector<VkSemaphore> waitSemas, std::vector<VkPipelineStageFlags> waitStages, std::vector<VkSemaphore> signalSemas, VkFence fence) {
+	void GPUDevice::submitCmds(VkQueue queue, std::vector<CommandBuffer>& _cmdBuffers, u32 cmdBufferCount, std::vector<VkSemaphore> waitSemas, std::vector<VkPipelineStageFlags> waitStages, std::vector<VkSemaphore> signalSemas, VkFence fence) {
+
+		std::vector<VkCommandBuffer>cmdBuffersToSubmit(cmdBufferCount);
+		for (u32 i = 0; i < cmdBufferCount; i++) {
+			cmdBuffersToSubmit[i] = _cmdBuffers[i].getCmdBuffer();
+		}
 		VkSubmitInfo submitInfo{};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.waitSemaphoreCount = 1;
@@ -1352,8 +1377,8 @@ namespace zzcVulkanRenderEngine {
 		submitInfo.pWaitDstStageMask = waitStages.data();
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = signalSemas.data();
-		submitInfo.commandBufferCount = static_cast<uint32_t>(cmdBuffesToSubmit.size());
-		submitInfo.pCommandBuffers = cmdBuffesToSubmit.data();
+		submitInfo.commandBufferCount = static_cast<uint32_t>(cmdBuffersToSubmit.size());
+		submitInfo.pCommandBuffers = cmdBuffersToSubmit.data();
 
 		ASSERT(
 			vkQueueSubmit(queue, 1, &submitInfo, fence) == VK_SUCCESS,

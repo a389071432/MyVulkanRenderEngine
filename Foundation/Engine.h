@@ -32,6 +32,7 @@ namespace zzcVulkanRenderEngine {
 		// configs 
 		// TODO: set as staring configs parameters
 		const u32 frameInFlight = 2;
+		const u32 maxThreadPerFrame = 20;
 
 		// Sync objects
 		std::vector<VkFence> fencesFrame;
